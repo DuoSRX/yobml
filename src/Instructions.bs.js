@@ -87,7 +87,7 @@ function decode(opcode) {
         case 50 : 
             return /* Ldd_hl_a */5;
         case 54 : 
-            return /* Ld_n_hl */7;
+            return /* Ld_hl_d8 */7;
         case 62 : 
             return /* Ld_n */Block.__(5, [/* A */0]);
         case 2 : 

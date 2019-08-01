@@ -79,19 +79,21 @@ function trace(cpu, instruction) {
 }
 
 function step(cpu, breakpoints) {
-  var instruction = Instructions$Yobml.decode(Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */1]));
+  var instruction = Instructions$Yobml.decode(Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]));
   trace(cpu, instruction);
   var cpu_000 = /* sp */cpu[/* sp */0];
   var cpu_001 = /* pc */cpu[/* pc */1] + 1 | 0;
-  var cpu_002 = /* ime */cpu[/* ime */2];
-  var cpu_003 = /* registers */cpu[/* registers */3];
-  var cpu_004 = /* memory */cpu[/* memory */4];
+  var cpu_002 = /* cycle */cpu[/* cycle */2];
+  var cpu_003 = /* ime */cpu[/* ime */3];
+  var cpu_004 = /* registers */cpu[/* registers */4];
+  var cpu_005 = /* memory */cpu[/* memory */5];
   var cpu$1 = /* record */[
     cpu_000,
     cpu_001,
     cpu_002,
     cpu_003,
-    cpu_004
+    cpu_004,
+    cpu_005
   ];
   return /* tuple */[
           InstructionsExec$Yobml.execute(cpu$1, instruction),

@@ -11,78 +11,83 @@ let store = (cpu, address, value) => Memory.store(cpu.memory, address, value)
 let load_next = (cpu) => load(cpu, cpu.pc)
 let load_next16 = (cpu) => load16(cpu, cpu.pc)
 
-let nop = (cpu) => cpu
+// Call after every instruction to change the PC
+// and increase the cycle count
+let bump = (cpu, pc, cycles) => {
+  {...cpu, pc:pc, cycle:(cpu.cycle+cycles)}
+}
+
+let nop = (cpu) => bump(cpu, cpu.pc, 4)
 
 let cp_n = (cpu) => {
   let reg = get_register(cpu, A);
   let byte = load_next(cpu);
   let h = (byte land 0xF) > (reg land 0xF);
   set_flags(cpu, ~z=(reg == byte), ~n=true, ~h, ~c=(reg < byte), ());
-  bump_pc(cpu, 1)
+  bump(cpu, cpu.pc + 1, 8)
 }
 
 let di = (cpu) =>
-  {...cpu, ime: false}
+  bump({...cpu, ime: false}, cpu.pc, 4)
 
 let ld_rr = (cpu, r1, r2) => {
   get_register(cpu, r2) |> set_register(cpu, r1)
-  cpu
+  bump(cpu, cpu.pc, 4)
 }
 
 let ld_n = (cpu, r) => {
   load_next(cpu) |> set_register(cpu, r);
-  bump_pc(cpu, 1)
+  bump(cpu, cpu.pc + 1, 8)
 }
 
 let ld_nn = (cpu, r16) => {
   load16(cpu, cpu.pc) |> set_register16(cpu, r16);
-  bump_pc(cpu, 2)
+  bump(cpu, cpu.pc + 2, 12)
 }
 
-let ld_n_hl = (cpu) => {
+let ld_hl_d8 = (cpu) => {
   let address = get_register16(cpu, HL)
   load_next(cpu) |> store(cpu, address)
-  bump_pc(cpu, 1)
+  bump(cpu, cpu.pc + 1, 12)
 }
 
 let ld_r16_a = (cpu, r16) => {
   let address = get_register16(cpu, r16);
   get_register(cpu, A) |> store(cpu, address);
-  cpu
+  bump(cpu, cpu.pc, 8)
 }
 
 let ldd_hl_a = (cpu) => {
   let address = get_register16(cpu, HL);
   get_register(cpu, A) |> store(cpu, address);
   set_register16(cpu, HL, wrapping_add16(address, -1));
-  cpu
+  bump(cpu, cpu.pc, 8)
 }
 
 let ldi_a_hl = (cpu) => {
   let address = get_register16(cpu, HL);
   load(cpu, address) |> set_register(cpu, A);
   set_register16(cpu, HL, wrapping_add16(address, 1));
-  cpu
+  bump(cpu, cpu.pc, 8)
 }
 
 let ld_read_io_n = (cpu) => {
   let n = load_next(cpu);
   let byte = load(cpu, wrapping_add16(0xFF00, n));
   set_register(cpu, A, byte);
-  bump_pc(cpu, 1)
+  bump(cpu, cpu.pc + 1, 12)
 }
 
 let ld_write_io_n = (cpu) => {
   let n = load_next(cpu);
   let address = wrapping_add16(0xFF00, n);
   store(cpu, address, get_register(cpu, A));
-  bump_pc(cpu, 1)
+  bump(cpu, cpu.pc + 1, 12)
 }
 
 let inc = (cpu, r) => {
-  wrapping_add(get_register(cpu, r), 1)
-  |> set_register(cpu, r)
-  cpu
+  wrapping_add(get_register(cpu, r), 1) |> set_register(cpu, r)
+  bump(cpu, cpu.pc, 4)
 }
 
 let dec = (cpu, r) => {
@@ -91,11 +96,13 @@ let dec = (cpu, r) => {
   set_register(cpu, r, value);
   let h = (value land 0xF) > (reg land 0xF);
   set_flags(cpu, ~z=(value == 0), ~n=true, ~h, ());
-  cpu
+  bump(cpu, cpu.pc, 4)
 }
 
-let jp = (cpu) =>
-  {...cpu, pc: load_next16(cpu)}
+let jp = (cpu) => {
+  let address = load_next16(cpu)
+  bump(cpu, address, 16)
+}
 
 let jr = (cpu, flag, condition) => {
   let do_jump = has_flag(cpu, flag) == condition
@@ -104,9 +111,9 @@ let jr = (cpu, flag, condition) => {
     let byte = load_next(cpu);
     // Treat the byte as a signed integer
     let offset = (byte < 0x80) ? byte : (byte - 0x100);
-    bump_pc(cpu, offset + 1)
+    bump(cpu, cpu.pc + offset + 1, 12)
   } else {
-    bump_pc(cpu, 1)
+    bump(cpu, cpu.pc + 1, 8)
   }
 }
 
@@ -116,7 +123,7 @@ let xor = (cpu, r1, r2) => {
   let result = a lxor b;
   set_register(cpu, r1, result);
   set_flags(cpu, ~z=(result == 0), ~n=false, ~h=false, ~c=false, ())
-  cpu
+  bump(cpu, cpu.pc, 4)
 }
 
 let execute = (cpu, instruction) => switch(instruction) {
@@ -132,7 +139,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ld_r16_a(r) => ld_r16_a(cpu, r)
   | Ld_rr(r1, r2) => ld_rr(cpu, r1, r2)
   | Ld_n(r) => ld_n(cpu, r)
-  | Ld_n_hl => ld_n_hl(cpu)
+  | Ld_hl_d8 => ld_hl_d8(cpu)
   | Ld_nn(r) => ld_nn(cpu, r)
   | Ldd_hl_a => ldd_hl_a(cpu)
   | Ldi_a_hl => ldi_a_hl(cpu)
