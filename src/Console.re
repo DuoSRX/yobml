@@ -11,7 +11,6 @@ let make = () => {
     |> Array.mapi((n, _) => String.get(file, n) |> int_of_char );
 
   {
-    // cpu: Cpu.make(Tetris.rom),
     cpu: Cpu.make(rom),
     running: true,
     // breakpoints: [0x20C]

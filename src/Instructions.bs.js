@@ -5,8 +5,20 @@ var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var Format = require("bs-platform/lib/js/format.js");
 var Printf = require("bs-platform/lib/js/printf.js");
+var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 var Registers$Yobml = require("./Registers.bs.js");
+
+var regs = /* array */[
+  /* B */1,
+  /* C */2,
+  /* D */3,
+  /* E */4,
+  /* H */6,
+  /* L */7,
+  /* F */5,
+  /* A */0
+];
 
 var OpcodeNotImplement = Caml_exceptions.create("Instructions-Yobml.OpcodeNotImplement");
 
@@ -33,7 +45,7 @@ function decode(opcode) {
       return /* Ld_read_io_n */3;
     }
   } else if (opcode !== 175) {
-    if (opcode >= 72) {
+    if (opcode >= 128) {
       if (opcode !== 195) {
         exit = 1;
       } else {
@@ -44,26 +56,32 @@ function decode(opcode) {
         case 0 : 
             return /* Nop */8;
         case 1 : 
-            return /* Ld_nn */Block.__(5, [/* BC */1]);
+            return /* Ld_nn */Block.__(6, [/* BC */1]);
         case 5 : 
             return /* Dec */Block.__(0, [/* B */1]);
         case 6 : 
-            return /* Ld_n */Block.__(4, [/* B */1]);
+            return /* Ld_n */Block.__(5, [/* B */1]);
         case 12 : 
-            return /* Inc */Block.__(2, [/* C */2]);
+            return /* Inc */Block.__(3, [/* C */2]);
         case 13 : 
             return /* Dec */Block.__(0, [/* C */2]);
         case 14 : 
-            return /* Ld_n */Block.__(4, [/* C */2]);
+            return /* Ld_n */Block.__(5, [/* C */2]);
         case 17 : 
-            return /* Ld_nn */Block.__(5, [/* DE */2]);
+            return /* Ld_nn */Block.__(6, [/* DE */2]);
+        case 18 : 
+            return /* Ld_r16_a */Block.__(1, [/* DE */2]);
+        case 20 : 
+            return /* Inc */Block.__(3, [/* D */3]);
+        case 28 : 
+            return /* Inc */Block.__(3, [/* E */4]);
         case 32 : 
-            return /* Jr */Block.__(3, [
+            return /* Jr */Block.__(4, [
                       /* Z */0,
                       false
                     ]);
         case 33 : 
-            return /* Ld_nn */Block.__(5, [/* HL */3]);
+            return /* Ld_nn */Block.__(6, [/* HL */3]);
         case 42 : 
             return /* Ldi_a_hl */6;
         case 50 : 
@@ -71,17 +89,7 @@ function decode(opcode) {
         case 54 : 
             return /* Ld_n_hl */7;
         case 62 : 
-            return /* Ld_n */Block.__(4, [/* A */0]);
-        case 65 : 
-            return /* Ld_rr */Block.__(1, [
-                      /* B */1,
-                      /* C */2
-                    ]);
-        case 66 : 
-            return /* Ld_rr */Block.__(1, [
-                      /* B */1,
-                      /* D */3
-                    ]);
+            return /* Ld_n */Block.__(5, [/* A */0]);
         case 2 : 
         case 3 : 
         case 4 : 
@@ -92,9 +100,7 @@ function decode(opcode) {
         case 11 : 
         case 15 : 
         case 16 : 
-        case 18 : 
         case 19 : 
-        case 20 : 
         case 21 : 
         case 22 : 
         case 23 : 
@@ -102,7 +108,6 @@ function decode(opcode) {
         case 25 : 
         case 26 : 
         case 27 : 
-        case 28 : 
         case 29 : 
         case 30 : 
         case 31 : 
@@ -132,50 +137,114 @@ function decode(opcode) {
         case 60 : 
         case 61 : 
         case 63 : 
+        case 70 : 
+        case 78 : 
+        case 86 : 
+        case 94 : 
+        case 102 : 
+        case 110 : 
+        case 112 : 
+        case 113 : 
+        case 114 : 
+        case 115 : 
+        case 116 : 
+        case 117 : 
+        case 118 : 
+        case 119 : 
+        case 126 : 
+            exit = 1;
+            break;
         case 64 : 
+        case 65 : 
+        case 66 : 
         case 67 : 
         case 68 : 
         case 69 : 
-        case 70 : 
-            exit = 1;
-            break;
         case 71 : 
-            return /* Ld_rr */Block.__(1, [
-                      /* B */1,
-                      /* A */0
-                    ]);
+        case 72 : 
+        case 73 : 
+        case 74 : 
+        case 75 : 
+        case 76 : 
+        case 77 : 
+        case 79 : 
+        case 80 : 
+        case 81 : 
+        case 82 : 
+        case 83 : 
+        case 84 : 
+        case 85 : 
+        case 87 : 
+        case 88 : 
+        case 89 : 
+        case 90 : 
+        case 91 : 
+        case 92 : 
+        case 93 : 
+        case 95 : 
+        case 96 : 
+        case 97 : 
+        case 98 : 
+        case 99 : 
+        case 100 : 
+        case 101 : 
+        case 103 : 
+        case 104 : 
+        case 105 : 
+        case 106 : 
+        case 107 : 
+        case 108 : 
+        case 109 : 
+        case 111 : 
+        case 120 : 
+        case 121 : 
+        case 122 : 
+        case 123 : 
+        case 124 : 
+        case 125 : 
+        case 127 : 
+            exit = 2;
+            break;
         
       }
     } else {
       exit = 1;
     }
   } else {
-    return /* Xor */Block.__(6, [
+    return /* Xor */Block.__(7, [
               /* A */0,
               /* A */0
             ]);
   }
-  if (exit === 1) {
-    throw [
-          OpcodeNotImplement,
-          Curry._1(Printf.sprintf(/* Format */[
-                    /* String_literal */Block.__(11, [
-                        "0x",
-                        /* Int */Block.__(4, [
-                            /* Int_X */8,
-                            /* Lit_padding */Block.__(0, [
-                                /* Zeros */2,
-                                2
-                              ]),
-                            /* No_precision */0,
-                            /* End_of_format */0
-                          ])
-                      ]),
-                    "0x%02X"
-                  ]), opcode)
-        ];
+  switch (exit) {
+    case 1 : 
+        throw [
+              OpcodeNotImplement,
+              Curry._1(Printf.sprintf(/* Format */[
+                        /* String_literal */Block.__(11, [
+                            "0x",
+                            /* Int */Block.__(4, [
+                                /* Int_X */8,
+                                /* Lit_padding */Block.__(0, [
+                                    /* Zeros */2,
+                                    2
+                                  ]),
+                                /* No_precision */0,
+                                /* End_of_format */0
+                              ])
+                          ]),
+                        "0x%02X"
+                      ]), opcode)
+            ];
+    case 2 : 
+        var dst = Caml_array.caml_array_get(regs, (opcode >>> 3) & 7);
+        var src = Caml_array.caml_array_get(regs, opcode & 7);
+        return /* Ld_rr */Block.__(2, [
+                  dst,
+                  src
+                ]);
+    
   }
-  
 }
 
 function pretty(instruction) {
@@ -215,6 +284,20 @@ function pretty(instruction) {
                           "DEC %s"
                         ]), Registers$Yobml.to_string(instruction[0]));
       case 1 : 
+          return Curry._1(Format.sprintf(/* Format */[
+                          /* String_literal */Block.__(11, [
+                              "LD [",
+                              /* String */Block.__(2, [
+                                  /* No_padding */0,
+                                  /* String_literal */Block.__(11, [
+                                      "], A",
+                                      /* End_of_format */0
+                                    ])
+                                ])
+                            ]),
+                          "LD [%s], A"
+                        ]), Registers$Yobml.to_string16(instruction[0]));
+      case 2 : 
           return Curry._2(Format.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "LD ",
@@ -231,7 +314,7 @@ function pretty(instruction) {
                             ]),
                           "LD %s, %s"
                         ]), Registers$Yobml.to_string(instruction[0]), Registers$Yobml.to_string(instruction[1]));
-      case 2 : 
+      case 3 : 
           return Curry._1(Format.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "INC ",
@@ -242,7 +325,7 @@ function pretty(instruction) {
                             ]),
                           "INC %s"
                         ]), Registers$Yobml.to_string(instruction[0]));
-      case 3 : 
+      case 4 : 
           var match = instruction[0];
           if (match !== 0) {
             if (match >= 3) {
@@ -259,7 +342,7 @@ function pretty(instruction) {
           } else {
             return "JR NZ, nn";
           }
-      case 4 : 
+      case 5 : 
           return Curry._1(Format.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "LD ",
@@ -273,7 +356,7 @@ function pretty(instruction) {
                             ]),
                           "LD %s, n"
                         ]), Registers$Yobml.to_string(instruction[0]));
-      case 5 : 
+      case 6 : 
           return Curry._1(Format.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "LD ",
@@ -287,7 +370,7 @@ function pretty(instruction) {
                             ]),
                           "LD %s, nn"
                         ]), Registers$Yobml.to_string16(instruction[0]));
-      case 6 : 
+      case 7 : 
           return Curry._2(Format.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "XOR ",
@@ -309,6 +392,7 @@ function pretty(instruction) {
   }
 }
 
+exports.regs = regs;
 exports.OpcodeNotImplement = OpcodeNotImplement;
 exports.decode = decode;
 exports.pretty = pretty;

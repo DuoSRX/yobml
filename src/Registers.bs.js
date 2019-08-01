@@ -45,11 +45,12 @@ function get(regs, reg) {
   switch (reg) {
     case 0 : 
         return regs[/* a */0];
+    case 1 : 
+        return regs[/* b */1];
     case 2 : 
         return regs[/* c */2];
-    case 1 : 
     case 3 : 
-        return regs[/* b */1];
+        return regs[/* d */3];
     case 4 : 
         return regs[/* e */4];
     case 5 : 

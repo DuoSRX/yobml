@@ -75,6 +75,12 @@ function ld_n_hl(cpu) {
   return Cpu$Yobml.bump_pc(cpu, 1);
 }
 
+function ld_r16_a(cpu, r16) {
+  var address = Cpu$Yobml.get_register16(cpu, r16);
+  store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
+  return cpu;
+}
+
 function ldd_hl_a(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
@@ -177,16 +183,18 @@ function execute(cpu, instruction) {
       case 0 : 
           return dec(cpu, instruction[0]);
       case 1 : 
-          return ld_rr(cpu, instruction[0], instruction[1]);
+          return ld_r16_a(cpu, instruction[0]);
       case 2 : 
-          return inc(cpu, instruction[0]);
+          return ld_rr(cpu, instruction[0], instruction[1]);
       case 3 : 
-          return jr(cpu, instruction[0], instruction[1]);
+          return inc(cpu, instruction[0]);
       case 4 : 
-          return ld_n(cpu, instruction[0]);
+          return jr(cpu, instruction[0], instruction[1]);
       case 5 : 
-          return ld_nn(cpu, instruction[0]);
+          return ld_n(cpu, instruction[0]);
       case 6 : 
+          return ld_nn(cpu, instruction[0]);
+      case 7 : 
           return xor(cpu, instruction[0], instruction[1]);
       
     }
@@ -207,6 +215,7 @@ exports.ld_rr = ld_rr;
 exports.ld_n = ld_n;
 exports.ld_nn = ld_nn;
 exports.ld_n_hl = ld_n_hl;
+exports.ld_r16_a = ld_r16_a;
 exports.ldd_hl_a = ldd_hl_a;
 exports.ldi_a_hl = ldi_a_hl;
 exports.ld_read_io_n = ld_read_io_n;

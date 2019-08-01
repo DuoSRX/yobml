@@ -1,5 +1,3 @@
-open Belt
-
 [@bs.deriving jsConverter]
 type t = {
   sp : int, // stack pointer
@@ -14,7 +12,6 @@ type t = {
 type cpu_flag = Z | N | H | C
 
 let make = (rom) => {
-  // let wram = Array.append([|0x36, 0x3E, 0x44, 0x0, 0x12|], Array.make(0x1000, 0))
   let memory = Memory.make(~rom)
   let registers = Registers.make();
   { sp: 0xFFFE, pc: 0x100, ime: false, memory, registers };
