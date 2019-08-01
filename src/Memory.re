@@ -4,6 +4,7 @@ type t = {
   rom: array(int),
   wram: array(int),
   vram: array(int),
+  exram: array(int),
   oam: array(int),
   io: array(int),
   hram: array(int)
@@ -14,6 +15,8 @@ let make = (~rom) => {
     rom,
     wram: Array.make(0x2000, 0),
     vram: Array.make(0x2000, 0),
+    // External ram FIXME: this depends on the mapper
+    exram: Array.make(0x2000, 0),
     oam: Array.make(0xA0, 0),
     io: Array.make(0x80, 0),
     hram: Array.make(0x80, 0)
@@ -27,8 +30,12 @@ let load = (mem, address) => {
     mem.rom[address]
   } else if (address < 0xA000) {
     mem.vram[address land 0x1FFF]
+  } else if (address >= 0xA000 && address < 0xC000) { // FIXME: mapper
+    mem.exram[address land 0x1FFF]
   } else if (address >= 0xC000 && address < 0xE000) {
     mem.wram[address land 0x1FFF]
+  } else if (address >= 0xE000 && address < 0xFE00) { // Mirror of C000-DDFF
+    mem.wram[(address - 0x2000) land 0x1FFF]
   } else if (address >= 0xFE00 && address <= 0xFE9F) {
     mem.oam[address land 0x9F]
   } else if (address >= 0xFEA0 && address <= 0xFEFF) {
@@ -47,8 +54,12 @@ let store = (mem, address, value) => {
     mem.rom[address] = value
   } else if (address < 0xA000) {
     mem.vram[address land 0x1FFF] = value
+  } else if (address >= 0xA000 && address < 0xC000) { // FIXME: mapper
+    mem.exram[address land 0x1FFF] = value
   } else if (address >= 0xC000 && address < 0xE000) {
     mem.wram[address land 0x1FFF] = value
+  } else if (address >= 0xE000 && address < 0xFE00) { // Mirror of C000-DDFF
+    mem.wram[(address - 0x2000) land 0x1FFF] = value
   } else if (address >= 0xFE00 && address <= 0xFE9F) {
     mem.oam[address land 0x9F] = value
   } else if (address >= 0xFEA0 && address <= 0xFEFF) {
@@ -66,4 +77,11 @@ let load16 = (mem, address) => {
   let lo = load(mem, address)
   let hi = load(mem, address + 1)
   lo lor (hi lsl 8)
+}
+
+let store16 = (mem, address, value) => {
+  let lo = value land 0xFF
+  let hi = (value land 0xFF00) lsr 8
+  store(mem, address, lo)
+  store(mem, address + 1, hi)
 }

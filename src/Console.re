@@ -19,11 +19,15 @@ let make = () => {
 
 let run = (console) => {
   let rec loop = (console, steps) => {
-    let (cpu, instruction) = CpuExec.step(~cpu=console.cpu, ~breakpoints=[]);
-    if (steps < 10000000) {
+    // let (cpu, instruction) = CpuExec.step(~cpu=console.cpu, ~breakpoints=[]);
+    let (cpu, instruction) = CpuExec.step(~cpu=console.cpu);
+    // if (steps < 10000000000 && cpu.pc != 0xC068) {
+    if (steps < 10000000000) {
       loop({...console, cpu}, steps + 1);
     } else {
-      CpuExec.trace(cpu, instruction)
+      // if (List.length(cpu.serial) > 0) {
+        Js.log(cpu.serial)
+      // }
     }
     // onStep(cpu);
   }
