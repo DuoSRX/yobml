@@ -7,7 +7,9 @@ type t = {
   ime : bool, // interrupt enable
 
   registers: Registers.t,
-  memory: Memory.t
+  memory: Memory.t,
+
+  mutable serial: list(char) // for debugging purpose only
 }
 
 type cpu_flag = Z | N | H | C
@@ -15,7 +17,7 @@ type cpu_flag = Z | N | H | C
 let make = (rom) => {
   let memory = Memory.make(~rom)
   let registers = Registers.make();
-  { sp: 0xFFFE, pc: 0x100, cycle: 0, ime: false, memory, registers };
+  { sp: 0xFFFE, pc: 0x100, cycle: 0, ime: false, memory, registers, serial: [] };
 };
 
 let get_register = (cpu, register) =>
@@ -69,6 +71,15 @@ let set_flags = (cpu, ~z=?, ~n=?, ~h=?, ~c=?, ()) => {
   switch_flag(n, N);
   switch_flag(h, H);
   switch_flag(c, C);
+}
+
+let flag_to_string = (flag) => {
+  switch(flag) {
+    | Z => "Z"
+    | N => "N"
+    | H => "H"
+    | C => "C"
+  };
 }
 
 let bump_pc = (cpu, n) => {...cpu, pc: cpu.pc + n}

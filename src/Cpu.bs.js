@@ -12,7 +12,8 @@ function tToJs(param) {
           cycle: param[/* cycle */2],
           ime: param[/* ime */3],
           registers: param[/* registers */4],
-          memory: param[/* memory */5]
+          memory: param[/* memory */5],
+          serial: param[/* serial */6]
         };
 }
 
@@ -23,7 +24,8 @@ function tFromJs(param) {
           /* cycle */param.cycle,
           /* ime */param.ime,
           /* registers */param.registers,
-          /* memory */param.memory
+          /* memory */param.memory,
+          /* serial */param.serial
         ];
 }
 
@@ -36,7 +38,8 @@ function make(rom) {
           /* cycle */0,
           /* ime */false,
           /* registers */registers,
-          /* memory */memory
+          /* memory */memory,
+          /* serial : [] */0
         ];
 }
 
@@ -124,6 +127,20 @@ function set_flags(cpu, z, n, h, c, param) {
   return switch_flag(c, /* C */3);
 }
 
+function flag_to_string(flag) {
+  switch (flag) {
+    case 0 : 
+        return "Z";
+    case 1 : 
+        return "N";
+    case 2 : 
+        return "H";
+    case 3 : 
+        return "C";
+    
+  }
+}
+
 function bump_pc(cpu, n) {
   return /* record */[
           /* sp */cpu[/* sp */0],
@@ -131,7 +148,8 @@ function bump_pc(cpu, n) {
           /* cycle */cpu[/* cycle */2],
           /* ime */cpu[/* ime */3],
           /* registers */cpu[/* registers */4],
-          /* memory */cpu[/* memory */5]
+          /* memory */cpu[/* memory */5],
+          /* serial */cpu[/* serial */6]
         ];
 }
 
@@ -146,5 +164,6 @@ exports.has_flag = has_flag;
 exports.set_flag = set_flag;
 exports.unset_flag = unset_flag;
 exports.set_flags = set_flags;
+exports.flag_to_string = flag_to_string;
 exports.bump_pc = bump_pc;
 /* No side effect */

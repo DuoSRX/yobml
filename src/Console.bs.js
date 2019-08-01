@@ -19,23 +19,24 @@ function make(param) {
         ];
 }
 
-function run($$console) {
-  var _console = $$console;
+function run($$console$1) {
+  var _console = $$console$1;
   var _steps = 0;
   while(true) {
     var steps = _steps;
-    var $$console$1 = _console;
-    var match = CpuExec$Yobml.step($$console$1[/* cpu */0], /* [] */0);
+    var $$console$2 = _console;
+    var match = CpuExec$Yobml.step($$console$2[/* cpu */0]);
     var cpu = match[0];
-    if (steps < 10000000) {
+    if (steps < 1410065408) {
       _steps = steps + 1 | 0;
       _console = /* record */[
         /* cpu */cpu,
-        /* running */$$console$1[/* running */1]
+        /* running */$$console$2[/* running */1]
       ];
       continue ;
     } else {
-      return CpuExec$Yobml.trace(cpu, match[1]);
+      console.log(cpu[/* serial */6]);
+      return /* () */0;
     }
   };
 }
