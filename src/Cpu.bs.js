@@ -9,9 +9,10 @@ function tToJs(param) {
   return {
           sp: param[/* sp */0],
           pc: param[/* pc */1],
-          ime: param[/* ime */2],
-          registers: param[/* registers */3],
-          memory: param[/* memory */4]
+          cycle: param[/* cycle */2],
+          ime: param[/* ime */3],
+          registers: param[/* registers */4],
+          memory: param[/* memory */5]
         };
 }
 
@@ -19,6 +20,7 @@ function tFromJs(param) {
   return /* record */[
           /* sp */param.sp,
           /* pc */param.pc,
+          /* cycle */param.cycle,
           /* ime */param.ime,
           /* registers */param.registers,
           /* memory */param.memory
@@ -31,6 +33,7 @@ function make(rom) {
   return /* record */[
           /* sp */65534,
           /* pc */256,
+          /* cycle */0,
           /* ime */false,
           /* registers */registers,
           /* memory */memory
@@ -38,31 +41,31 @@ function make(rom) {
 }
 
 function get_register(cpu, register) {
-  return Registers$Yobml.get(cpu[/* registers */3], register);
+  return Registers$Yobml.get(cpu[/* registers */4], register);
 }
 
 function get_register16(cpu, register) {
-  return Registers$Yobml.get16(cpu[/* registers */3], register);
+  return Registers$Yobml.get16(cpu[/* registers */4], register);
 }
 
 function set_register(cpu, register, value) {
-  return Registers$Yobml.set(cpu[/* registers */3], register, value);
+  return Registers$Yobml.set(cpu[/* registers */4], register, value);
 }
 
 function set_register16(cpu, register, value) {
-  return Registers$Yobml.set16(cpu[/* registers */3], register, value);
+  return Registers$Yobml.set16(cpu[/* registers */4], register, value);
 }
 
 function has_flag(cpu, flag) {
   switch (flag) {
     case 0 : 
-        return (cpu[/* registers */3][/* f */5] & 128) > 0;
+        return (cpu[/* registers */4][/* f */5] & 128) > 0;
     case 1 : 
-        return (cpu[/* registers */3][/* f */5] & 64) > 0;
+        return (cpu[/* registers */4][/* f */5] & 64) > 0;
     case 2 : 
-        return (cpu[/* registers */3][/* f */5] & 32) > 0;
+        return (cpu[/* registers */4][/* f */5] & 32) > 0;
     case 3 : 
-        return (cpu[/* registers */3][/* f */5] & 16) > 0;
+        return (cpu[/* registers */4][/* f */5] & 16) > 0;
     
   }
 }
@@ -70,16 +73,16 @@ function has_flag(cpu, flag) {
 function set_flag(cpu, flag) {
   switch (flag) {
     case 0 : 
-        cpu[/* registers */3][/* f */5] = cpu[/* registers */3][/* f */5] | 128;
+        cpu[/* registers */4][/* f */5] = cpu[/* registers */4][/* f */5] | 128;
         return /* () */0;
     case 1 : 
-        cpu[/* registers */3][/* f */5] = cpu[/* registers */3][/* f */5] | 64;
+        cpu[/* registers */4][/* f */5] = cpu[/* registers */4][/* f */5] | 64;
         return /* () */0;
     case 2 : 
-        cpu[/* registers */3][/* f */5] = cpu[/* registers */3][/* f */5] | 32;
+        cpu[/* registers */4][/* f */5] = cpu[/* registers */4][/* f */5] | 32;
         return /* () */0;
     case 3 : 
-        cpu[/* registers */3][/* f */5] = cpu[/* registers */3][/* f */5] | 16;
+        cpu[/* registers */4][/* f */5] = cpu[/* registers */4][/* f */5] | 16;
         return /* () */0;
     
   }
@@ -88,16 +91,16 @@ function set_flag(cpu, flag) {
 function unset_flag(cpu, flag) {
   switch (flag) {
     case 0 : 
-        cpu[/* registers */3][/* f */5] = cpu[/* registers */3][/* f */5] & Pervasives.lnot(128) & 255;
+        cpu[/* registers */4][/* f */5] = cpu[/* registers */4][/* f */5] & Pervasives.lnot(128) & 255;
         return /* () */0;
     case 1 : 
-        cpu[/* registers */3][/* f */5] = cpu[/* registers */3][/* f */5] & Pervasives.lnot(64) & 255;
+        cpu[/* registers */4][/* f */5] = cpu[/* registers */4][/* f */5] & Pervasives.lnot(64) & 255;
         return /* () */0;
     case 2 : 
-        cpu[/* registers */3][/* f */5] = cpu[/* registers */3][/* f */5] & Pervasives.lnot(32) & 255;
+        cpu[/* registers */4][/* f */5] = cpu[/* registers */4][/* f */5] & Pervasives.lnot(32) & 255;
         return /* () */0;
     case 3 : 
-        cpu[/* registers */3][/* f */5] = cpu[/* registers */3][/* f */5] & Pervasives.lnot(16) & 255;
+        cpu[/* registers */4][/* f */5] = cpu[/* registers */4][/* f */5] & Pervasives.lnot(16) & 255;
         return /* () */0;
     
   }
@@ -125,9 +128,10 @@ function bump_pc(cpu, n) {
   return /* record */[
           /* sp */cpu[/* sp */0],
           /* pc */cpu[/* pc */1] + n | 0,
-          /* ime */cpu[/* ime */2],
-          /* registers */cpu[/* registers */3],
-          /* memory */cpu[/* memory */4]
+          /* cycle */cpu[/* cycle */2],
+          /* ime */cpu[/* ime */3],
+          /* registers */cpu[/* registers */4],
+          /* memory */cpu[/* memory */5]
         ];
 }
 

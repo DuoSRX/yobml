@@ -21,7 +21,7 @@ type instruction =
   | Ldd_hl_a
   | Ldi_a_hl
   | Ld_n(register)
-  | Ld_n_hl
+  | Ld_hl_d8
   | Ld_nn(register16)
   | Nop
   | Xor(register, register)
@@ -56,7 +56,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x21 => Ld_nn(HL)
   | 0x2A => Ldi_a_hl
   | 0x32 => Ldd_hl_a
-  | 0x36 => Ld_n_hl
+  | 0x36 => Ld_hl_d8
   | 0x3E => Ld_n(A)
   // | 0x41 => Ld_rr(B, C)
   // | 0x42 => Ld_rr(B, D)
@@ -77,7 +77,7 @@ let pretty = (instruction) => switch(instruction) {
   | Cp_n => "CP n"
   | Di => "Di"
   | Ld_n(r) => Format.sprintf("LD %s, n", to_string(r))
-  | Ld_n_hl => "LD n, (HL)"
+  | Ld_hl_d8 => "LD n, (HL)"
   | Ld_nn(r) => Format.sprintf("LD %s, nn", to_string16(r))
   | Ld_rr(r1, r2) => Format.sprintf("LD %s, %s", to_string(r1), to_string(r2))
   | Ld_r16_a(r) => Format.sprintf("LD [%s], A", to_string16(r))
