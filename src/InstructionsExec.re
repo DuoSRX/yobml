@@ -45,6 +45,12 @@ let ld_n_hl = (cpu) => {
   bump_pc(cpu, 1)
 }
 
+let ld_r16_a = (cpu, r16) => {
+  let address = get_register16(cpu, r16);
+  get_register(cpu, A) |> store(cpu, address);
+  cpu
+}
+
 let ldd_hl_a = (cpu) => {
   let address = get_register16(cpu, HL);
   get_register(cpu, A) |> store(cpu, address);
@@ -123,6 +129,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ld_write_io_n => ld_write_io_n(cpu)
   // | Ld_read_io_c => ld_read_io_c(cpu)
   // | Ld_write_io_c => ld_write_io_c(cpu)
+  | Ld_r16_a(r) => ld_r16_a(cpu, r)
   | Ld_rr(r1, r2) => ld_rr(cpu, r1, r2)
   | Ld_n(r) => ld_n(cpu, r)
   | Ld_n_hl => ld_n_hl(cpu)

@@ -24,7 +24,7 @@ let get = (regs, reg) => switch(reg) {
   | A => regs.a
   | B => regs.b
   | C => regs.c
-  | D => regs.b
+  | D => regs.d
   | E => regs.e
   | F => regs.f
   | H => regs.h
