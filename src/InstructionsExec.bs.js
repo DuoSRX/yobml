@@ -150,12 +150,30 @@ function cp_n(cpu) {
   return bump(cpu, cpu[/* pc */1] + 1 | 0, 8);
 }
 
+function cpl(cpu) {
+  Cpu$Yobml.set_register(cpu, /* A */0, Cpu$Yobml.get_register(cpu, /* A */0) ^ 255);
+  Cpu$Yobml.set_flags(cpu, undefined, true, true, undefined, /* () */0);
+  return bump(cpu, cpu[/* pc */1], 4);
+}
+
 function di(cpu) {
   return bump(/* record */[
               /* sp */cpu[/* sp */0],
               /* pc */cpu[/* pc */1],
               /* cycle */cpu[/* cycle */2],
               /* ime */false,
+              /* registers */cpu[/* registers */4],
+              /* memory */cpu[/* memory */5],
+              /* serial */cpu[/* serial */6]
+            ], cpu[/* pc */1], 4);
+}
+
+function ei(cpu) {
+  return bump(/* record */[
+              /* sp */cpu[/* sp */0],
+              /* pc */cpu[/* pc */1],
+              /* cycle */cpu[/* cycle */2],
+              /* ime */true,
               /* registers */cpu[/* registers */4],
               /* memory */cpu[/* memory */5],
               /* serial */cpu[/* serial */6]
@@ -250,6 +268,21 @@ function ld_write_io_n(cpu) {
   return bump(cpu, cpu[/* pc */1] + 1 | 0, 12);
 }
 
+function ld_read_io_c(cpu) {
+  var n = Cpu$Yobml.get_register(cpu, /* C */2);
+  var address = wrapping_add16(65280, n);
+  var $$byte = Memory$Yobml.load(cpu[/* memory */5], address);
+  Cpu$Yobml.set_register(cpu, /* A */0, $$byte);
+  return bump(cpu, cpu[/* pc */1] + 1 | 0, 12);
+}
+
+function ld_write_io_c(cpu) {
+  var n = Cpu$Yobml.get_register(cpu, /* C */2);
+  var address = wrapping_add16(65280, n);
+  store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
+  return bump(cpu, cpu[/* pc */1] + 1 | 0, 12);
+}
+
 function ld_sp(cpu) {
   var word = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* pc */1]);
   return bump(/* record */[
@@ -291,6 +324,23 @@ function dec(cpu, r) {
   var h = (value & 15) > (reg & 15);
   Cpu$Yobml.set_flags(cpu, value === 0, true, h, undefined, /* () */0);
   return bump(cpu, cpu[/* pc */1], 4);
+}
+
+function dec16(cpu, r) {
+  var reg = Cpu$Yobml.get_register16(cpu, r);
+  var value = wrapping_add(reg, -1);
+  Cpu$Yobml.set_register16(cpu, r, value);
+  return bump(cpu, cpu[/* pc */1], 8);
+}
+
+function dec_hl(cpu) {
+  var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  var a = Memory$Yobml.load(cpu[/* memory */5], address);
+  var value = wrapping_add(a, -1);
+  store(cpu, address, value);
+  var h = (value & 15) > (a & 15);
+  Cpu$Yobml.set_flags(cpu, value === 0, true, h, undefined, /* () */0);
+  return bump(cpu, cpu[/* pc */1], 12);
 }
 
 function adc_d8(cpu) {
@@ -490,44 +540,54 @@ function execute(cpu, instruction) {
       case 4 : 
           return cp_n(cpu);
       case 5 : 
-          return di(cpu);
+          return cpl(cpu);
       case 6 : 
-          return ld_sp(cpu);
+          return dec_hl(cpu);
       case 7 : 
-          return jp(cpu);
+          return di(cpu);
       case 8 : 
-          return jr_e8(cpu);
+          return ei(cpu);
       case 9 : 
-          return ld_read_io_n(cpu);
+          return jp(cpu);
       case 10 : 
-          return ld_write_io_n(cpu);
+          return jr_e8(cpu);
       case 11 : 
-          return ldd_hl_a(cpu);
+          return ld_sp(cpu);
       case 12 : 
-          return ldi_a_hl(cpu);
+          return ld_read_io_n(cpu);
       case 13 : 
-          return ldi_hl_a(cpu);
+          return ld_write_io_n(cpu);
       case 14 : 
-          return ld_a16_a(cpu);
+          return ld_read_io_c(cpu);
       case 15 : 
-          return ld_a_a16(cpu);
+          return ld_write_io_c(cpu);
       case 16 : 
-          return ld_hl_d8(cpu);
+          return ldd_hl_a(cpu);
       case 17 : 
-          return or_hl(cpu);
+          return ldi_a_hl(cpu);
       case 18 : 
-          return cpu;
+          return ldi_hl_a(cpu);
       case 19 : 
-          return ret(cpu);
+          return ld_a16_a(cpu);
       case 20 : 
-          return rra(cpu);
+          return ld_a_a16(cpu);
       case 21 : 
-          return srl_hl(cpu);
+          return ld_hl_d8(cpu);
       case 22 : 
-          return sub_d8(cpu);
+          return or_hl(cpu);
       case 23 : 
-          return xor_d8(cpu);
+          return cpu;
       case 24 : 
+          return ret(cpu);
+      case 25 : 
+          return rra(cpu);
+      case 26 : 
+          return srl_hl(cpu);
+      case 27 : 
+          return sub_d8(cpu);
+      case 28 : 
+          return xor_d8(cpu);
+      case 29 : 
           return xor_hl(cpu);
       
     }
@@ -538,38 +598,40 @@ function execute(cpu, instruction) {
       case 1 : 
           return dec(cpu, instruction[0]);
       case 2 : 
-          return ld_r16_a(cpu, instruction[0]);
+          return dec16(cpu, instruction[0]);
       case 3 : 
-          return ld_rr(cpu, instruction[0], instruction[1]);
-      case 4 : 
           return inc(cpu, instruction[0]);
-      case 5 : 
+      case 4 : 
           return inc16(cpu, instruction[0]);
-      case 6 : 
+      case 5 : 
           return jr(cpu, instruction[0], instruction[1]);
+      case 6 : 
+          return ld_r16_a(cpu, instruction[0]);
       case 7 : 
-          return ld_hl_r(cpu, instruction[0]);
+          return ld_rr(cpu, instruction[0], instruction[1]);
       case 8 : 
-          return ld_r_hl(cpu, instruction[0]);
+          return ld_hl_r(cpu, instruction[0]);
       case 9 : 
-          return ld_a_r16(cpu, instruction[0]);
+          return ld_r_hl(cpu, instruction[0]);
       case 10 : 
-          return ld_n(cpu, instruction[0]);
+          return ld_a_r16(cpu, instruction[0]);
       case 11 : 
-          return ld_nn(cpu, instruction[0]);
+          return ld_n(cpu, instruction[0]);
       case 12 : 
-          return ora(cpu, instruction[0]);
+          return ld_nn(cpu, instruction[0]);
       case 13 : 
-          return pop16(cpu, instruction[0]);
+          return ora(cpu, instruction[0]);
       case 14 : 
-          return push16(cpu, instruction[0]);
+          return pop16(cpu, instruction[0]);
       case 15 : 
-          return ret_cond(cpu, instruction[0], instruction[1]);
+          return push16(cpu, instruction[0]);
       case 16 : 
-          return rr(cpu, instruction[0]);
+          return ret_cond(cpu, instruction[0], instruction[1]);
       case 17 : 
-          return srl(cpu, instruction[0]);
+          return rr(cpu, instruction[0]);
       case 18 : 
+          return srl(cpu, instruction[0]);
+      case 19 : 
           return xor(cpu, instruction[0]);
       
     }
@@ -594,7 +656,9 @@ exports.call_cond = call_cond;
 exports.ret = ret;
 exports.ret_cond = ret_cond;
 exports.cp_n = cp_n;
+exports.cpl = cpl;
 exports.di = di;
+exports.ei = ei;
 exports.ld_rr = ld_rr;
 exports.ld_n = ld_n;
 exports.ld_nn = ld_nn;
@@ -609,11 +673,15 @@ exports.ld_hl_r = ld_hl_r;
 exports.ld_r_hl = ld_r_hl;
 exports.ld_read_io_n = ld_read_io_n;
 exports.ld_write_io_n = ld_write_io_n;
+exports.ld_read_io_c = ld_read_io_c;
+exports.ld_write_io_c = ld_write_io_c;
 exports.ld_sp = ld_sp;
 exports.ld_a16_a = ld_a16_a;
 exports.inc = inc;
 exports.inc16 = inc16;
 exports.dec = dec;
+exports.dec16 = dec16;
+exports.dec_hl = dec_hl;
 exports.adc_d8 = adc_d8;
 exports.add_d8 = add_d8;
 exports.sub_d8 = sub_d8;

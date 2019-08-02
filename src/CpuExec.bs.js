@@ -27,7 +27,7 @@ function pretty_flags(cpu) {
 }
 
 function trace(cpu, instruction) {
-  console.log(Curry._8(Printf.sprintf(/* Format */[
+  console.log(Curry.app(Printf.sprintf(/* Format */[
                 /* String_literal */Block.__(11, [
                     "AF:",
                     /* Int */Block.__(4, [
@@ -88,9 +88,42 @@ function trace(cpu, instruction) {
                                                                         /* No_precision */0,
                                                                         /* String_literal */Block.__(11, [
                                                                             ": ",
-                                                                            /* String */Block.__(2, [
-                                                                                /* No_padding */0,
-                                                                                /* End_of_format */0
+                                                                            /* Int */Block.__(4, [
+                                                                                /* Int_X */8,
+                                                                                /* Lit_padding */Block.__(0, [
+                                                                                    /* Zeros */2,
+                                                                                    2
+                                                                                  ]),
+                                                                                /* No_precision */0,
+                                                                                /* Char_literal */Block.__(12, [
+                                                                                    /* " " */32,
+                                                                                    /* Int */Block.__(4, [
+                                                                                        /* Int_X */8,
+                                                                                        /* Lit_padding */Block.__(0, [
+                                                                                            /* Zeros */2,
+                                                                                            2
+                                                                                          ]),
+                                                                                        /* No_precision */0,
+                                                                                        /* Char_literal */Block.__(12, [
+                                                                                            /* " " */32,
+                                                                                            /* Int */Block.__(4, [
+                                                                                                /* Int_X */8,
+                                                                                                /* Lit_padding */Block.__(0, [
+                                                                                                    /* Zeros */2,
+                                                                                                    2
+                                                                                                  ]),
+                                                                                                /* No_precision */0,
+                                                                                                /* String_literal */Block.__(11, [
+                                                                                                    "  ",
+                                                                                                    /* String */Block.__(2, [
+                                                                                                        /* No_padding */0,
+                                                                                                        /* End_of_format */0
+                                                                                                      ])
+                                                                                                  ])
+                                                                                              ])
+                                                                                          ])
+                                                                                      ])
+                                                                                  ])
                                                                               ])
                                                                           ])
                                                                       ])
@@ -107,8 +140,20 @@ function trace(cpu, instruction) {
                           ])
                       ])
                   ]),
-                "AF:%04X BC:%04X DE:%04X HL:%04X SP:%04X [%s] %04X: %s"
-              ]), Cpu$Yobml.get_register16(cpu, /* AF */0), Cpu$Yobml.get_register16(cpu, /* BC */1), Cpu$Yobml.get_register16(cpu, /* DE */2), Cpu$Yobml.get_register16(cpu, /* HL */3), cpu[/* sp */0], pretty_flags(cpu), cpu[/* pc */1], Instructions$Yobml.pretty(instruction)));
+                "AF:%04X BC:%04X DE:%04X HL:%04X SP:%04X [%s] %04X: %02X %02X %02X  %s"
+              ]), [
+            Cpu$Yobml.get_register16(cpu, /* AF */0),
+            Cpu$Yobml.get_register16(cpu, /* BC */1),
+            Cpu$Yobml.get_register16(cpu, /* DE */2),
+            Cpu$Yobml.get_register16(cpu, /* HL */3),
+            cpu[/* sp */0],
+            pretty_flags(cpu),
+            cpu[/* pc */1],
+            Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]),
+            Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1] + 1 | 0),
+            Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1] + 2 | 0),
+            Instructions$Yobml.pretty(instruction)
+          ]));
   return /* () */0;
 }
 

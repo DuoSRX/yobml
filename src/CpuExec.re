@@ -7,7 +7,7 @@ let pretty_flags = (cpu) => {
 }
 
 let trace = (cpu, instruction) => {
-  Js.log(sprintf("AF:%04X BC:%04X DE:%04X HL:%04X SP:%04X [%s] %04X: %s",
+  Js.log(sprintf("AF:%04X BC:%04X DE:%04X HL:%04X SP:%04X [%s] %04X: %02X %02X %02X  %s",
     get_register16(cpu, AF),
     get_register16(cpu, BC),
     get_register16(cpu, DE),
@@ -15,6 +15,9 @@ let trace = (cpu, instruction) => {
     cpu.sp,
     pretty_flags(cpu),
     cpu.pc,
+    Memory.load(cpu.memory, cpu.pc),
+    Memory.load(cpu.memory, cpu.pc + 1),
+    Memory.load(cpu.memory, cpu.pc + 2),
     Instructions.pretty(instruction))
   );
 }
