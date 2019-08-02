@@ -9,7 +9,7 @@ type t = {
   registers: Registers.t,
   memory: Memory.t,
 
-  mutable serial: list(char) // for debugging purpose only
+  mutable serial: list(string) // for debugging purpose only
 }
 
 type cpu_flag = Z | N | H | C

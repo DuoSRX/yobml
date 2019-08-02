@@ -9,7 +9,7 @@ var Caml_string = require("bs-platform/lib/js/caml_string.js");
 var CpuExec$Yobml = require("./CpuExec.bs.js");
 
 function make(param) {
-  var file = Fs.readFileSync("./roms/tetris.gb", "binary");
+  var file = Fs.readFileSync("./roms/01-special.gb", "binary");
   var rom = $$Array.mapi((function (n, param) {
           return Caml_string.get(file, n);
         }), Caml_array.caml_make_vect(file.length, 0));
@@ -27,7 +27,7 @@ function run($$console$1) {
     var $$console$2 = _console;
     var match = CpuExec$Yobml.step($$console$2[/* cpu */0]);
     var cpu = match[0];
-    if (steps < 1410065408) {
+    if (steps < 100000000) {
       _steps = steps + 1 | 0;
       _console = /* record */[
         /* cpu */cpu,
@@ -35,7 +35,9 @@ function run($$console$1) {
       ];
       continue ;
     } else {
+      CpuExec$Yobml.trace(cpu, match[1]);
       console.log(cpu[/* serial */6]);
+      console.log(cpu[/* memory */5][/* io */5]);
       return /* () */0;
     }
   };

@@ -19,7 +19,7 @@ let make = (~rom) => {
     exram: Array.make(0x2000, 0),
     oam: Array.make(0xA0, 0),
     io: Array.make(0x80, 0),
-    hram: Array.make(0x80, 0)
+    hram: Array.make(0x7F, 0)
   }
 }
 
@@ -41,10 +41,9 @@ let load = (mem, address) => {
   } else if (address >= 0xFEA0 && address <= 0xFEFF) {
     0 // Some games try to read/write here. No-op
   } else if (address >= 0xFF00 && address < 0xFF80) {
-    0x94
-    // mem.io[address land 0x7F]
+    mem.io[address land 0x7F]
   } else if (address >= 0xFF80) {
-    mem.hram[address land 0x7F]
+    mem.hram[address land 0x7E]
   } else {
     raise(MemoryAccessUnimplement(sprintf("%04X", address)))
   }
@@ -68,7 +67,7 @@ let store = (mem, address, value) => {
   } else if (address >= 0xFF00 && address < 0xFF80) {
     mem.io[address land 0x7F] = value
   } else if (address >= 0xFF80) {
-    mem.hram[address land 0x7F] = value
+    mem.hram[address land 0x7E] = value
   } else {
     raise(MemoryAccessUnimplement(sprintf("%04X", address)))
   }

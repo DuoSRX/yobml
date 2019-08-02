@@ -28,12 +28,12 @@ let step = (~cpu) => {
   | 0xCB => {
       let byte = Memory.load(cpu.memory, cpu.pc + 1);
       let instruction = Instructions.decode_cb(byte);
-      trace(cpu, instruction);
+      // trace(cpu, instruction);
       ({...cpu, pc: cpu.pc + 2}, instruction)
     }
   | opcode => {
       let instruction = Instructions.decode(opcode);
-      trace(cpu, instruction);
+      // trace(cpu, instruction);
       ({...cpu, pc: cpu.pc + 1}, instruction)
     }
   };

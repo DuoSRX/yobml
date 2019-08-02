@@ -27,7 +27,7 @@ function decode(opcode) {
   var exit = 0;
   switch (opcode) {
     case 0 : 
-        return /* Nop */26;
+        return /* Nop */27;
     case 1 : 
         return /* Ld_nn */Block.__(17, [/* BC */1]);
     case 3 : 
@@ -38,6 +38,8 @@ function decode(opcode) {
         return /* Dec */Block.__(5, [/* B */1]);
     case 6 : 
         return /* Ld_n */Block.__(16, [/* B */1]);
+    case 8 : 
+        return /* Ld_a16_sp */23;
     case 9 : 
         return /* Add_hl_r16 */Block.__(1, [/* BC */1]);
     case 10 : 
@@ -71,7 +73,7 @@ function decode(opcode) {
     case 30 : 
         return /* Ld_n */Block.__(16, [/* E */4]);
     case 31 : 
-        return /* Rra */28;
+        return /* Rra */29;
     case 32 : 
         return /* Jr */Block.__(10, [
                   /* Z */0,
@@ -121,7 +123,7 @@ function decode(opcode) {
     case 53 : 
         return /* Dec_hl */8;
     case 54 : 
-        return /* Ld_hl_d8 */24;
+        return /* Ld_hl_d8 */25;
     case 60 : 
         return /* Inc */Block.__(7, [/* A */0]);
     case 61 : 
@@ -236,7 +238,7 @@ function decode(opcode) {
     case 173 : 
         return /* Xor */Block.__(28, [/* L */7]);
     case 174 : 
-        return /* Xor_hl */33;
+        return /* Xor_hl */34;
     case 175 : 
         return /* Xor */Block.__(28, [/* A */0]);
     case 176 : 
@@ -252,7 +254,7 @@ function decode(opcode) {
     case 181 : 
         return /* Or */Block.__(18, [/* L */7]);
     case 182 : 
-        return /* Or_hl */25;
+        return /* Or_hl */26;
     case 183 : 
         return /* Or */Block.__(18, [/* A */0]);
     case 184 : 
@@ -300,7 +302,7 @@ function decode(opcode) {
                   true
                 ]);
     case 201 : 
-        return /* Ret */27;
+        return /* Ret */28;
     case 202 : 
         return /* JpCond */Block.__(9, [
                   /* Z */0,
@@ -327,7 +329,7 @@ function decode(opcode) {
     case 213 : 
         return /* Push16 */Block.__(20, [/* DE */2]);
     case 214 : 
-        return /* Sub_d8 */31;
+        return /* Sub_d8 */32;
     case 215 : 
         return /* Rst */Block.__(25, [16]);
     case 216 : 
@@ -359,7 +361,7 @@ function decode(opcode) {
     case 234 : 
         return /* Ld_a16_a */22;
     case 238 : 
-        return /* Xor_d8 */32;
+        return /* Xor_d8 */33;
     case 239 : 
         return /* Rst */Block.__(25, [40]);
     case 240 : 
@@ -375,12 +377,11 @@ function decode(opcode) {
     case 247 : 
         return /* Rst */Block.__(25, [48]);
     case 250 : 
-        return /* Ld_a_a16 */23;
+        return /* Ld_a_a16 */24;
     case 251 : 
         return /* Ei */10;
     case 2 : 
     case 7 : 
-    case 8 : 
     case 15 : 
     case 16 : 
     case 21 : 
@@ -580,7 +581,7 @@ function decode_cb(opcode) {
       case 29 : 
           return /* Swap */Block.__(27, [/* L */7]);
       case 30 : 
-          return /* Swap_hl */30;
+          return /* Swap_hl */31;
       case 31 : 
           return /* Swap */Block.__(27, [/* A */0]);
       case 32 : 
@@ -596,7 +597,7 @@ function decode_cb(opcode) {
       case 37 : 
           return /* Srl */Block.__(26, [/* L */7]);
       case 38 : 
-          return /* Srl_hl */29;
+          return /* Srl_hl */30;
       case 39 : 
           return /* Srl */Block.__(26, [/* A */0]);
       
@@ -686,26 +687,28 @@ function pretty(instruction) {
       case 22 : 
           return "LD (a16), A";
       case 23 : 
-          return "LD A,(a16)";
+          return "LD (a16), SP";
       case 24 : 
-          return "LD n, (HL)";
+          return "LD A,(a16)";
       case 25 : 
-          return "OR (HL)";
+          return "LD n, (HL)";
       case 26 : 
-          return "NOP";
+          return "OR (HL)";
       case 27 : 
-          return "RET";
+          return "NOP";
       case 28 : 
-          return "RRA";
+          return "RET";
       case 29 : 
-          return "SRL (HL)";
+          return "RRA";
       case 30 : 
-          return "SWAP (HL)";
+          return "SRL (HL)";
       case 31 : 
-          return "SUB d8";
+          return "SWAP (HL)";
       case 32 : 
-          return "XOR d8";
+          return "SUB d8";
       case 33 : 
+          return "XOR d8";
+      case 34 : 
           return "XOR A, (HL)";
       
     }
