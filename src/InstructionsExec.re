@@ -10,7 +10,6 @@ let load = (cpu, address) => Memory.load(cpu.memory, address)
 let load16 = (cpu, address) => Memory.load16(cpu.memory, address)
 let store = (cpu, address, value) => {
   if (address == 0xFF01 || address == 0xFF02) {
-    raise(FooEx);
     cpu.serial = [char_of_int(value), ...cpu.serial];
   }
   Memory.store(cpu.memory, address, value)
@@ -19,6 +18,18 @@ let store16 = (cpu, address, value) => Memory.store16(cpu.memory, address, value
 
 let load_next = (cpu) => load(cpu, cpu.pc)
 let load_next16 = (cpu) => load16(cpu, cpu.pc)
+
+let storage_load = (cpu, storage) => switch(storage) {
+  | Register(r) => get_register(cpu, r)
+  | Register16(r) => get_register16(cpu, r)
+  | Pointer(r) => get_register16(cpu, r) |> load(cpu)
+};
+
+let storage_store = (cpu, storage, value) => switch(storage) {
+  | Register(r) => set_register(cpu, r, value)
+  | Register16(r) => set_register16(cpu, r, value)
+  | Pointer(r) => get_register16(cpu, r)->store(cpu, _, value)
+};
 
 // Call after every instruction to change the PC
 // and increase the cycle count
@@ -47,6 +58,16 @@ let ret = (cpu) => {
   let pc = load16(cpu, cpu.sp)
   let sp = wrapping_add16(cpu.sp, 2)
   bump({...cpu, sp}, pc, 16)
+}
+
+let ret_cond = (cpu, flag, condition) => {
+  if (has_flag(cpu, flag) == condition) {
+     let pc = load16(cpu, cpu.sp)
+     let sp = wrapping_add16(cpu.sp, 2)
+    bump({...cpu, sp}, pc, 20)
+  } else {
+    bump(cpu, cpu.pc + 2, 8)
+  }
 }
 
 let cp_n = (cpu) => {
@@ -182,6 +203,18 @@ let dec = (cpu, r) => {
   bump(cpu, cpu.pc, 4)
 }
 
+let adc_d8 = (cpu) => {
+  let a = get_register(cpu, A)
+  let b = load_next(cpu)
+  let carry = has_flag(cpu, C) ? 1 : 0
+  let result = a + b + carry
+  set_register(cpu, A, result land 0xFF)
+  let c = result > 0xFF
+  let h = (a land 0xF) + (b land 0xF) + carry > 0xF
+  set_flags(cpu, ~z=(result == 0), ~n=false, ~c, ~h, ())
+  bump(cpu, cpu.pc + 1, 8)
+}
+
 let add_d8 = (cpu) => {
   let a = get_register(cpu, A)
   let b = load_next(cpu)
@@ -247,6 +280,15 @@ let ora = (cpu, r) => {
   bump(cpu, cpu.pc, 4)
 }
 
+let or_hl = (cpu) => {
+  let a = get_register(cpu, A)
+  let b = get_register16(cpu, HL) |> load(cpu)
+  let value = a lor b
+  set_register(cpu, A, value)
+  set_flags(cpu, ~z=(value == 0), ~n=false, ~c=false, ~h=false, ())
+  bump(cpu, cpu.pc, 8)
+}
+
 let push16 = (cpu, r16) => {
   let sp = wrapping_add16(cpu.sp, -2)
   store16(cpu, sp, get_register16(cpu, r16))
@@ -260,13 +302,58 @@ let pop16 = (cpu, r16) => {
   bump({...cpu, sp}, cpu.pc, 12)
 }
 
-let xor = (cpu, r1, r2) => {
-  let a = get_register(cpu, r1);
-  let b = get_register(cpu, r2);
+let rr = (cpu, storage) => {
+  let a = storage_load(cpu, storage)
+  let carry = has_flag(cpu, C) ? 1 : 0
+  let c = (a land 1) == 1
+  let value = (carry lsl 7) lor (a lsr 1)
+  storage_store(cpu, storage, value)
+  set_flags(cpu, ~n=false, ~h=false, ~z=(value == 0), ~c , ())
+  bump(cpu, cpu.pc, 8)
+}
+
+let rra = (cpu) => {
+  let a = get_register(cpu, A)
+  let carry = has_flag(cpu, C) ? 1 : 0
+  let c = (a land 1) == 1
+  let value = (carry lsl 7) lor (a lsr 1)
+  set_register(cpu, A, value)
+  set_flags(cpu, ~n=false, ~h=false, ~z=false, ~c , ())
+  bump(cpu, cpu.pc, 8)
+}
+
+let srl = (cpu, r) => {
+  let a = get_register(cpu, r)
+  let result = a lsr 1
+  set_register(cpu, r, result)
+  set_flags(cpu, ~h=false, ~n=false, ~z=(result == 0), ~c=(a land 1 == 1), ())
+  bump(cpu, cpu.pc, 8)
+}
+
+let srl_hl = (cpu) => {
+  let a = get_register16(cpu, HL) |> load(cpu)
+  let result = a lsr 1
+  store(cpu, a, result)
+  set_flags(cpu, ~h=false, ~n=false, ~z=(result == 0), ~c=(a land 1 == 1), ())
+  bump(cpu, cpu.pc, 16)
+}
+
+let xor = (cpu, r) => {
+  let a = get_register(cpu, A);
+  let b = get_register(cpu, r);
   let result = a lxor b;
-  set_register(cpu, r1, result);
+  set_register(cpu, A, result);
   set_flags(cpu, ~z=(result == 0), ~n=false, ~h=false, ~c=false, ())
   bump(cpu, cpu.pc, 4)
+}
+
+let xor_d8 = (cpu) => {
+  let a = get_register(cpu, A);
+  let b = load_next(cpu)
+  let result = a lxor b;
+  set_register(cpu, A, result);
+  set_flags(cpu, ~z=(result == 0), ~n=false, ~h=false, ~c=false, ())
+  bump(cpu, cpu.pc + 1, 8)
 }
 
 let xor_hl = (cpu) => {
@@ -280,6 +367,7 @@ let xor_hl = (cpu) => {
 
 let execute = (cpu, instruction) => switch(instruction) {
   | Nop => cpu
+  | Adc_d8 => adc_d8(cpu)
   | Add_d8 => add_d8(cpu)
   | And_d8 => and_d8(cpu)
   | Call => call(cpu)
@@ -311,10 +399,17 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Jr_e8 => jr_e8(cpu)
   | Jr(flag, cond) => jr(cpu, flag, cond)
   | Or(r) => ora(cpu, r)
+  | Or_hl => or_hl(cpu)
   | Pop16(r) => pop16(cpu, r)
   | Push16(r) => push16(cpu, r)
   | Ret => ret(cpu)
+  | RetCond(flag, cond) => ret_cond(cpu, flag, cond)
+  | Rr(s) => rr(cpu, s)
+  | Rra => rra(cpu)
+  | Srl(r) => srl(cpu, r)
+  | Srl_hl => srl_hl(cpu)
   | Sub_d8 => sub_d8(cpu)
-  | Xor(r1, r2) => xor(cpu, r1, r2)
+  | Xor(r) => xor(cpu, r)
+  | Xor_d8 => xor_d8(cpu)
   | Xor_hl => xor_hl(cpu)
 }

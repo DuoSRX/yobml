@@ -5,7 +5,13 @@ open Registers
 // Order is important.
 let regs = [|B, C, D, E, H, L, F, A|];
 
+type storage =
+  | Register(register)
+  | Register16(register16)
+  | Pointer(register16)
+
 type instruction =
+  | Adc_d8
   | Add_d8
   | And_d8
   // | And(register)
@@ -38,13 +44,20 @@ type instruction =
   | Ld_hl_d8
   | Ld_nn(register16)
   | Or(register)
+  | Or_hl
   | Nop
   | Pop16(register16)
   // | Push(register)
   | Push16(register16)
   | Ret
+  | RetCond(Cpu.cpu_flag, bool)
+  | Rra
+  | Rr(storage)
+  | Srl(register)
+  | Srl_hl
   | Sub_d8
-  | Xor(register, register)
+  | Xor(register)
+  | Xor_d8
   | Xor_hl
 
 exception OpcodeNotImplemented(string);
@@ -77,6 +90,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x18 => Jr_e8
   | 0x1A => Ld_a_r16(DE)
   | 0x1C => Inc(E)
+  | 0x1F => Rra
   | 0x0C => Inc(C)
   | 0x0D => Dec(C)
   | 0x0E => Ld_n(C)
@@ -86,53 +100,70 @@ let decode = (opcode) => switch(opcode) {
   | 0x22 => Ldi_hl_a
   | 0x23 => Inc16(HL)
   | 0x24 => Inc(H)
+  | 0x25 => Dec(H)
   | 0x26 => Ld_n(H)
   | 0x28 => Jr(Z, true)
   | 0x2A => Ldi_a_hl
   | 0x2C => Inc(L)
   | 0x2D => Dec(L)
   | 0x2E => Ld_n(L)
+  | 0x30 => Jr(C, false)
   | 0x31 => Ld_sp
   | 0x32 => Ldd_hl_a
   | 0x36 => Ld_hl_d8
+  | 0x3D => Dec(A)
   | 0x3E => Ld_n(A)
   | 0x46 => Ld_r_hl(B)
   | 0x4E => Ld_r_hl(E)
   | 0x56 => Ld_r_hl(D)
+  | 0x70 => Ld_hl_r(B)
+  | 0x71 => Ld_hl_r(C)
+  | 0x72 => Ld_hl_r(D)
+  | 0x73 => Ld_hl_r(E)
+  | 0x74 => Ld_hl_r(H)
+  | 0x75 => Ld_hl_r(L)
+  // 0x75 => HALT
   | 0x77 => Ld_hl_r(A)
   // | 0x41 => Ld_rr(B, C)
   // | 0x42 => Ld_rr(B, D)
   // | 0x47 => Ld_rr(B, A)
-  | 0xA8 => Xor(A, B)
-  | 0xA9 => Xor(A, C)
-  | 0xAA => Xor(A, D)
-  | 0xAB => Xor(A, E)
-  | 0xAC => Xor(A, H)
-  | 0xAD => Xor(A, L)
+  | 0xA8 => Xor(B)
+  | 0xA9 => Xor(C)
+  | 0xAA => Xor(D)
+  | 0xAB => Xor(E)
+  | 0xAC => Xor(H)
+  | 0xAD => Xor(L)
   | 0xAE => Xor_hl
-  | 0xAF => Xor(A, A)
+  | 0xAF => Xor(A)
   | 0xB0 => Or(B)
   | 0xB1 => Or(C)
   | 0xB2 => Or(D)
   | 0xB3 => Or(E)
   | 0xB4 => Or(H)
   | 0xB5 => Or(L)
+  | 0xB6 => Or_hl
   | 0xB7 => Or(A)
+  | 0xC0 => RetCond(Z, false)
   | 0xC1 => Pop16(BC)
   | 0xC3 => Jp
   | 0xC4 => CallCond(Z, false)
   | 0xC5 => Push16(BC)
   | 0xC6 => Add_d8
+  | 0xC8 => RetCond(Z, true)
   | 0xC9 => Ret
+  | 0xCE => Adc_d8
   | 0xCD => Call
+  | 0xD0 => RetCond(C, false)
   | 0xD1 => Pop16(DE)
   | 0xD5 => Push16(DE)
   | 0xD6 => Sub_d8
+  | 0xD8 => RetCond(C, true)
   | 0xE0 => Ld_write_io_n
   | 0xE1 => Pop16(HL)
   | 0xE5 => Push16(HL)
   | 0xE6 => And_d8
   | 0xEA => Ld_a16_a
+  | 0xEE => Xor_d8
   | 0xF1 => Pop16(AF)
   | 0xF5 => Push16(AF)
   | 0xFA => Ld_a_a16
@@ -146,11 +177,27 @@ let decode = (opcode) => switch(opcode) {
 }
 
 let decode_cb = (opcode) => switch(opcode) {
-  | 0 => Nop
+  | 0x18 => Rr(Register(B))
+  | 0x19 => Rr(Register(C))
+  | 0x1A => Rr(Register(D))
+  | 0x1B => Rr(Register(E))
+  | 0x1C => Rr(Register(H))
+  | 0x1D => Rr(Register(L))
+  | 0x1E => Rr(Pointer(HL))
+  | 0x1F => Rr(Register(A))
+  | 0x38 => Srl(B)
+  | 0x39 => Srl(C)
+  | 0x3A => Srl(D)
+  | 0x3B => Srl(E)
+  | 0x3C => Srl(H)
+  | 0x3D => Srl(L)
+  | 0x3E => Srl_hl
+  | 0x3F => Srl(A)
   | n => raise(CBOpcodeNotImplemented(sprintf("0x%02X", n)))
 }
 
 let pretty = (instruction) => switch(instruction) {
+  | Adc_d8 => "ADC d8"
   | Add_d8 => "ADD A, d8"
   | And_d8 => "AND d8"
   | Call => "CALL d16"
@@ -190,12 +237,25 @@ let pretty = (instruction) => switch(instruction) {
   | Jr(C, true) => "JR C, nn"
   | Jr(_, _) => "Unreachable"
   | Or(r) => sprintf("OR %s", to_string(r))
+  | Or_hl => "OR (HL)"
   | Pop16(r) => sprintf("POP %s", to_string16(r))
   // | Push(r) => sprintf("PUSH %s", to_string(r))
   | Push16(r) => sprintf("PUSH %s", to_string16(r))
   | Ret => "RET"
+  | RetCond(Z, false) => "RET NZ"
+  | RetCond(C, false) => "RET NC"
+  | RetCond(Z, true) => "RET Z"
+  | RetCond(C, true) => "RET C"
+  | RetCond(_,_) => "Unreachable RET"
+  | Rr(Register(r)) => sprintf("RR %s", to_string(r))
+  | Rr(Register16(r)) => sprintf("RR %s", to_string16(r))
+  | Rr(Pointer(r)) => sprintf("RR (%s)", to_string16(r))
+  | Rra => "RRA"
+  | Srl(r) => sprintf("SRL %s", to_string(r))
+  | Srl_hl => "SRL (HL)"
   | Sub_d8 => "SUB d8"
-  | Xor(r1, r2) => sprintf("XOR %s %s", to_string(r1), to_string(r2))
+  | Xor(r) => sprintf("XOR %s", to_string(r))
+  | Xor_d8 => "XOR d8"
   | Xor_hl => "XOR A, (HL)"
   | Nop => "NOP"
   // | _ => "???"
