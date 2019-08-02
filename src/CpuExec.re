@@ -12,7 +12,7 @@ let trace = (cpu, instruction) => {
     get_register16(cpu, BC),
     get_register16(cpu, DE),
     get_register16(cpu, HL),
-    cpu.sp,
+    get_register16(cpu, SP),
     pretty_flags(cpu),
     cpu.pc,
     Memory.load(cpu.memory, cpu.pc),

@@ -8,17 +8,18 @@ type t = {
   mutable f : int,
   mutable h : int,
   mutable l : int,
+  mutable sp : int,
 }
 
 let make = () => {
-  { a: 1, b: 0, c: 0x13, d: 0, e: 0xD8, f: 0xB0, h: 1, l: 0x4D };
+  { a: 1, b: 0, c: 0x13, d: 0, e: 0xD8, f: 0xB0, h: 1, l: 0x4D, sp: 0xFFFE };
 }
 
 type register =
   | A | B | C | D | E | F | H | L;
 
 type register16 =
-  | AF | BC | DE | HL;
+  | AF | BC | DE | HL | SP;
 
 let get = (regs, reg) => switch(reg) {
   | A => regs.a
@@ -47,6 +48,7 @@ let get16 = (regs, reg) => switch(reg) {
   | BC => (regs.b lsl 8) lor regs.c
   | DE => (regs.d lsl 8) lor regs.e
   | HL => (regs.h lsl 8) lor regs.l
+  | SP => regs.sp
 }
 
 let set16 = (regs, reg, value) => {
@@ -57,6 +59,7 @@ let set16 = (regs, reg, value) => {
   | BC => regs.b = hi; regs.c = lo
   | DE => regs.d = hi; regs.e = lo
   | HL => regs.h = hi; regs.l = lo
+  | SP => regs.sp = value
   }
 }
 
@@ -76,4 +79,5 @@ let to_string16 = (reg) => switch(reg) {
   | BC => "BC"
   | DE => "DE"
   | HL => "HL"
+  | SP => "SP"
 }

@@ -9,8 +9,9 @@ let wrapping_add16 = (a, b) => (a + b) land 0xFFFF
 let load = (cpu, address) => Memory.load(cpu.memory, address)
 let load16 = (cpu, address) => Memory.load16(cpu.memory, address)
 let store = (cpu, address, value) => {
-  if (address == 0xFF01 || address == 0xFF02) {
+  if (address == 0xFF01) {  //|| address == 0xFF02) {
     cpu.serial = [String.make(1, Char.chr(value)), ...cpu.serial];
+    // print_char(Char.chr(value))
   }
   Memory.store(cpu.memory, address, value)
 }
@@ -41,9 +42,10 @@ let nop = (cpu) => bump(cpu, cpu.pc, 4)
 
 let call = (cpu) => {
   let address = load_next16(cpu)
-  let sp = wrapping_add16(cpu.sp, -2)
+  let sp = wrapping_add16(get_register16(cpu, SP), -2)
   store16(cpu, sp, cpu.pc + 2)
-  bump({...cpu, sp}, address, 24)
+  set_register16(cpu, SP, sp)
+  bump(cpu, address, 24)
 }
 
 let call_cond = (cpu, flag, condition) => {
@@ -55,16 +57,25 @@ let call_cond = (cpu, flag, condition) => {
 }
 
 let ret = (cpu) => {
-  let pc = load16(cpu, cpu.sp)
-  let sp = wrapping_add16(cpu.sp, 2)
-  bump({...cpu, sp}, pc, 16)
+  let sp = get_register16(cpu, SP)
+  let pc = load16(cpu, sp)
+  wrapping_add16(sp, 2) |> set_register16(cpu, SP)
+  bump(cpu, pc, 16)
+}
+
+let reti = (cpu) => {
+  let sp = get_register16(cpu, SP)
+  let pc = load16(cpu, sp)
+  wrapping_add16(sp, 2) |> set_register16(cpu, SP)
+  bump({...cpu, ime: true}, pc, 16)
 }
 
 let ret_cond = (cpu, flag, condition) => {
   if (has_flag(cpu, flag) == condition) {
-     let pc = load16(cpu, cpu.sp)
-     let sp = wrapping_add16(cpu.sp, 2)
-    bump({...cpu, sp}, pc, 20)
+    let sp = get_register16(cpu, SP)
+    let pc = load16(cpu, sp)
+    wrapping_add16(sp, 2) |> set_register16(cpu, SP)
+    bump(cpu, pc, 20)
   } else {
     bump(cpu, cpu.pc, 8)
   }
@@ -99,6 +110,11 @@ let and_hl = (cpu) => {
   bump(cpu, cpu.pc, 8)
 }
 
+let ccf = (cpu) => {
+  set_flags(cpu, ~h=false, ~n=false, ~c=(!has_flag(cpu, C)), ())
+  bump(cpu, cpu.pc, 4)
+}
+
 let cp = (cpu, r) => {
   let a = get_register(cpu, A);
   let b = get_register(cpu, r)
@@ -121,16 +137,30 @@ let cpl = (cpu) => {
   bump(cpu, cpu.pc, 4)
 }
 
+exception NoDAA
+
 let daa = (cpu) => {
-  // TODO: Implement whatever the hell this is supposed to do
+  // raise(NoDAA)
+  // let a = get_register(cpu, A)
+  // let adj1 = has_flag(cpu, H) ? 0x06 : 0
+  // let adj2 = adj1 lor (has_flag(cpu, C) ? 0x60 : 0)
+  // let adj3 = if (has_flag(cpu, N)) {
+  //   wrapping_add(a, -adj2)
+  // } else {
+
+  // }
+
+
   bump(cpu, cpu.pc, 4)
 }
 
 let di = (cpu) =>
   bump({...cpu, ime: false}, cpu.pc, 4)
 
-let ei = (cpu) =>
+let ei = (cpu) => {
+  // load(cpu, 0xFFFF) |> store(cpu, 0xFF0F)
   bump({...cpu, ime: true}, cpu.pc, 4)
+}
 
 let ld_rr = (cpu, r1, r2) => {
   get_register(cpu, r2) |> set_register(cpu, r1)
@@ -150,6 +180,19 @@ let ld_nn = (cpu, r16) => {
 let ld_hl_d8 = (cpu) => {
   let address = get_register16(cpu, HL)
   load_next(cpu) |> store(cpu, address)
+  bump(cpu, cpu.pc + 1, 12)
+}
+
+// FIXME: this fails Blargg
+let ld_hl_sp_e8 = (cpu) => {
+  let a = get_register16(cpu, SP)
+  let b = load_next(cpu)
+  let b = b > 0x80 ? -(0x80 - (b - 0x80)) : b
+  let value = wrapping_add16(a, b)
+  let h = ((a land 0xF) + (a land 0xF)) > 0xF
+  let c = ((a land 0xFF) + (b land 0xFF)) > 0xFF
+  set_flags(cpu, ~h, ~c, ~n=false, ~z=false, ())
+  set_register16(cpu, HL, value)
   bump(cpu, cpu.pc + 1, 12)
 }
 
@@ -205,6 +248,11 @@ let ld_r_hl = (cpu, r) => {
   bump(cpu, cpu.pc, 8)
 }
 
+let ld_sp_hl = (cpu) => {
+  get_register16(cpu, HL) |> set_register16(cpu, SP)
+  bump(cpu, cpu.pc, 8)
+}
+
 let ld_read_io_n = (cpu) => {
   let n = load_next(cpu);
   let byte = if (n == 0x44) {
@@ -243,8 +291,8 @@ let ld_write_io_c = (cpu) => {
 }
 
 let ld_sp = (cpu) => {
-  let word = load_next16(cpu)
-  bump({...cpu, sp:word}, cpu.pc + 2, 12)
+  load_next16(cpu) |> set_register16(cpu, SP)
+  bump(cpu, cpu.pc + 2, 12)
 }
 
 let ld_a16_a = (cpu) => {
@@ -255,7 +303,7 @@ let ld_a16_a = (cpu) => {
 
 let ld_a16_sp = (cpu) => {
   let address = load_next16(cpu)
-  store16(cpu, address, cpu.sp)
+  get_register16(cpu, SP) |> store16(cpu, address)
   bump(cpu, cpu.pc + 2, 20)
 }
 
@@ -285,7 +333,7 @@ let dec = (cpu, r) => {
 
 let dec16 = (cpu, r) => {
   let reg = get_register16(cpu, r);
-  let value = wrapping_add(reg, -1);
+  let value = wrapping_add16(reg, -1);
   set_register16(cpu, r, value);
   bump(cpu, cpu.pc, 8)
 }
@@ -293,11 +341,11 @@ let dec16 = (cpu, r) => {
 let dec_hl = (cpu) => {
   let address = get_register16(cpu, HL)
   let a = load(cpu, address)
-  let value = wrapping_add(a, -1);
+  let value = wrapping_add16(a, -1);
   store(cpu, address, value);
-  let h = (value land 0xF) > (a land 0xF);
-  set_flags(cpu, ~z=(value == 0), ~n=true, ~h, ());
-  bump(cpu, cpu.pc, 12)
+  // let h = (value land 0xF) > (a land 0xF);
+  // set_flags(cpu, ~z=(value == 0), ~n=true, ~h, ());
+  bump(cpu, cpu.pc, 8)
 }
 
 let adc_d8 = (cpu) => {
@@ -331,6 +379,22 @@ let add_hl_r16 = (cpu, r) => {
   set_register16(cpu, HL, result land 0xFFFF)
   set_flags(cpu, ~h, ~c=(result > 0xFFFF), ~n=false, ())
   bump(cpu, cpu.pc, 8)
+}
+
+// FIXME: this fails blargg
+let add_sp_e8 = (cpu) => {
+  let a = get_register16(cpu, SP)
+  let b = load_next(cpu)
+  // let b = b > 0x80 ? -(0x80 - (b - 0x80)) : b
+  // let b = b > 0x7F ? -(0xFF - b) : b
+  // let b = b > 0x7F ? -((lnot(b) + 1) land 0xFF) : b
+  let b = (b land 0x80) > 0 ? b - 0x100 : b
+  let h = ((a land 0xF) + (a land 0xF)) > 0xF
+  let c = ((a land 0xFF) + (b land 0xFF)) > 0xFF
+  set_flags(cpu, ~h, ~c, ~n=false, ~z=false, ())
+  let sp = wrapping_add16(a, b)
+  set_register16(cpu, SP, sp)
+  bump(cpu, cpu.pc + 1, 16)
 }
 
 let sub_d8 = (cpu) => {
@@ -420,16 +484,29 @@ let or_hl = (cpu) => {
 }
 
 let push16 = (cpu, r16) => {
-  let sp = wrapping_add16(cpu.sp, -2)
+  let sp = get_register16(cpu, SP)->wrapping_add16(_, -2)
   store16(cpu, sp, get_register16(cpu, r16))
-  bump({...cpu, sp}, cpu.pc, 16)
+  set_register16(cpu, SP, sp)
+  bump(cpu, cpu.pc, 16)
 }
 
 let pop16 = (cpu, r16) => {
-  let value = load16(cpu, cpu.sp)
-  let sp = wrapping_add16(cpu.sp, 2)
+  let value = load16(cpu, get_register16(cpu, SP))
+  let sp = get_register16(cpu, SP)->wrapping_add16(_, 2)
   set_register16(cpu, r16, value)
-  bump({...cpu, sp}, cpu.pc, 12)
+  set_register16(cpu, SP, sp)
+  bump(cpu, cpu.pc, 12)
+}
+
+let pop_af = (cpu) => {
+  let af = load16(cpu, get_register16(cpu, SP)) land 0xFFF0
+  let sp = get_register16(cpu, SP)->wrapping_add16(_, 2)
+  set_register16(cpu, AF, af)
+  set_register16(cpu, SP, sp)
+  set_flags(cpu,
+    ~z=(af land 0x80 > 0), ~n=(af land 0x40 > 0),
+    ~h=(af land 0x20 > 0), ~c=(af land 0x10 > 0), ())
+  bump(cpu, cpu.pc, 12)
 }
 
 let res = (cpu, bit, r) => {
@@ -466,9 +543,15 @@ let rra = (cpu) => {
 }
 
 let rst = (cpu, n) => {
-  let sp = wrapping_add16(cpu.sp, -2)
+  let sp = wrapping_add16(get_register16(cpu, SP), -2)
   store16(cpu, sp, cpu.pc)
-  bump({...cpu, sp}, n, 16)
+  set_register16(cpu, SP, sp)
+  bump(cpu, n, 16)
+}
+
+let scf = (cpu) => {
+  set_flags(cpu, ~c=true, ~h=false, ~n=false, ())
+  bump(cpu, cpu.pc, 4)
 }
 
 let srl = (cpu, r) => {
@@ -540,12 +623,14 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Add(r) => add(cpu, r)
   | Add_d8 => add_d8(cpu)
   | Add_hl_r16(r) => add_hl_r16(cpu, r)
+  | Add_sp_e8 => add_sp_e8(cpu)
   | Adc_d8 => adc_d8(cpu)
   | And(r) => and_(cpu, r)
   | And_hl => and_hl(cpu)
   | And_d8 => and_d8(cpu)
   | Call => call(cpu)
   | CallCond(flag ,cond) => call_cond(cpu, flag, cond)
+  | Ccf => ccf(cpu)
   | Cp(r) => cp(cpu, r)
   | Cp_n => cp_n(cpu)
   | Cpl => cpl(cpu)
@@ -574,6 +659,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ld_rr(r1, r2) => ld_rr(cpu, r1, r2)
   | Ld_n(r) => ld_n(cpu, r)
   | Ld_hl_d8 => ld_hl_d8(cpu)
+  | Ld_hl_sp_e8 => ld_hl_sp_e8(cpu)
   | Ld_r_hl(r) => ld_r_hl(cpu, r)
   | Ld_hl_r(r) => ld_hl_r(cpu, r)
   | Ld_nn(r) => ld_nn(cpu, r)
@@ -581,17 +667,21 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ldi_a_hl => ldi_a_hl(cpu)
   | Ldi_hl_a => ldi_hl_a(cpu)
   | Ld_a16_a => ld_a16_a(cpu)
+  | Ld_sp_hl => ld_sp_hl(cpu)
   | Or(r) => ora(cpu, r)
   | Or_hl => or_hl(cpu)
   | Pop16(r) => pop16(cpu, r)
+  | Pop_af => pop_af(cpu)
   | Push16(r) => push16(cpu, r)
   | Res(n, r) => res(cpu, n, r)
   | Res_hl(n) => res_hl(cpu, n)
   | Ret => ret(cpu)
+  | Reti => reti(cpu)
   | RetCond(flag, cond) => ret_cond(cpu, flag, cond)
   | Rr(s) => rr(cpu, s)
   | Rra => rra(cpu)
   | Rst(n) => rst(cpu, n)
+  | Scf => scf(cpu)
   | Srl(r) => srl(cpu, r)
   | Srl_hl => srl_hl(cpu)
   | Swap(r) => swap(cpu, r)

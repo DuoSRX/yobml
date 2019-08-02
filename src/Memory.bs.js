@@ -15,7 +15,7 @@ function make(rom) {
           /* exram */Caml_array.caml_make_vect(8192, 0),
           /* oam */Caml_array.caml_make_vect(160, 0),
           /* io */Caml_array.caml_make_vect(128, 0),
-          /* hram */Caml_array.caml_make_vect(127, 0)
+          /* hram */Caml_array.caml_make_vect(128, 0)
         ];
 }
 
@@ -39,7 +39,7 @@ function load(mem, address) {
   } else if (address >= 65280 && address < 65408) {
     return Caml_array.caml_array_get(mem[/* io */5], address & 127);
   } else if (address >= 65408) {
-    return Caml_array.caml_array_get(mem[/* hram */6], address & 126);
+    return Caml_array.caml_array_get(mem[/* hram */6], address & 127);
   } else {
     throw [
           MemoryAccessUnimplement,
@@ -77,7 +77,7 @@ function store(mem, address, value) {
   } else if (address >= 65280 && address < 65408) {
     return Caml_array.caml_array_set(mem[/* io */5], address & 127, value);
   } else if (address >= 65408) {
-    return Caml_array.caml_array_set(mem[/* hram */6], address & 126, value);
+    return Caml_array.caml_array_set(mem[/* hram */6], address & 127, value);
   } else {
     throw [
           MemoryAccessUnimplement,

@@ -19,33 +19,33 @@ function wrapping_add16(a, b) {
 }
 
 function load(cpu, address) {
-  return Memory$Yobml.load(cpu[/* memory */5], address);
+  return Memory$Yobml.load(cpu[/* memory */4], address);
 }
 
 function load16(cpu, address) {
-  return Memory$Yobml.load16(cpu[/* memory */5], address);
+  return Memory$Yobml.load16(cpu[/* memory */4], address);
 }
 
 function store(cpu, address, value) {
-  if (address === 65281 || address === 65282) {
-    cpu[/* serial */6] = /* :: */[
+  if (address === 65281) {
+    cpu[/* serial */5] = /* :: */[
       $$String.make(1, Char.chr(value)),
-      cpu[/* serial */6]
+      cpu[/* serial */5]
     ];
   }
-  return Memory$Yobml.store(cpu[/* memory */5], address, value);
+  return Memory$Yobml.store(cpu[/* memory */4], address, value);
 }
 
 function store16(cpu, address, value) {
-  return Memory$Yobml.store16(cpu[/* memory */5], address, value);
+  return Memory$Yobml.store16(cpu[/* memory */4], address, value);
 }
 
 function load_next(cpu) {
-  return Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  return Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
 }
 
 function load_next16(cpu) {
-  return Memory$Yobml.load16(cpu[/* memory */5], cpu[/* pc */1]);
+  return Memory$Yobml.load16(cpu[/* memory */4], cpu[/* pc */0]);
 }
 
 function storage_load(cpu, storage) {
@@ -56,7 +56,7 @@ function storage_load(cpu, storage) {
         return Cpu$Yobml.get_register16(cpu, storage[0]);
     case 2 : 
         var address = Cpu$Yobml.get_register16(cpu, storage[0]);
-        return Memory$Yobml.load(cpu[/* memory */5], address);
+        return Memory$Yobml.load(cpu[/* memory */4], address);
     
   }
 }
@@ -75,72 +75,64 @@ function storage_store(cpu, storage, value) {
 
 function bump(cpu, pc, cycles) {
   return /* record */[
-          /* sp */cpu[/* sp */0],
           /* pc */pc,
-          /* cycle */cpu[/* cycle */2] + cycles | 0,
-          /* ime */cpu[/* ime */3],
-          /* registers */cpu[/* registers */4],
-          /* memory */cpu[/* memory */5],
-          /* serial */cpu[/* serial */6]
+          /* cycle */cpu[/* cycle */1] + cycles | 0,
+          /* ime */cpu[/* ime */2],
+          /* registers */cpu[/* registers */3],
+          /* memory */cpu[/* memory */4],
+          /* serial */cpu[/* serial */5]
         ];
 }
 
 function nop(cpu) {
-  return bump(cpu, cpu[/* pc */1], 4);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function call(cpu) {
-  var address = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* pc */1]);
-  var sp = wrapping_add16(cpu[/* sp */0], -2);
-  store16(cpu, sp, cpu[/* pc */1] + 2 | 0);
-  return bump(/* record */[
-              /* sp */sp,
-              /* pc */cpu[/* pc */1],
-              /* cycle */cpu[/* cycle */2],
-              /* ime */cpu[/* ime */3],
-              /* registers */cpu[/* registers */4],
-              /* memory */cpu[/* memory */5],
-              /* serial */cpu[/* serial */6]
-            ], address, 24);
+  var address = Memory$Yobml.load16(cpu[/* memory */4], cpu[/* pc */0]);
+  var sp = wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), -2);
+  store16(cpu, sp, cpu[/* pc */0] + 2 | 0);
+  Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
+  return bump(cpu, address, 24);
 }
 
 function call_cond(cpu, flag, condition) {
   if (Cpu$Yobml.has_flag(cpu, flag) === condition) {
     return call(cpu);
   } else {
-    return bump(cpu, cpu[/* pc */1] + 2 | 0, 12);
+    return bump(cpu, cpu[/* pc */0] + 2 | 0, 12);
   }
 }
 
 function ret(cpu) {
-  var pc = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* sp */0]);
-  var sp = wrapping_add16(cpu[/* sp */0], 2);
+  var sp = Cpu$Yobml.get_register16(cpu, /* SP */4);
+  var pc = Memory$Yobml.load16(cpu[/* memory */4], sp);
+  Cpu$Yobml.set_register16(cpu, /* SP */4, wrapping_add16(sp, 2));
+  return bump(cpu, pc, 16);
+}
+
+function reti(cpu) {
+  var sp = Cpu$Yobml.get_register16(cpu, /* SP */4);
+  var pc = Memory$Yobml.load16(cpu[/* memory */4], sp);
+  Cpu$Yobml.set_register16(cpu, /* SP */4, wrapping_add16(sp, 2));
   return bump(/* record */[
-              /* sp */sp,
-              /* pc */cpu[/* pc */1],
-              /* cycle */cpu[/* cycle */2],
-              /* ime */cpu[/* ime */3],
-              /* registers */cpu[/* registers */4],
-              /* memory */cpu[/* memory */5],
-              /* serial */cpu[/* serial */6]
+              /* pc */cpu[/* pc */0],
+              /* cycle */cpu[/* cycle */1],
+              /* ime */true,
+              /* registers */cpu[/* registers */3],
+              /* memory */cpu[/* memory */4],
+              /* serial */cpu[/* serial */5]
             ], pc, 16);
 }
 
 function ret_cond(cpu, flag, condition) {
   if (Cpu$Yobml.has_flag(cpu, flag) === condition) {
-    var pc = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* sp */0]);
-    var sp = wrapping_add16(cpu[/* sp */0], 2);
-    return bump(/* record */[
-                /* sp */sp,
-                /* pc */cpu[/* pc */1],
-                /* cycle */cpu[/* cycle */2],
-                /* ime */cpu[/* ime */3],
-                /* registers */cpu[/* registers */4],
-                /* memory */cpu[/* memory */5],
-                /* serial */cpu[/* serial */6]
-              ], pc, 20);
+    var sp = Cpu$Yobml.get_register16(cpu, /* SP */4);
+    var pc = Memory$Yobml.load16(cpu[/* memory */4], sp);
+    Cpu$Yobml.set_register16(cpu, /* SP */4, wrapping_add16(sp, 2));
+    return bump(cpu, pc, 20);
   } else {
-    return bump(cpu, cpu[/* pc */1], 8);
+    return bump(cpu, cpu[/* pc */0], 8);
   }
 }
 
@@ -152,7 +144,7 @@ function add(cpu, r) {
   var h = (result & 15) < (b & 15);
   var c = result < b;
   Cpu$Yobml.set_flags(cpu, result === 0, false, h, c, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function and_(cpu, r) {
@@ -161,17 +153,22 @@ function and_(cpu, r) {
   var result = a & b;
   Cpu$Yobml.set_register(cpu, r, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, true, false, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 4);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function and_hl(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  var b = Memory$Yobml.load(cpu[/* memory */5], address);
+  var b = Memory$Yobml.load(cpu[/* memory */4], address);
   var result = a & b;
   Cpu$Yobml.set_register(cpu, /* A */0, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, true, false, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
+}
+
+function ccf(cpu) {
+  Cpu$Yobml.set_flags(cpu, undefined, false, false, !Cpu$Yobml.has_flag(cpu, /* C */3), /* () */0);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function cp(cpu, r) {
@@ -179,185 +176,195 @@ function cp(cpu, r) {
   var b = Cpu$Yobml.get_register(cpu, r);
   var h = (a & 15) > (b & 15);
   Cpu$Yobml.set_flags(cpu, a === b, true, h, a < b, /* () */0);
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
 function cp_n(cpu) {
   var reg = Cpu$Yobml.get_register(cpu, /* A */0);
-  var $$byte = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  var $$byte = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var h = ($$byte & 15) > (reg & 15);
   Cpu$Yobml.set_flags(cpu, reg === $$byte, true, h, reg < $$byte, /* () */0);
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
 function cpl(cpu) {
   Cpu$Yobml.set_register(cpu, /* A */0, Cpu$Yobml.get_register(cpu, /* A */0) ^ 255);
   Cpu$Yobml.set_flags(cpu, undefined, true, true, undefined, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 4);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
+var NoDAA = Caml_exceptions.create("InstructionsExec-Yobml.NoDAA");
+
 function daa(cpu) {
-  return bump(cpu, cpu[/* pc */1], 4);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function di(cpu) {
   return bump(/* record */[
-              /* sp */cpu[/* sp */0],
-              /* pc */cpu[/* pc */1],
-              /* cycle */cpu[/* cycle */2],
+              /* pc */cpu[/* pc */0],
+              /* cycle */cpu[/* cycle */1],
               /* ime */false,
-              /* registers */cpu[/* registers */4],
-              /* memory */cpu[/* memory */5],
-              /* serial */cpu[/* serial */6]
-            ], cpu[/* pc */1], 4);
+              /* registers */cpu[/* registers */3],
+              /* memory */cpu[/* memory */4],
+              /* serial */cpu[/* serial */5]
+            ], cpu[/* pc */0], 4);
 }
 
 function ei(cpu) {
   return bump(/* record */[
-              /* sp */cpu[/* sp */0],
-              /* pc */cpu[/* pc */1],
-              /* cycle */cpu[/* cycle */2],
+              /* pc */cpu[/* pc */0],
+              /* cycle */cpu[/* cycle */1],
               /* ime */true,
-              /* registers */cpu[/* registers */4],
-              /* memory */cpu[/* memory */5],
-              /* serial */cpu[/* serial */6]
-            ], cpu[/* pc */1], 4);
+              /* registers */cpu[/* registers */3],
+              /* memory */cpu[/* memory */4],
+              /* serial */cpu[/* serial */5]
+            ], cpu[/* pc */0], 4);
 }
 
 function ld_rr(cpu, r1, r2) {
   Cpu$Yobml.set_register(cpu, r1, Cpu$Yobml.get_register(cpu, r2));
-  return bump(cpu, cpu[/* pc */1], 4);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function ld_n(cpu, r) {
-  Cpu$Yobml.set_register(cpu, r, Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]));
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 8);
+  Cpu$Yobml.set_register(cpu, r, Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]));
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
 function ld_nn(cpu, r16) {
-  Cpu$Yobml.set_register16(cpu, r16, Memory$Yobml.load16(cpu[/* memory */5], cpu[/* pc */1]));
-  return bump(cpu, cpu[/* pc */1] + 2 | 0, 12);
+  Cpu$Yobml.set_register16(cpu, r16, Memory$Yobml.load16(cpu[/* memory */4], cpu[/* pc */0]));
+  return bump(cpu, cpu[/* pc */0] + 2 | 0, 12);
 }
 
 function ld_hl_d8(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  store(cpu, address, Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]));
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 12);
+  store(cpu, address, Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]));
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
+}
+
+function ld_hl_sp_e8(cpu) {
+  var a = Cpu$Yobml.get_register16(cpu, /* SP */4);
+  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
+  var match = b > 128;
+  var b$1 = match ? -(128 - (b - 128 | 0) | 0) | 0 : b;
+  var value = wrapping_add16(a, b$1);
+  var h = ((a & 15) + (a & 15) | 0) > 15;
+  var c = ((a & 255) + (b$1 & 255) | 0) > 255;
+  Cpu$Yobml.set_flags(cpu, false, false, h, c, /* () */0);
+  Cpu$Yobml.set_register16(cpu, /* HL */3, value);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
 }
 
 function ld_r16_a(cpu, r16) {
   var address = Cpu$Yobml.get_register16(cpu, r16);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function ld_a_r16(cpu, r16) {
   var address = Cpu$Yobml.get_register16(cpu, r16);
-  Cpu$Yobml.set_register(cpu, /* A */0, Memory$Yobml.load(cpu[/* memory */5], address));
-  return bump(cpu, cpu[/* pc */1], 8);
+  Cpu$Yobml.set_register(cpu, /* A */0, Memory$Yobml.load(cpu[/* memory */4], address));
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function ld_a_a16(cpu) {
-  var address = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* pc */1]);
-  var $$byte = Memory$Yobml.load(cpu[/* memory */5], address);
+  var address = Memory$Yobml.load16(cpu[/* memory */4], cpu[/* pc */0]);
+  var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   Cpu$Yobml.set_register(cpu, /* A */0, $$byte);
-  return bump(cpu, cpu[/* pc */1] + 2 | 0, 16);
+  return bump(cpu, cpu[/* pc */0] + 2 | 0, 16);
 }
 
 function ldi_hl_a(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
   Cpu$Yobml.set_register16(cpu, /* HL */3, wrapping_add16(address, 1));
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function ldi_a_hl(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  Cpu$Yobml.set_register(cpu, /* A */0, Memory$Yobml.load(cpu[/* memory */5], address));
+  Cpu$Yobml.set_register(cpu, /* A */0, Memory$Yobml.load(cpu[/* memory */4], address));
   Cpu$Yobml.set_register16(cpu, /* HL */3, wrapping_add16(address, 1));
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function ldd_hl_a(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
   Cpu$Yobml.set_register16(cpu, /* HL */3, wrapping_add16(address, -1));
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function ld_hl_r(cpu, r) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   store(cpu, address, Cpu$Yobml.get_register(cpu, r));
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function ld_r_hl(cpu, r) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  Cpu$Yobml.set_register(cpu, r, Memory$Yobml.load(cpu[/* memory */5], address));
-  return bump(cpu, cpu[/* pc */1], 8);
+  Cpu$Yobml.set_register(cpu, r, Memory$Yobml.load(cpu[/* memory */4], address));
+  return bump(cpu, cpu[/* pc */0], 8);
+}
+
+function ld_sp_hl(cpu) {
+  Cpu$Yobml.set_register16(cpu, /* SP */4, Cpu$Yobml.get_register16(cpu, /* HL */3));
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function ld_read_io_n(cpu) {
-  var n = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  var n = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var $$byte;
   if (n === 68) {
-    var match = cpu[/* pc */1] - 1 | 0;
+    var match = cpu[/* pc */0] - 1 | 0;
     $$byte = match !== 563 ? (
         match !== 10280 ? 0 : 145
       ) : 148;
   } else {
     var address = wrapping_add16(65280, n);
-    $$byte = Memory$Yobml.load(cpu[/* memory */5], address);
+    $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   }
   Cpu$Yobml.set_register(cpu, /* A */0, $$byte);
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 12);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
 }
 
 function ld_write_io_n(cpu) {
-  var n = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  var n = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var address = wrapping_add16(65280, n);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 12);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
 }
 
 function ld_read_io_c(cpu) {
   var n = Cpu$Yobml.get_register(cpu, /* C */2);
   var address = wrapping_add16(65280, n);
-  var $$byte = Memory$Yobml.load(cpu[/* memory */5], address);
+  var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   Cpu$Yobml.set_register(cpu, /* A */0, $$byte);
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 12);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
 }
 
 function ld_write_io_c(cpu) {
   var n = Cpu$Yobml.get_register(cpu, /* C */2);
   var address = wrapping_add16(65280, n);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 12);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
 }
 
 function ld_sp(cpu) {
-  var word = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* pc */1]);
-  return bump(/* record */[
-              /* sp */word,
-              /* pc */cpu[/* pc */1],
-              /* cycle */cpu[/* cycle */2],
-              /* ime */cpu[/* ime */3],
-              /* registers */cpu[/* registers */4],
-              /* memory */cpu[/* memory */5],
-              /* serial */cpu[/* serial */6]
-            ], cpu[/* pc */1] + 2 | 0, 12);
+  Cpu$Yobml.set_register16(cpu, /* SP */4, Memory$Yobml.load16(cpu[/* memory */4], cpu[/* pc */0]));
+  return bump(cpu, cpu[/* pc */0] + 2 | 0, 12);
 }
 
 function ld_a16_a(cpu) {
-  var address = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* pc */1]);
+  var address = Memory$Yobml.load16(cpu[/* memory */4], cpu[/* pc */0]);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
-  return bump(cpu, cpu[/* pc */1] + 2 | 0, 16);
+  return bump(cpu, cpu[/* pc */0] + 2 | 0, 16);
 }
 
 function ld_a16_sp(cpu) {
-  var address = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* pc */1]);
-  store16(cpu, address, cpu[/* sp */0]);
-  return bump(cpu, cpu[/* pc */1] + 2 | 0, 20);
+  var address = Memory$Yobml.load16(cpu[/* memory */4], cpu[/* pc */0]);
+  store16(cpu, address, Cpu$Yobml.get_register16(cpu, /* SP */4));
+  return bump(cpu, cpu[/* pc */0] + 2 | 0, 20);
 }
 
 function inc(cpu, r) {
@@ -366,13 +373,13 @@ function inc(cpu, r) {
   Cpu$Yobml.set_register(cpu, r, value);
   var h = (value & 15) < (reg & 15);
   Cpu$Yobml.set_flags(cpu, value === 0, false, h, undefined, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 4);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function inc16(cpu, r) {
   var value = Cpu$Yobml.get_register16(cpu, r);
   Cpu$Yobml.set_register16(cpu, r, wrapping_add16(value, 1));
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function dec(cpu, r) {
@@ -381,29 +388,27 @@ function dec(cpu, r) {
   Cpu$Yobml.set_register(cpu, r, value);
   var h = (value & 15) > (reg & 15);
   Cpu$Yobml.set_flags(cpu, value === 0, true, h, undefined, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 4);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function dec16(cpu, r) {
   var reg = Cpu$Yobml.get_register16(cpu, r);
-  var value = wrapping_add(reg, -1);
+  var value = wrapping_add16(reg, -1);
   Cpu$Yobml.set_register16(cpu, r, value);
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function dec_hl(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  var a = Memory$Yobml.load(cpu[/* memory */5], address);
-  var value = wrapping_add(a, -1);
+  var a = Memory$Yobml.load(cpu[/* memory */4], address);
+  var value = wrapping_add16(a, -1);
   store(cpu, address, value);
-  var h = (value & 15) > (a & 15);
-  Cpu$Yobml.set_flags(cpu, value === 0, true, h, undefined, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 12);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function adc_d8(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
-  var b = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var match = Cpu$Yobml.has_flag(cpu, /* C */3);
   var carry = match ? 1 : 0;
   var result = (a + b | 0) + carry | 0;
@@ -411,18 +416,18 @@ function adc_d8(cpu) {
   var c = result > 255;
   var h = (((a & 15) + (b & 15) | 0) + carry | 0) > 15;
   Cpu$Yobml.set_flags(cpu, result === 0, false, h, c, /* () */0);
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
 function add_d8(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
-  var b = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var value = wrapping_add(a, b);
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   var h = (value & 15) < (b & 15);
   var c = value < b;
   Cpu$Yobml.set_flags(cpu, value === 0, false, h, c, /* () */0);
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
 function add_hl_r16(cpu, r) {
@@ -432,31 +437,44 @@ function add_hl_r16(cpu, r) {
   var h = ((hl & 4095) + (a & 4095) | 0) > 4095;
   Cpu$Yobml.set_register16(cpu, /* HL */3, result & 65535);
   Cpu$Yobml.set_flags(cpu, undefined, false, h, result > 65535, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
+}
+
+function add_sp_e8(cpu) {
+  var a = Cpu$Yobml.get_register16(cpu, /* SP */4);
+  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
+  var match = (b & 128) > 0;
+  var b$1 = match ? b - 256 | 0 : b;
+  var h = ((a & 15) + (a & 15) | 0) > 15;
+  var c = ((a & 255) + (b$1 & 255) | 0) > 255;
+  Cpu$Yobml.set_flags(cpu, false, false, h, c, /* () */0);
+  var sp = wrapping_add16(a, b$1);
+  Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 16);
 }
 
 function sub_d8(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
-  var b = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var value = wrapping_add(a, -b | 0);
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   var h = (value & 15) > (a & 15);
   var c = value > a;
   Cpu$Yobml.set_flags(cpu, a === b, true, h, c, /* () */0);
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
 function jp(cpu) {
-  var address = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* pc */1]);
+  var address = Memory$Yobml.load16(cpu[/* memory */4], cpu[/* pc */0]);
   return bump(cpu, address, 16);
 }
 
 function jp_cond(cpu, flag, condition) {
   if (Cpu$Yobml.has_flag(cpu, flag) === condition) {
-    var address = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* pc */1]);
+    var address = Memory$Yobml.load16(cpu[/* memory */4], cpu[/* pc */0]);
     return bump(cpu, address, 16);
   } else {
-    return bump(cpu, cpu[/* pc */1] + 2 | 0, 12);
+    return bump(cpu, cpu[/* pc */0] + 2 | 0, 12);
   }
 }
 
@@ -466,29 +484,29 @@ function jp_hl(cpu) {
 }
 
 function jr_e8(cpu) {
-  var $$byte = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  var $$byte = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var offset = $$byte > 127 ? -(Pervasives.lnot($$byte) + 1 & 255) | 0 : $$byte;
-  return bump(cpu, (cpu[/* pc */1] + offset | 0) + 1 | 0, 12);
+  return bump(cpu, (cpu[/* pc */0] + offset | 0) + 1 | 0, 12);
 }
 
 function jr(cpu, flag, condition) {
   var do_jump = Cpu$Yobml.has_flag(cpu, flag) === condition;
   if (do_jump) {
-    var $$byte = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+    var $$byte = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
     var offset = $$byte > 127 ? -(Pervasives.lnot($$byte) + 1 & 255) | 0 : $$byte;
-    return bump(cpu, (cpu[/* pc */1] + offset | 0) + 1 | 0, 12);
+    return bump(cpu, (cpu[/* pc */0] + offset | 0) + 1 | 0, 12);
   } else {
-    return bump(cpu, cpu[/* pc */1] + 1 | 0, 8);
+    return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
   }
 }
 
 function and_d8(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
-  var b = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var value = a & b;
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   Cpu$Yobml.set_flags(cpu, value === 0, false, true, false, /* () */0);
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 4);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 4);
 }
 
 function ora(cpu, r) {
@@ -497,59 +515,56 @@ function ora(cpu, r) {
   var value = a | b;
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   Cpu$Yobml.set_flags(cpu, value === 0, false, false, false, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 4);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function or_hl(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  var b = Memory$Yobml.load(cpu[/* memory */5], address);
+  var b = Memory$Yobml.load(cpu[/* memory */4], address);
   var value = a | b;
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   Cpu$Yobml.set_flags(cpu, value === 0, false, false, false, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function push16(cpu, r16) {
-  var sp = wrapping_add16(cpu[/* sp */0], -2);
+  var sp = wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), -2);
   store16(cpu, sp, Cpu$Yobml.get_register16(cpu, r16));
-  return bump(/* record */[
-              /* sp */sp,
-              /* pc */cpu[/* pc */1],
-              /* cycle */cpu[/* cycle */2],
-              /* ime */cpu[/* ime */3],
-              /* registers */cpu[/* registers */4],
-              /* memory */cpu[/* memory */5],
-              /* serial */cpu[/* serial */6]
-            ], cpu[/* pc */1], 16);
+  Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
+  return bump(cpu, cpu[/* pc */0], 16);
 }
 
 function pop16(cpu, r16) {
-  var value = Memory$Yobml.load16(cpu[/* memory */5], cpu[/* sp */0]);
-  var sp = wrapping_add16(cpu[/* sp */0], 2);
+  var address = Cpu$Yobml.get_register16(cpu, /* SP */4);
+  var value = Memory$Yobml.load16(cpu[/* memory */4], address);
+  var sp = wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), 2);
   Cpu$Yobml.set_register16(cpu, r16, value);
-  return bump(/* record */[
-              /* sp */sp,
-              /* pc */cpu[/* pc */1],
-              /* cycle */cpu[/* cycle */2],
-              /* ime */cpu[/* ime */3],
-              /* registers */cpu[/* registers */4],
-              /* memory */cpu[/* memory */5],
-              /* serial */cpu[/* serial */6]
-            ], cpu[/* pc */1], 12);
+  Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
+  return bump(cpu, cpu[/* pc */0], 12);
+}
+
+function pop_af(cpu) {
+  var address = Cpu$Yobml.get_register16(cpu, /* SP */4);
+  var af = Memory$Yobml.load16(cpu[/* memory */4], address) & 65520;
+  var sp = wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), 2);
+  Cpu$Yobml.set_register16(cpu, /* AF */0, af);
+  Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
+  Cpu$Yobml.set_flags(cpu, (af & 128) > 0, (af & 64) > 0, (af & 32) > 0, (af & 16) > 0, /* () */0);
+  return bump(cpu, cpu[/* pc */0], 12);
 }
 
 function res(cpu, bit, r) {
   var reg = Cpu$Yobml.get_register(cpu, r);
   Cpu$Yobml.set_register(cpu, r, reg & Pervasives.lnot((1 << bit)));
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function res_hl(cpu, bit) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  var $$byte = Memory$Yobml.load(cpu[/* memory */5], address);
+  var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   store(cpu, address, $$byte & Pervasives.lnot((1 << bit)));
-  return bump(cpu, cpu[/* pc */1], 16);
+  return bump(cpu, cpu[/* pc */0], 16);
 }
 
 function rr(cpu, storage) {
@@ -560,7 +575,7 @@ function rr(cpu, storage) {
   var value = (carry << 7) | (a >>> 1);
   storage_store(cpu, storage, value);
   Cpu$Yobml.set_flags(cpu, value === 0, false, false, c, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function rra(cpu) {
@@ -571,21 +586,19 @@ function rra(cpu) {
   var value = (carry << 7) | (a >>> 1);
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   Cpu$Yobml.set_flags(cpu, false, false, false, c, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function rst(cpu, n) {
-  var sp = wrapping_add16(cpu[/* sp */0], -2);
-  store16(cpu, sp, cpu[/* pc */1]);
-  return bump(/* record */[
-              /* sp */sp,
-              /* pc */cpu[/* pc */1],
-              /* cycle */cpu[/* cycle */2],
-              /* ime */cpu[/* ime */3],
-              /* registers */cpu[/* registers */4],
-              /* memory */cpu[/* memory */5],
-              /* serial */cpu[/* serial */6]
-            ], n, 16);
+  var sp = wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), -2);
+  store16(cpu, sp, cpu[/* pc */0]);
+  Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
+  return bump(cpu, n, 16);
+}
+
+function scf(cpu) {
+  Cpu$Yobml.set_flags(cpu, undefined, false, false, true, /* () */0);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function srl(cpu, r) {
@@ -593,16 +606,16 @@ function srl(cpu, r) {
   var result = (a >>> 1);
   Cpu$Yobml.set_register(cpu, r, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, (a & 1) === 1, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function srl_hl(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  var a = Memory$Yobml.load(cpu[/* memory */5], address);
+  var a = Memory$Yobml.load(cpu[/* memory */4], address);
   var result = (a >>> 1);
   store(cpu, a, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, (a & 1) === 1, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 16);
+  return bump(cpu, cpu[/* pc */0], 16);
 }
 
 function swap(cpu, r) {
@@ -612,18 +625,18 @@ function swap(cpu, r) {
   var result = lo | hi;
   Cpu$Yobml.set_register(cpu, r, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, false, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function swap_hl(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  var a = Memory$Yobml.load(cpu[/* memory */5], address);
+  var a = Memory$Yobml.load(cpu[/* memory */4], address);
   var lo = ((a & 15) << 4);
   var hi = ((a & 240) >>> 4);
   var result = lo | hi;
   store(cpu, address, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, false, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 16);
+  return bump(cpu, cpu[/* pc */0], 16);
 }
 
 function xor(cpu, r) {
@@ -632,26 +645,26 @@ function xor(cpu, r) {
   var result = a ^ b;
   Cpu$Yobml.set_register(cpu, /* A */0, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, false, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 4);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function xor_d8(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
-  var b = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var result = a ^ b;
   Cpu$Yobml.set_register(cpu, /* A */0, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, false, /* () */0);
-  return bump(cpu, cpu[/* pc */1] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
 function xor_hl(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  var b = Memory$Yobml.load(cpu[/* memory */5], address);
+  var b = Memory$Yobml.load(cpu[/* memory */4], address);
   var result = a ^ b;
   Cpu$Yobml.set_register(cpu, /* A */0, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, false, /* () */0);
-  return bump(cpu, cpu[/* pc */1], 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function execute(cpu, instruction) {
@@ -662,70 +675,84 @@ function execute(cpu, instruction) {
       case 1 : 
           return add_d8(cpu);
       case 2 : 
-          return and_d8(cpu);
+          return add_sp_e8(cpu);
       case 3 : 
-          return and_hl(cpu);
+          return and_d8(cpu);
       case 4 : 
-          return call(cpu);
+          return and_hl(cpu);
       case 5 : 
-          return cp_n(cpu);
+          return call(cpu);
       case 6 : 
-          return cpl(cpu);
+          return ccf(cpu);
       case 7 : 
-          return daa(cpu);
+          return cp_n(cpu);
       case 8 : 
-          return dec_hl(cpu);
+          return cpl(cpu);
       case 9 : 
-          return di(cpu);
+          return daa(cpu);
       case 10 : 
-          return ei(cpu);
+          return dec_hl(cpu);
       case 11 : 
-          return jp(cpu);
+          return di(cpu);
       case 12 : 
-          return jp_hl(cpu);
+          return ei(cpu);
       case 13 : 
-          return jr_e8(cpu);
+          return jp(cpu);
       case 14 : 
-          return ld_sp(cpu);
+          return jp_hl(cpu);
       case 15 : 
-          return ld_read_io_n(cpu);
+          return jr_e8(cpu);
       case 16 : 
-          return ld_write_io_n(cpu);
+          return ld_sp(cpu);
       case 17 : 
-          return ld_read_io_c(cpu);
+          return ld_read_io_n(cpu);
       case 18 : 
-          return ld_write_io_c(cpu);
+          return ld_write_io_n(cpu);
       case 19 : 
-          return ldd_hl_a(cpu);
+          return ld_read_io_c(cpu);
       case 20 : 
-          return ldi_a_hl(cpu);
+          return ld_write_io_c(cpu);
       case 21 : 
-          return ldi_hl_a(cpu);
+          return ldd_hl_a(cpu);
       case 22 : 
-          return ld_a16_a(cpu);
+          return ldi_a_hl(cpu);
       case 23 : 
-          return ld_a16_sp(cpu);
+          return ldi_hl_a(cpu);
       case 24 : 
-          return ld_a_a16(cpu);
+          return ld_a16_a(cpu);
       case 25 : 
-          return ld_hl_d8(cpu);
+          return ld_a16_sp(cpu);
       case 26 : 
-          return or_hl(cpu);
+          return ld_sp_hl(cpu);
       case 27 : 
-          return cpu;
+          return ld_a_a16(cpu);
       case 28 : 
-          return ret(cpu);
+          return ld_hl_d8(cpu);
       case 29 : 
-          return rra(cpu);
+          return ld_hl_sp_e8(cpu);
       case 30 : 
-          return srl_hl(cpu);
+          return or_hl(cpu);
       case 31 : 
-          return swap_hl(cpu);
+          return cpu;
       case 32 : 
-          return sub_d8(cpu);
+          return pop_af(cpu);
       case 33 : 
-          return xor_d8(cpu);
+          return ret(cpu);
       case 34 : 
+          return reti(cpu);
+      case 35 : 
+          return rra(cpu);
+      case 36 : 
+          return scf(cpu);
+      case 37 : 
+          return srl_hl(cpu);
+      case 38 : 
+          return swap_hl(cpu);
+      case 39 : 
+          return sub_d8(cpu);
+      case 40 : 
+          return xor_d8(cpu);
+      case 41 : 
           return xor_hl(cpu);
       
     }
@@ -810,13 +837,16 @@ exports.nop = nop;
 exports.call = call;
 exports.call_cond = call_cond;
 exports.ret = ret;
+exports.reti = reti;
 exports.ret_cond = ret_cond;
 exports.add = add;
 exports.and_ = and_;
 exports.and_hl = and_hl;
+exports.ccf = ccf;
 exports.cp = cp;
 exports.cp_n = cp_n;
 exports.cpl = cpl;
+exports.NoDAA = NoDAA;
 exports.daa = daa;
 exports.di = di;
 exports.ei = ei;
@@ -824,6 +854,7 @@ exports.ld_rr = ld_rr;
 exports.ld_n = ld_n;
 exports.ld_nn = ld_nn;
 exports.ld_hl_d8 = ld_hl_d8;
+exports.ld_hl_sp_e8 = ld_hl_sp_e8;
 exports.ld_r16_a = ld_r16_a;
 exports.ld_a_r16 = ld_a_r16;
 exports.ld_a_a16 = ld_a_a16;
@@ -832,6 +863,7 @@ exports.ldi_a_hl = ldi_a_hl;
 exports.ldd_hl_a = ldd_hl_a;
 exports.ld_hl_r = ld_hl_r;
 exports.ld_r_hl = ld_r_hl;
+exports.ld_sp_hl = ld_sp_hl;
 exports.ld_read_io_n = ld_read_io_n;
 exports.ld_write_io_n = ld_write_io_n;
 exports.ld_read_io_c = ld_read_io_c;
@@ -847,6 +879,7 @@ exports.dec_hl = dec_hl;
 exports.adc_d8 = adc_d8;
 exports.add_d8 = add_d8;
 exports.add_hl_r16 = add_hl_r16;
+exports.add_sp_e8 = add_sp_e8;
 exports.sub_d8 = sub_d8;
 exports.jp = jp;
 exports.jp_cond = jp_cond;
@@ -858,11 +891,13 @@ exports.ora = ora;
 exports.or_hl = or_hl;
 exports.push16 = push16;
 exports.pop16 = pop16;
+exports.pop_af = pop_af;
 exports.res = res;
 exports.res_hl = res_hl;
 exports.rr = rr;
 exports.rra = rra;
 exports.rst = rst;
+exports.scf = scf;
 exports.srl = srl;
 exports.srl_hl = srl_hl;
 exports.swap = swap;
