@@ -408,6 +408,19 @@ let pop16 = (cpu, r16) => {
   bump({...cpu, sp}, cpu.pc, 12)
 }
 
+let res = (cpu, bit, r) => {
+  let reg = get_register(cpu, r)
+  set_register(cpu, r, reg land (lnot (1 lsl bit)))
+  bump(cpu, cpu.pc, 8)
+}
+
+let res_hl = (cpu, bit) => {
+  let address = get_register16(cpu, HL)
+  let byte = load(cpu, address)
+  store(cpu, address, byte land (lnot (1 lsl bit)))
+  bump(cpu, cpu.pc, 16)
+}
+
 let rr = (cpu, storage) => {
   let a = storage_load(cpu, storage)
   let carry = has_flag(cpu, C) ? 1 : 0
@@ -547,6 +560,8 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Or_hl => or_hl(cpu)
   | Pop16(r) => pop16(cpu, r)
   | Push16(r) => push16(cpu, r)
+  | Res(n, r) => res(cpu, n, r)
+  | Res_hl(n) => res_hl(cpu, n)
   | Ret => ret(cpu)
   | RetCond(flag, cond) => ret_cond(cpu, flag, cond)
   | Rr(s) => rr(cpu, s)
