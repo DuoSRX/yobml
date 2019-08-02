@@ -11,7 +11,8 @@ function tToJs(param) {
           e: param[/* e */4],
           f: param[/* f */5],
           h: param[/* h */6],
-          l: param[/* l */7]
+          l: param[/* l */7],
+          sp: param[/* sp */8]
         };
 }
 
@@ -24,7 +25,8 @@ function tFromJs(param) {
           /* e */param.e,
           /* f */param.f,
           /* h */param.h,
-          /* l */param.l
+          /* l */param.l,
+          /* sp */param.sp
         ];
 }
 
@@ -37,7 +39,8 @@ function make(param) {
           /* e */216,
           /* f */176,
           /* h */1,
-          /* l */77
+          /* l */77,
+          /* sp */65534
         ];
 }
 
@@ -103,6 +106,8 @@ function get16(regs, reg) {
         return (regs[/* d */3] << 8) | regs[/* e */4];
     case 3 : 
         return (regs[/* h */6] << 8) | regs[/* l */7];
+    case 4 : 
+        return regs[/* sp */8];
     
   }
 }
@@ -126,6 +131,9 @@ function set16(regs, reg, value) {
     case 3 : 
         regs[/* h */6] = hi;
         regs[/* l */7] = lo;
+        return /* () */0;
+    case 4 : 
+        regs[/* sp */8] = value;
         return /* () */0;
     
   }
@@ -163,6 +171,8 @@ function to_string16(reg) {
         return "DE";
     case 3 : 
         return "HL";
+    case 4 : 
+        return "SP";
     
   }
 }

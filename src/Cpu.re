@@ -1,6 +1,5 @@
 [@bs.deriving jsConverter]
 type t = {
-  sp : int, // stack pointer
   pc : int, // program counter
   cycle: int,
 
@@ -17,7 +16,7 @@ type cpu_flag = Z | N | H | C
 let make = (rom) => {
   let memory = Memory.make(~rom)
   let registers = Registers.make();
-  { sp: 0xFFFE, pc: 0x100, cycle: 0, ime: false, memory, registers, serial: [] };
+  { pc: 0x100, cycle: 0, ime: false, memory, registers, serial: [] };
 };
 
 let get_register = (cpu, register) =>

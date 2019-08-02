@@ -2,6 +2,7 @@
 'use strict';
 
 var Fs = require("fs");
+var List = require("bs-platform/lib/js/list.js");
 var $$Array = require("bs-platform/lib/js/array.js");
 var Cpu$Yobml = require("./Cpu.bs.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
@@ -9,7 +10,7 @@ var Caml_string = require("bs-platform/lib/js/caml_string.js");
 var CpuExec$Yobml = require("./CpuExec.bs.js");
 
 function make(param) {
-  var file = Fs.readFileSync("./roms/01-special.gb", "binary");
+  var file = Fs.readFileSync("./roms/09-op r,r.gb", "binary");
   var rom = $$Array.mapi((function (n, param) {
           return Caml_string.get(file, n);
         }), Caml_array.caml_make_vect(file.length, 0));
@@ -27,7 +28,7 @@ function run($$console$1) {
     var $$console$2 = _console;
     var match = CpuExec$Yobml.step($$console$2[/* cpu */0]);
     var cpu = match[0];
-    if (steps < 100000000) {
+    if (steps < 10000000) {
       _steps = steps + 1 | 0;
       _console = /* record */[
         /* cpu */cpu,
@@ -36,8 +37,7 @@ function run($$console$1) {
       continue ;
     } else {
       CpuExec$Yobml.trace(cpu, match[1]);
-      console.log(cpu[/* serial */6]);
-      console.log(cpu[/* memory */5][/* io */5]);
+      console.log($$Array.of_list(List.rev(cpu[/* serial */5])).join(""));
       return /* () */0;
     }
   };

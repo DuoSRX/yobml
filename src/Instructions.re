@@ -14,12 +14,14 @@ type instruction =
   | Adc_d8
   | Add(register)
   | Add_d8
+  | Add_sp_e8
   | Add_hl_r16(register16)
   | And_d8
   | And(register)
   | And_hl
   | Call
   | CallCond(Cpu.cpu_flag, bool)
+  | Ccf
   | Cp(register)
   | Cp_n
   | Cpl
@@ -50,24 +52,29 @@ type instruction =
   | Ldi_hl_a
   | Ld_a16_a
   | Ld_a16_sp
+  | Ld_sp_hl
   | Ld_a_a16
   | Ld_a_r16(register16)
   | Ld_n(register)
   | Ld_hl_d8
+  | Ld_hl_sp_e8
   | Ld_nn(register16)
   | Or(register)
   | Or_hl
   | Nop
   | Pop16(register16)
+  | Pop_af
   // | Push(register)
   | Push16(register16)
   | Res(int, register)
   | Res_hl(int)
   | Ret
+  | Reti
   | RetCond(Cpu.cpu_flag, bool)
   | Rra
   | Rr(storage)
   | Rst(int)
+  | Scf
   | Srl(register)
   | Srl_hl
   | Swap(register)
@@ -114,6 +121,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x18 => Jr_e8
   | 0x19 => Add_hl_r16(DE)
   | 0x1A => Ld_a_r16(DE)
+  | 0x1B => Dec16(DE)
   | 0x1C => Inc(E)
   | 0x1D => Dec(E)
   | 0x1F => Rra
@@ -127,8 +135,9 @@ let decode = (opcode) => switch(opcode) {
   | 0x26 => Ld_n(H)
   | 0x27 => Daa
   | 0x28 => Jr(Z, true)
-  | 0x29 => Add_hl_r16(DE)
+  | 0x29 => Add_hl_r16(HL)
   | 0x2A => Ldi_a_hl
+  | 0x2B => Dec16(HL)
   | 0x2C => Inc(L)
   | 0x2D => Dec(L)
   | 0x2E => Ld_n(L)
@@ -136,11 +145,17 @@ let decode = (opcode) => switch(opcode) {
   | 0x30 => Jr(C, false)
   | 0x31 => Ld_sp
   | 0x32 => Ldd_hl_a
+  | 0x33 => Inc16(SP)
   | 0x35 => Dec_hl
   | 0x36 => Ld_hl_d8
+  | 0x37 => Scf
+  | 0x38 => Jr(C, true)
+  | 0x39 => Add_hl_r16(SP)
+  | 0x3B => Dec16(SP)
   | 0x3C => Inc(A)
   | 0x3D => Dec(A)
   | 0x3E => Ld_n(A)
+  | 0x3F => Ccf
   | 0x46 => Ld_r_hl(B)
   | 0x4E => Ld_r_hl(C)
   | 0x56 => Ld_r_hl(D)
@@ -159,6 +174,12 @@ let decode = (opcode) => switch(opcode) {
   // | 0x41 => Ld_rr(B, C)
   // | 0x42 => Ld_rr(B, D)
   // | 0x47 => Ld_rr(B, A)
+  | 0x80 => Add(B)
+  | 0x81 => Add(C)
+  | 0x82 => Add(D)
+  | 0x83 => Add(E)
+  | 0x84 => Add(H)
+  | 0x85 => Add(L)
   | 0x87 => Add(A)
   | 0xA0 => And(B)
   | 0xA1 => And(C)
@@ -203,17 +224,21 @@ let decode = (opcode) => switch(opcode) {
   | 0xC8 => RetCond(Z, true)
   | 0xC9 => Ret
   | 0xCA => JpCond(Z, true)
+  | 0xCC => CallCond(Z, true)
   | 0xCE => Adc_d8
   | 0xCF => Rst(0x8)
   | 0xCD => Call
   | 0xD0 => RetCond(C, false)
   | 0xD1 => Pop16(DE)
   | 0xD2 => JpCond(C, false)
+  | 0xD4 => CallCond(C, false)
   | 0xD5 => Push16(DE)
   | 0xD6 => Sub_d8
   | 0xD7 => Rst(0x10)
   | 0xD8 => RetCond(C, true)
+  | 0xD9 => Reti
   | 0xDA => JpCond(C, true)
+  | 0xDC => CallCond(C, true)
   | 0xDF => Rst(0x18)
   | 0xE0 => Ld_write_io_n
   | 0xE1 => Pop16(HL)
@@ -221,16 +246,19 @@ let decode = (opcode) => switch(opcode) {
   | 0xE5 => Push16(HL)
   | 0xE6 => And_d8
   | 0xE7 => Rst(0x20)
+  | 0xE8 => Add_sp_e8
   | 0xE9 => Jp_hl
   | 0xEA => Ld_a16_a
   | 0xEE => Xor_d8
   | 0xEF => Rst(0x28)
   | 0xF0 => Ld_read_io_n
-  | 0xF1 => Pop16(AF)
+  | 0xF1 => Pop_af
   | 0xF2 => Ld_read_io_c
   | 0xF3 => Di
   | 0xF5 => Push16(AF)
   | 0xF7 => Rst(0x30)
+  | 0xF8 => Ld_hl_sp_e8
+  | 0xF9 => Ld_sp_hl
   | 0xFA => Ld_a_a16
   | 0xFB => Ei
   | 0xFE => Cp_n
@@ -285,6 +313,7 @@ let pretty = (instruction) => switch(instruction) {
   | Add_d8 => "ADD A, d8"
   | Add_hl_r16(r) => sprintf("ADD HL, %s", to_string16(r))
   | Add(r) => sprintf("ADD A, %s", to_string(r))
+  | Add_sp_e8 => "ADD SP, r8"
   | And_d8 => "AND d8"
   | And(r) => sprintf("AND %s", to_string(r))
   | And_hl => "NAD (HL)"
@@ -294,6 +323,7 @@ let pretty = (instruction) => switch(instruction) {
   | CallCond(Z, true) => "CALL Z, d16"
   | CallCond(Z, false) => "CALL NZ, d16"
   | CallCond(_,_) => "unreachable"
+  | Ccf => "CCF"
   | Cp(r) => sprintf("CP %s", to_string(r))
   | Cp_n => "CP n"
   | Cpl => "CPL"
@@ -303,21 +333,33 @@ let pretty = (instruction) => switch(instruction) {
   | Dec_hl => "DEC (HL)"
   | Di => "DI"
   | Ei => "EI"
+  | Inc(r) => sprintf("INC %s", to_string(r))
+  | Inc16(r) => sprintf("INC %s", to_string16(r))
+  | Jp => "JP nn"
+  | Jp_hl => "JP (HL)"
   | JpCond(C, true) => "JP C, a16"
   | JpCond(C, false) => "JP NC, a16"
   | JpCond(Z, true) => "JP Z, a16"
   | JpCond(Z, false) => "JP NZ, a16"
   | JpCond(_,_) => "JP unreachable"
+  | Jr_e8 => "JR e8"
+  | Jr(Z, false) => "JR NZ, nn"
+  | Jr(C, false) => "JR NC, nn"
+  | Jr(Z, true) => "JR Z, nn"
+  | Jr(C, true) => "JR C, nn"
+  | Jr(_, _) => "Unreachable"
   | Ld_sp => "LD sp, nn"
   | Ld_n(r) => sprintf("LD %s, n", to_string(r))
   | Ld_r_hl(r) => sprintf("LD %s, (HL)", to_string(r))
   | Ld_hl_r(r) => sprintf("LD (HL), %s", to_string(r))
   | Ld_hl_d8 => "LD n, (HL)"
+  | Ld_hl_sp_e8 => "LD HL, sp+e8"
   | Ld_nn(r) => sprintf("LD %s, nn", to_string16(r))
   | Ld_rr(r1, r2) => sprintf("LD %s, %s", to_string(r1), to_string(r2))
   | Ld_r16_a(r) => sprintf("LD [%s], A", to_string16(r))
   | Ld_a_r16(r) => sprintf("LD A, [%s]", to_string16(r))
   | Ldi_hl_a => "LDI (HL), A"
+  | Ld_sp_hl => "LD SP, HL"
   | Ldi_a_hl => "LDI A, (HL)"
   | Ldd_hl_a => "LDD (HL), A"
   | Ld_a_a16 => "LD A,(a16)"
@@ -327,24 +369,16 @@ let pretty = (instruction) => switch(instruction) {
   | Ld_write_io_n => "LDH (FF00+n), A"
   | Ld_read_io_c => "LD A, (FF00+C)"
   | Ld_write_io_c => "LD (FF00+C), A"
-  | Inc(r) => sprintf("INC %s", to_string(r))
-  | Inc16(r) => sprintf("INC %s", to_string16(r))
-  | Jp => "JP nn"
-  | Jp_hl => "JP (HL)"
-  | Jr_e8 => "JR e8"
-  | Jr(Z, false) => "JR NZ, nn"
-  | Jr(C, false) => "JR NC, nn"
-  | Jr(Z, true) => "JR Z, nn"
-  | Jr(C, true) => "JR C, nn"
-  | Jr(_, _) => "Unreachable"
   | Or(r) => sprintf("OR %s", to_string(r))
   | Or_hl => "OR (HL)"
   | Pop16(r) => sprintf("POP %s", to_string16(r))
+  | Pop_af => "POP AF"
   // | Push(r) => sprintf("PUSH %s", to_string(r))
   | Push16(r) => sprintf("PUSH %s", to_string16(r))
   | Res(n, r) => sprintf("RES %d, %s", n, to_string(r))
   | Res_hl(n) => sprintf("RES %d, (HL)", n)
   | Ret => "RET"
+  | Reti => "RETI"
   | RetCond(Z, false) => "RET NZ"
   | RetCond(C, false) => "RET NC"
   | RetCond(Z, true) => "RET Z"
@@ -355,6 +389,7 @@ let pretty = (instruction) => switch(instruction) {
   | Rr(Pointer(r)) => sprintf("RR (%s)", to_string16(r))
   | Rra => "RRA"
   | Rst(n) => sprintf("RST %02XH", n)
+  | Scf => "SCF"
   | Srl(r) => sprintf("SRL %s", to_string(r))
   | Srl_hl => "SRL (HL)"
   | Swap(r) => sprintf("SWAP %s", to_string(r))

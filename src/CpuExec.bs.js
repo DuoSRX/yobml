@@ -146,46 +146,44 @@ function trace(cpu, instruction) {
             Cpu$Yobml.get_register16(cpu, /* BC */1),
             Cpu$Yobml.get_register16(cpu, /* DE */2),
             Cpu$Yobml.get_register16(cpu, /* HL */3),
-            cpu[/* sp */0],
+            Cpu$Yobml.get_register16(cpu, /* SP */4),
             pretty_flags(cpu),
-            cpu[/* pc */1],
-            Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]),
-            Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1] + 1 | 0),
-            Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1] + 2 | 0),
+            cpu[/* pc */0],
+            Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]),
+            Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0] + 1 | 0),
+            Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0] + 2 | 0),
             Instructions$Yobml.pretty(instruction)
           ]));
   return /* () */0;
 }
 
 function step(cpu) {
-  var opcode = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1]);
+  var opcode = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var match;
   if (opcode !== 203) {
     var instruction = Instructions$Yobml.decode(opcode);
     match = /* tuple */[
       /* record */[
-        /* sp */cpu[/* sp */0],
-        /* pc */cpu[/* pc */1] + 1 | 0,
-        /* cycle */cpu[/* cycle */2],
-        /* ime */cpu[/* ime */3],
-        /* registers */cpu[/* registers */4],
-        /* memory */cpu[/* memory */5],
-        /* serial */cpu[/* serial */6]
+        /* pc */cpu[/* pc */0] + 1 | 0,
+        /* cycle */cpu[/* cycle */1],
+        /* ime */cpu[/* ime */2],
+        /* registers */cpu[/* registers */3],
+        /* memory */cpu[/* memory */4],
+        /* serial */cpu[/* serial */5]
       ],
       instruction
     ];
   } else {
-    var $$byte = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1] + 1 | 0);
+    var $$byte = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0] + 1 | 0);
     var instruction$1 = Instructions$Yobml.decode_cb($$byte);
     match = /* tuple */[
       /* record */[
-        /* sp */cpu[/* sp */0],
-        /* pc */cpu[/* pc */1] + 2 | 0,
-        /* cycle */cpu[/* cycle */2],
-        /* ime */cpu[/* ime */3],
-        /* registers */cpu[/* registers */4],
-        /* memory */cpu[/* memory */5],
-        /* serial */cpu[/* serial */6]
+        /* pc */cpu[/* pc */0] + 2 | 0,
+        /* cycle */cpu[/* cycle */1],
+        /* ime */cpu[/* ime */2],
+        /* registers */cpu[/* registers */3],
+        /* memory */cpu[/* memory */4],
+        /* serial */cpu[/* serial */5]
       ],
       instruction$1
     ];
