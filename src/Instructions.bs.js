@@ -27,122 +27,135 @@ function decode(opcode) {
   var exit = 0;
   switch (opcode) {
     case 0 : 
-        return /* Nop */24;
+        return /* Nop */26;
     case 1 : 
-        return /* Ld_nn */Block.__(14, [/* BC */1]);
+        return /* Ld_nn */Block.__(17, [/* BC */1]);
     case 3 : 
-        return /* Inc16 */Block.__(6, [/* BC */1]);
+        return /* Inc16 */Block.__(8, [/* BC */1]);
+    case 4 : 
+        return /* Inc */Block.__(7, [/* B */1]);
     case 5 : 
-        return /* Dec */Block.__(3, [/* B */1]);
+        return /* Dec */Block.__(5, [/* B */1]);
     case 6 : 
-        return /* Ld_n */Block.__(13, [/* B */1]);
+        return /* Ld_n */Block.__(16, [/* B */1]);
+    case 9 : 
+        return /* Add_hl_r16 */Block.__(1, [/* BC */1]);
     case 10 : 
-        return /* Ld_a_r16 */Block.__(12, [/* BC */1]);
+        return /* Ld_a_r16 */Block.__(15, [/* BC */1]);
     case 11 : 
-        return /* Dec16 */Block.__(4, [/* BC */1]);
+        return /* Dec16 */Block.__(6, [/* BC */1]);
     case 12 : 
-        return /* Inc */Block.__(5, [/* C */2]);
+        return /* Inc */Block.__(7, [/* C */2]);
     case 13 : 
-        return /* Dec */Block.__(3, [/* C */2]);
+        return /* Dec */Block.__(5, [/* C */2]);
     case 14 : 
-        return /* Ld_n */Block.__(13, [/* C */2]);
+        return /* Ld_n */Block.__(16, [/* C */2]);
     case 17 : 
-        return /* Ld_nn */Block.__(14, [/* DE */2]);
+        return /* Ld_nn */Block.__(17, [/* DE */2]);
     case 18 : 
-        return /* Ld_r16_a */Block.__(8, [/* DE */2]);
+        return /* Ld_r16_a */Block.__(11, [/* DE */2]);
     case 19 : 
-        return /* Inc16 */Block.__(6, [/* DE */2]);
+        return /* Inc16 */Block.__(8, [/* DE */2]);
     case 20 : 
-        return /* Inc */Block.__(5, [/* D */3]);
+        return /* Inc */Block.__(7, [/* D */3]);
     case 22 : 
-        return /* Ld_n */Block.__(13, [/* D */3]);
+        return /* Ld_n */Block.__(16, [/* D */3]);
     case 24 : 
-        return /* Jr_e8 */11;
+        return /* Jr_e8 */13;
     case 26 : 
-        return /* Ld_a_r16 */Block.__(12, [/* DE */2]);
+        return /* Ld_a_r16 */Block.__(15, [/* DE */2]);
     case 28 : 
-        return /* Inc */Block.__(5, [/* E */4]);
+        return /* Inc */Block.__(7, [/* E */4]);
+    case 29 : 
+        return /* Dec */Block.__(5, [/* E */4]);
     case 30 : 
-        return /* Ld_n */Block.__(13, [/* E */4]);
+        return /* Ld_n */Block.__(16, [/* E */4]);
     case 31 : 
-        return /* Rra */26;
+        return /* Rra */28;
     case 32 : 
-        return /* Jr */Block.__(7, [
+        return /* Jr */Block.__(10, [
                   /* Z */0,
                   false
                 ]);
     case 33 : 
-        return /* Ld_nn */Block.__(14, [/* HL */3]);
+        return /* Ld_nn */Block.__(17, [/* HL */3]);
     case 34 : 
-        return /* Ldi_hl_a */19;
+        return /* Ldi_hl_a */21;
     case 35 : 
-        return /* Inc16 */Block.__(6, [/* HL */3]);
+        return /* Inc16 */Block.__(8, [/* HL */3]);
     case 36 : 
-        return /* Inc */Block.__(5, [/* H */6]);
+        return /* Inc */Block.__(7, [/* H */6]);
     case 37 : 
-        return /* Dec */Block.__(3, [/* H */6]);
+        return /* Dec */Block.__(5, [/* H */6]);
     case 38 : 
-        return /* Ld_n */Block.__(13, [/* H */6]);
+        return /* Ld_n */Block.__(16, [/* H */6]);
+    case 39 : 
+        return /* Daa */7;
     case 40 : 
-        return /* Jr */Block.__(7, [
+        return /* Jr */Block.__(10, [
                   /* Z */0,
                   true
                 ]);
+    case 25 : 
+    case 41 : 
+        return /* Add_hl_r16 */Block.__(1, [/* DE */2]);
     case 42 : 
-        return /* Ldi_a_hl */18;
+        return /* Ldi_a_hl */20;
     case 44 : 
-        return /* Inc */Block.__(5, [/* L */7]);
+        return /* Inc */Block.__(7, [/* L */7]);
     case 45 : 
-        return /* Dec */Block.__(3, [/* L */7]);
+        return /* Dec */Block.__(5, [/* L */7]);
     case 46 : 
-        return /* Ld_n */Block.__(13, [/* L */7]);
+        return /* Ld_n */Block.__(16, [/* L */7]);
     case 47 : 
         return /* Cpl */6;
     case 48 : 
-        return /* Jr */Block.__(7, [
+        return /* Jr */Block.__(10, [
                   /* C */3,
                   false
                 ]);
     case 49 : 
-        return /* Ld_sp */12;
+        return /* Ld_sp */14;
     case 50 : 
-        return /* Ldd_hl_a */17;
+        return /* Ldd_hl_a */19;
     case 53 : 
-        return /* Dec_hl */7;
+        return /* Dec_hl */8;
     case 54 : 
-        return /* Ld_hl_d8 */22;
+        return /* Ld_hl_d8 */24;
+    case 60 : 
+        return /* Inc */Block.__(7, [/* A */0]);
     case 61 : 
-        return /* Dec */Block.__(3, [/* A */0]);
+        return /* Dec */Block.__(5, [/* A */0]);
     case 62 : 
-        return /* Ld_n */Block.__(13, [/* A */0]);
+        return /* Ld_n */Block.__(16, [/* A */0]);
     case 70 : 
-        return /* Ld_r_hl */Block.__(11, [/* B */1]);
+        return /* Ld_r_hl */Block.__(14, [/* B */1]);
     case 78 : 
-        return /* Ld_r_hl */Block.__(11, [/* C */2]);
+        return /* Ld_r_hl */Block.__(14, [/* C */2]);
     case 86 : 
-        return /* Ld_r_hl */Block.__(11, [/* D */3]);
+        return /* Ld_r_hl */Block.__(14, [/* D */3]);
     case 94 : 
-        return /* Ld_r_hl */Block.__(11, [/* E */4]);
+        return /* Ld_r_hl */Block.__(14, [/* E */4]);
     case 102 : 
-        return /* Ld_r_hl */Block.__(11, [/* H */6]);
+        return /* Ld_r_hl */Block.__(14, [/* H */6]);
     case 110 : 
-        return /* Ld_r_hl */Block.__(11, [/* L */7]);
+        return /* Ld_r_hl */Block.__(14, [/* L */7]);
     case 112 : 
-        return /* Ld_hl_r */Block.__(10, [/* B */1]);
+        return /* Ld_hl_r */Block.__(13, [/* B */1]);
     case 113 : 
-        return /* Ld_hl_r */Block.__(10, [/* C */2]);
+        return /* Ld_hl_r */Block.__(13, [/* C */2]);
     case 114 : 
-        return /* Ld_hl_r */Block.__(10, [/* D */3]);
+        return /* Ld_hl_r */Block.__(13, [/* D */3]);
     case 115 : 
-        return /* Ld_hl_r */Block.__(10, [/* E */4]);
+        return /* Ld_hl_r */Block.__(13, [/* E */4]);
     case 116 : 
-        return /* Ld_hl_r */Block.__(10, [/* H */6]);
+        return /* Ld_hl_r */Block.__(13, [/* H */6]);
     case 117 : 
-        return /* Ld_hl_r */Block.__(10, [/* L */7]);
+        return /* Ld_hl_r */Block.__(13, [/* L */7]);
     case 119 : 
-        return /* Ld_hl_r */Block.__(10, [/* A */0]);
+        return /* Ld_hl_r */Block.__(13, [/* A */0]);
     case 126 : 
-        return /* Ld_r_hl */Block.__(11, [/* A */0]);
+        return /* Ld_r_hl */Block.__(14, [/* A */0]);
     case 64 : 
     case 65 : 
     case 66 : 
@@ -197,152 +210,182 @@ function decode(opcode) {
     case 135 : 
         return /* Add */Block.__(0, [/* A */0]);
     case 160 : 
-        return /* And */Block.__(1, [/* B */1]);
+        return /* And */Block.__(2, [/* B */1]);
     case 161 : 
-        return /* And */Block.__(1, [/* C */2]);
+        return /* And */Block.__(2, [/* C */2]);
     case 162 : 
-        return /* And */Block.__(1, [/* D */3]);
+        return /* And */Block.__(2, [/* D */3]);
     case 163 : 
-        return /* And */Block.__(1, [/* E */4]);
+        return /* And */Block.__(2, [/* E */4]);
     case 164 : 
-        return /* And */Block.__(1, [/* H */6]);
+        return /* And */Block.__(2, [/* H */6]);
     case 165 : 
-        return /* And */Block.__(1, [/* L */7]);
+        return /* And */Block.__(2, [/* L */7]);
     case 167 : 
-        return /* And */Block.__(1, [/* A */0]);
+        return /* And */Block.__(2, [/* A */0]);
     case 168 : 
-        return /* Xor */Block.__(23, [/* B */1]);
+        return /* Xor */Block.__(26, [/* B */1]);
     case 169 : 
-        return /* Xor */Block.__(23, [/* C */2]);
+        return /* Xor */Block.__(26, [/* C */2]);
     case 170 : 
-        return /* Xor */Block.__(23, [/* D */3]);
+        return /* Xor */Block.__(26, [/* D */3]);
     case 171 : 
-        return /* Xor */Block.__(23, [/* E */4]);
+        return /* Xor */Block.__(26, [/* E */4]);
     case 172 : 
-        return /* Xor */Block.__(23, [/* H */6]);
+        return /* Xor */Block.__(26, [/* H */6]);
     case 173 : 
-        return /* Xor */Block.__(23, [/* L */7]);
+        return /* Xor */Block.__(26, [/* L */7]);
     case 174 : 
-        return /* Xor_hl */31;
+        return /* Xor_hl */33;
     case 175 : 
-        return /* Xor */Block.__(23, [/* A */0]);
+        return /* Xor */Block.__(26, [/* A */0]);
     case 176 : 
-        return /* Or */Block.__(15, [/* B */1]);
+        return /* Or */Block.__(18, [/* B */1]);
     case 177 : 
-        return /* Or */Block.__(15, [/* C */2]);
+        return /* Or */Block.__(18, [/* C */2]);
     case 178 : 
-        return /* Or */Block.__(15, [/* D */3]);
+        return /* Or */Block.__(18, [/* D */3]);
     case 179 : 
-        return /* Or */Block.__(15, [/* E */4]);
+        return /* Or */Block.__(18, [/* E */4]);
     case 180 : 
-        return /* Or */Block.__(15, [/* H */6]);
+        return /* Or */Block.__(18, [/* H */6]);
     case 181 : 
-        return /* Or */Block.__(15, [/* L */7]);
+        return /* Or */Block.__(18, [/* L */7]);
     case 182 : 
-        return /* Or_hl */23;
+        return /* Or_hl */25;
     case 183 : 
-        return /* Or */Block.__(15, [/* A */0]);
+        return /* Or */Block.__(18, [/* A */0]);
+    case 184 : 
+        return /* Cp */Block.__(4, [/* B */1]);
+    case 185 : 
+        return /* Cp */Block.__(4, [/* C */2]);
+    case 186 : 
+        return /* Cp */Block.__(4, [/* D */3]);
+    case 187 : 
+        return /* Cp */Block.__(4, [/* E */4]);
+    case 188 : 
+        return /* Cp */Block.__(4, [/* H */6]);
+    case 189 : 
+        return /* Cp */Block.__(4, [/* L */7]);
+    case 191 : 
+        return /* Cp */Block.__(4, [/* A */0]);
     case 192 : 
-        return /* RetCond */Block.__(18, [
+        return /* RetCond */Block.__(21, [
                   /* Z */0,
                   false
                 ]);
     case 193 : 
-        return /* Pop16 */Block.__(16, [/* BC */1]);
+        return /* Pop16 */Block.__(19, [/* BC */1]);
+    case 194 : 
+        return /* JpCond */Block.__(9, [
+                  /* Z */0,
+                  false
+                ]);
     case 195 : 
-        return /* Jp */10;
+        return /* Jp */11;
     case 196 : 
-        return /* CallCond */Block.__(2, [
+        return /* CallCond */Block.__(3, [
                   /* Z */0,
                   false
                 ]);
     case 197 : 
-        return /* Push16 */Block.__(17, [/* BC */1]);
+        return /* Push16 */Block.__(20, [/* BC */1]);
     case 198 : 
         return /* Add_d8 */1;
     case 199 : 
-        return /* Rst */Block.__(20, [0]);
+        return /* Rst */Block.__(23, [0]);
     case 200 : 
-        return /* RetCond */Block.__(18, [
+        return /* RetCond */Block.__(21, [
                   /* Z */0,
                   true
                 ]);
     case 201 : 
-        return /* Ret */25;
+        return /* Ret */27;
+    case 202 : 
+        return /* JpCond */Block.__(9, [
+                  /* Z */0,
+                  true
+                ]);
     case 205 : 
         return /* Call */4;
     case 206 : 
         return /* Adc_d8 */0;
     case 207 : 
-        return /* Rst */Block.__(20, [8]);
+        return /* Rst */Block.__(23, [8]);
     case 208 : 
-        return /* RetCond */Block.__(18, [
+        return /* RetCond */Block.__(21, [
                   /* C */3,
                   false
                 ]);
     case 209 : 
-        return /* Pop16 */Block.__(16, [/* DE */2]);
+        return /* Pop16 */Block.__(19, [/* DE */2]);
+    case 210 : 
+        return /* JpCond */Block.__(9, [
+                  /* C */3,
+                  false
+                ]);
     case 213 : 
-        return /* Push16 */Block.__(17, [/* DE */2]);
+        return /* Push16 */Block.__(20, [/* DE */2]);
     case 214 : 
-        return /* Sub_d8 */29;
+        return /* Sub_d8 */31;
     case 215 : 
-        return /* Rst */Block.__(20, [16]);
+        return /* Rst */Block.__(23, [16]);
     case 216 : 
-        return /* RetCond */Block.__(18, [
+        return /* RetCond */Block.__(21, [
+                  /* C */3,
+                  true
+                ]);
+    case 218 : 
+        return /* JpCond */Block.__(9, [
                   /* C */3,
                   true
                 ]);
     case 223 : 
-        return /* Rst */Block.__(20, [24]);
+        return /* Rst */Block.__(23, [24]);
     case 224 : 
-        return /* Ld_write_io_n */14;
+        return /* Ld_write_io_n */16;
     case 225 : 
-        return /* Pop16 */Block.__(16, [/* HL */3]);
+        return /* Pop16 */Block.__(19, [/* HL */3]);
     case 226 : 
-        return /* Ld_write_io_c */16;
+        return /* Ld_write_io_c */18;
     case 229 : 
-        return /* Push16 */Block.__(17, [/* HL */3]);
+        return /* Push16 */Block.__(20, [/* HL */3]);
     case 230 : 
         return /* And_d8 */2;
     case 231 : 
-        return /* Rst */Block.__(20, [32]);
+        return /* Rst */Block.__(23, [32]);
+    case 233 : 
+        return /* Jp_hl */12;
     case 234 : 
-        return /* Ld_a16_a */20;
+        return /* Ld_a16_a */22;
     case 238 : 
-        return /* Xor_d8 */30;
+        return /* Xor_d8 */32;
     case 239 : 
-        return /* Rst */Block.__(20, [40]);
+        return /* Rst */Block.__(23, [40]);
     case 240 : 
-        return /* Ld_read_io_n */13;
+        return /* Ld_read_io_n */15;
     case 241 : 
-        return /* Pop16 */Block.__(16, [/* AF */0]);
+        return /* Pop16 */Block.__(19, [/* AF */0]);
     case 242 : 
-        return /* Ld_read_io_c */15;
+        return /* Ld_read_io_c */17;
     case 243 : 
-        return /* Di */8;
+        return /* Di */9;
     case 245 : 
-        return /* Push16 */Block.__(17, [/* AF */0]);
+        return /* Push16 */Block.__(20, [/* AF */0]);
     case 247 : 
-        return /* Rst */Block.__(20, [48]);
+        return /* Rst */Block.__(23, [48]);
     case 250 : 
-        return /* Ld_a_a16 */21;
+        return /* Ld_a_a16 */23;
     case 251 : 
-        return /* Ei */9;
+        return /* Ei */10;
     case 2 : 
-    case 4 : 
     case 7 : 
     case 8 : 
-    case 9 : 
     case 15 : 
     case 16 : 
     case 21 : 
     case 23 : 
-    case 25 : 
     case 27 : 
-    case 29 : 
-    case 39 : 
-    case 41 : 
     case 43 : 
     case 51 : 
     case 52 : 
@@ -351,7 +394,6 @@ function decode(opcode) {
     case 57 : 
     case 58 : 
     case 59 : 
-    case 60 : 
     case 63 : 
     case 118 : 
     case 128 : 
@@ -386,23 +428,12 @@ function decode(opcode) {
     case 158 : 
     case 159 : 
     case 166 : 
-    case 184 : 
-    case 185 : 
-    case 186 : 
-    case 187 : 
-    case 188 : 
-    case 189 : 
     case 190 : 
-    case 191 : 
-    case 194 : 
-    case 202 : 
     case 203 : 
     case 204 : 
-    case 210 : 
     case 211 : 
     case 212 : 
     case 217 : 
-    case 218 : 
     case 219 : 
     case 220 : 
     case 221 : 
@@ -410,7 +441,6 @@ function decode(opcode) {
     case 227 : 
     case 228 : 
     case 232 : 
-    case 233 : 
     case 235 : 
     case 236 : 
     case 237 : 
@@ -425,7 +455,7 @@ function decode(opcode) {
     case 254 : 
         return /* Cp_n */5;
     case 255 : 
-        return /* Rst */Block.__(20, [56]);
+        return /* Rst */Block.__(23, [56]);
     default:
       exit = 1;
   }
@@ -452,7 +482,7 @@ function decode(opcode) {
     case 2 : 
         var dst = Caml_array.caml_array_get(regs, (opcode >>> 3) & 7);
         var src = Caml_array.caml_array_get(regs, opcode & 7);
-        return /* Ld_rr */Block.__(9, [
+        return /* Ld_rr */Block.__(12, [
                   dst,
                   src
                 ]);
@@ -464,21 +494,21 @@ function decode_cb(opcode) {
   var exit = 0;
   switch (opcode) {
     case 24 : 
-        return /* Rr */Block.__(19, [/* Register */Block.__(0, [/* B */1])]);
+        return /* Rr */Block.__(22, [/* Register */Block.__(0, [/* B */1])]);
     case 25 : 
-        return /* Rr */Block.__(19, [/* Register */Block.__(0, [/* C */2])]);
+        return /* Rr */Block.__(22, [/* Register */Block.__(0, [/* C */2])]);
     case 26 : 
-        return /* Rr */Block.__(19, [/* Register */Block.__(0, [/* D */3])]);
+        return /* Rr */Block.__(22, [/* Register */Block.__(0, [/* D */3])]);
     case 27 : 
-        return /* Rr */Block.__(19, [/* Register */Block.__(0, [/* E */4])]);
+        return /* Rr */Block.__(22, [/* Register */Block.__(0, [/* E */4])]);
     case 28 : 
-        return /* Rr */Block.__(19, [/* Register */Block.__(0, [/* H */6])]);
+        return /* Rr */Block.__(22, [/* Register */Block.__(0, [/* H */6])]);
     case 29 : 
-        return /* Rr */Block.__(19, [/* Register */Block.__(0, [/* L */7])]);
+        return /* Rr */Block.__(22, [/* Register */Block.__(0, [/* L */7])]);
     case 30 : 
-        return /* Rr */Block.__(19, [/* Pointer */Block.__(2, [/* HL */3])]);
+        return /* Rr */Block.__(22, [/* Pointer */Block.__(2, [/* HL */3])]);
     case 31 : 
-        return /* Rr */Block.__(19, [/* Register */Block.__(0, [/* A */0])]);
+        return /* Rr */Block.__(22, [/* Register */Block.__(0, [/* A */0])]);
     case 32 : 
     case 33 : 
     case 34 : 
@@ -498,37 +528,37 @@ function decode_cb(opcode) {
         exit = 1;
         break;
     case 48 : 
-        return /* Swap */Block.__(22, [/* B */1]);
+        return /* Swap */Block.__(25, [/* B */1]);
     case 49 : 
-        return /* Swap */Block.__(22, [/* C */2]);
+        return /* Swap */Block.__(25, [/* C */2]);
     case 50 : 
-        return /* Swap */Block.__(22, [/* D */3]);
+        return /* Swap */Block.__(25, [/* D */3]);
     case 51 : 
-        return /* Swap */Block.__(22, [/* E */4]);
+        return /* Swap */Block.__(25, [/* E */4]);
     case 52 : 
-        return /* Swap */Block.__(22, [/* H */6]);
+        return /* Swap */Block.__(25, [/* H */6]);
     case 53 : 
-        return /* Swap */Block.__(22, [/* L */7]);
+        return /* Swap */Block.__(25, [/* L */7]);
     case 54 : 
-        return /* Swap_hl */28;
+        return /* Swap_hl */30;
     case 55 : 
-        return /* Swap */Block.__(22, [/* A */0]);
+        return /* Swap */Block.__(25, [/* A */0]);
     case 56 : 
-        return /* Srl */Block.__(21, [/* B */1]);
+        return /* Srl */Block.__(24, [/* B */1]);
     case 57 : 
-        return /* Srl */Block.__(21, [/* C */2]);
+        return /* Srl */Block.__(24, [/* C */2]);
     case 58 : 
-        return /* Srl */Block.__(21, [/* D */3]);
+        return /* Srl */Block.__(24, [/* D */3]);
     case 59 : 
-        return /* Srl */Block.__(21, [/* E */4]);
+        return /* Srl */Block.__(24, [/* E */4]);
     case 60 : 
-        return /* Srl */Block.__(21, [/* H */6]);
+        return /* Srl */Block.__(24, [/* H */6]);
     case 61 : 
-        return /* Srl */Block.__(21, [/* L */7]);
+        return /* Srl */Block.__(24, [/* L */7]);
     case 62 : 
-        return /* Srl_hl */27;
+        return /* Srl_hl */29;
     case 63 : 
-        return /* Srl */Block.__(21, [/* A */0]);
+        return /* Srl */Block.__(24, [/* A */0]);
     default:
       exit = 1;
   }
@@ -573,54 +603,58 @@ function pretty(instruction) {
       case 6 : 
           return "CPL";
       case 7 : 
-          return "DEC (HL)";
+          return "DAA";
       case 8 : 
-          return "DI";
+          return "DEC (HL)";
       case 9 : 
-          return "EI";
+          return "DI";
       case 10 : 
-          return "JP nn";
+          return "EI";
       case 11 : 
-          return "JR e8";
+          return "JP nn";
       case 12 : 
-          return "LD sp, nn";
+          return "JP (HL)";
       case 13 : 
-          return "LDH A, (FF00+n)";
+          return "JR e8";
       case 14 : 
-          return "LDH (FF00+n), A";
+          return "LD sp, nn";
       case 15 : 
-          return "LD A, (FF00+C)";
+          return "LDH A, (FF00+n)";
       case 16 : 
-          return "LD (FF00+C), A";
+          return "LDH (FF00+n), A";
       case 17 : 
-          return "LDD (HL), A";
+          return "LD A, (FF00+C)";
       case 18 : 
-          return "LDI A, (HL)";
+          return "LD (FF00+C), A";
       case 19 : 
-          return "LDI (HL), A";
+          return "LDD (HL), A";
       case 20 : 
-          return "LD (a16), A";
+          return "LDI A, (HL)";
       case 21 : 
-          return "LD A,(a16)";
+          return "LDI (HL), A";
       case 22 : 
-          return "LD n, (HL)";
+          return "LD (a16), A";
       case 23 : 
-          return "OR (HL)";
+          return "LD A,(a16)";
       case 24 : 
-          return "NOP";
+          return "LD n, (HL)";
       case 25 : 
-          return "RET";
+          return "OR (HL)";
       case 26 : 
-          return "RRA";
+          return "NOP";
       case 27 : 
-          return "SRL (HL)";
+          return "RET";
       case 28 : 
-          return "SWAP (HL)";
+          return "RRA";
       case 29 : 
-          return "SUB d8";
+          return "SRL (HL)";
       case 30 : 
-          return "XOR d8";
+          return "SWAP (HL)";
       case 31 : 
+          return "SUB d8";
+      case 32 : 
+          return "XOR d8";
+      case 33 : 
           return "XOR A, (HL)";
       
     }
@@ -640,6 +674,17 @@ function pretty(instruction) {
       case 1 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
+                              "ADD HL, ",
+                              /* String */Block.__(2, [
+                                  /* No_padding */0,
+                                  /* End_of_format */0
+                                ])
+                            ]),
+                          "ADD HL, %s"
+                        ]), Registers$Yobml.to_string16(instruction[0]));
+      case 2 : 
+          return Curry._1(Printf.sprintf(/* Format */[
+                          /* String_literal */Block.__(11, [
                               "AND ",
                               /* String */Block.__(2, [
                                   /* No_padding */0,
@@ -648,7 +693,7 @@ function pretty(instruction) {
                             ]),
                           "AND %s"
                         ]), Registers$Yobml.to_string(instruction[0]));
-      case 2 : 
+      case 3 : 
           var match = instruction[0];
           if (match !== 0) {
             if (match >= 3) {
@@ -665,20 +710,20 @@ function pretty(instruction) {
           } else {
             return "CALL NZ, d16";
           }
-      case 3 : 
-          return Curry._1(Printf.sprintf(/* Format */[
-                          /* String_literal */Block.__(11, [
-                              "DEC ",
-                              /* String */Block.__(2, [
-                                  /* No_padding */0,
-                                  /* End_of_format */0
-                                ])
-                            ]),
-                          "DEC %s"
-                        ]), Registers$Yobml.to_string(instruction[0]));
       case 4 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
+                              "CP ",
+                              /* String */Block.__(2, [
+                                  /* No_padding */0,
+                                  /* End_of_format */0
+                                ])
+                            ]),
+                          "CP %s"
+                        ]), Registers$Yobml.to_string(instruction[0]));
+      case 5 : 
+          return Curry._1(Printf.sprintf(/* Format */[
+                          /* String_literal */Block.__(11, [
                               "DEC ",
                               /* String */Block.__(2, [
                                   /* No_padding */0,
@@ -686,21 +731,32 @@ function pretty(instruction) {
                                 ])
                             ]),
                           "DEC %s"
-                        ]), Registers$Yobml.to_string16(instruction[0]));
-      case 5 : 
-          return Curry._1(Printf.sprintf(/* Format */[
-                          /* String_literal */Block.__(11, [
-                              "INC ",
-                              /* String */Block.__(2, [
-                                  /* No_padding */0,
-                                  /* End_of_format */0
-                                ])
-                            ]),
-                          "INC %s"
                         ]), Registers$Yobml.to_string(instruction[0]));
       case 6 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
+                              "DEC ",
+                              /* String */Block.__(2, [
+                                  /* No_padding */0,
+                                  /* End_of_format */0
+                                ])
+                            ]),
+                          "DEC %s"
+                        ]), Registers$Yobml.to_string16(instruction[0]));
+      case 7 : 
+          return Curry._1(Printf.sprintf(/* Format */[
+                          /* String_literal */Block.__(11, [
+                              "INC ",
+                              /* String */Block.__(2, [
+                                  /* No_padding */0,
+                                  /* End_of_format */0
+                                ])
+                            ]),
+                          "INC %s"
+                        ]), Registers$Yobml.to_string(instruction[0]));
+      case 8 : 
+          return Curry._1(Printf.sprintf(/* Format */[
+                          /* String_literal */Block.__(11, [
                               "INC ",
                               /* String */Block.__(2, [
                                   /* No_padding */0,
@@ -709,10 +765,27 @@ function pretty(instruction) {
                             ]),
                           "INC %s"
                         ]), Registers$Yobml.to_string16(instruction[0]));
-      case 7 : 
+      case 9 : 
           var match$1 = instruction[0];
           if (match$1 !== 0) {
             if (match$1 >= 3) {
+              if (instruction[1]) {
+                return "JP C, a16";
+              } else {
+                return "JP NC, a16";
+              }
+            } else {
+              return "JP unreachable";
+            }
+          } else if (instruction[1]) {
+            return "JP Z, a16";
+          } else {
+            return "JP NZ, a16";
+          }
+      case 10 : 
+          var match$2 = instruction[0];
+          if (match$2 !== 0) {
+            if (match$2 >= 3) {
               if (instruction[1]) {
                 return "JR C, nn";
               } else {
@@ -726,7 +799,7 @@ function pretty(instruction) {
           } else {
             return "JR NZ, nn";
           }
-      case 8 : 
+      case 11 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "LD [",
@@ -740,7 +813,7 @@ function pretty(instruction) {
                             ]),
                           "LD [%s], A"
                         ]), Registers$Yobml.to_string16(instruction[0]));
-      case 9 : 
+      case 12 : 
           return Curry._2(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "LD ",
@@ -757,7 +830,7 @@ function pretty(instruction) {
                             ]),
                           "LD %s, %s"
                         ]), Registers$Yobml.to_string(instruction[0]), Registers$Yobml.to_string(instruction[1]));
-      case 10 : 
+      case 13 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "LD (HL), ",
@@ -768,7 +841,7 @@ function pretty(instruction) {
                             ]),
                           "LD (HL), %s"
                         ]), Registers$Yobml.to_string(instruction[0]));
-      case 11 : 
+      case 14 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "LD ",
@@ -782,7 +855,7 @@ function pretty(instruction) {
                             ]),
                           "LD %s, (HL)"
                         ]), Registers$Yobml.to_string(instruction[0]));
-      case 12 : 
+      case 15 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "LD A, [",
@@ -796,7 +869,7 @@ function pretty(instruction) {
                             ]),
                           "LD A, [%s]"
                         ]), Registers$Yobml.to_string16(instruction[0]));
-      case 13 : 
+      case 16 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "LD ",
@@ -810,7 +883,7 @@ function pretty(instruction) {
                             ]),
                           "LD %s, n"
                         ]), Registers$Yobml.to_string(instruction[0]));
-      case 14 : 
+      case 17 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "LD ",
@@ -824,7 +897,7 @@ function pretty(instruction) {
                             ]),
                           "LD %s, nn"
                         ]), Registers$Yobml.to_string16(instruction[0]));
-      case 15 : 
+      case 18 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "OR ",
@@ -835,7 +908,7 @@ function pretty(instruction) {
                             ]),
                           "OR %s"
                         ]), Registers$Yobml.to_string(instruction[0]));
-      case 16 : 
+      case 19 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "POP ",
@@ -846,7 +919,7 @@ function pretty(instruction) {
                             ]),
                           "POP %s"
                         ]), Registers$Yobml.to_string16(instruction[0]));
-      case 17 : 
+      case 20 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "PUSH ",
@@ -857,10 +930,10 @@ function pretty(instruction) {
                             ]),
                           "PUSH %s"
                         ]), Registers$Yobml.to_string16(instruction[0]));
-      case 18 : 
-          var match$2 = instruction[0];
-          if (match$2 !== 0) {
-            if (match$2 >= 3) {
+      case 21 : 
+          var match$3 = instruction[0];
+          if (match$3 !== 0) {
+            if (match$3 >= 3) {
               if (instruction[1]) {
                 return "RET C";
               } else {
@@ -874,9 +947,9 @@ function pretty(instruction) {
           } else {
             return "RET NZ";
           }
-      case 19 : 
-          var match$3 = instruction[0];
-          switch (match$3.tag | 0) {
+      case 22 : 
+          var match$4 = instruction[0];
+          switch (match$4.tag | 0) {
             case 0 : 
                 return Curry._1(Printf.sprintf(/* Format */[
                                 /* String_literal */Block.__(11, [
@@ -887,7 +960,7 @@ function pretty(instruction) {
                                       ])
                                   ]),
                                 "RR %s"
-                              ]), Registers$Yobml.to_string(match$3[0]));
+                              ]), Registers$Yobml.to_string(match$4[0]));
             case 1 : 
                 return Curry._1(Printf.sprintf(/* Format */[
                                 /* String_literal */Block.__(11, [
@@ -898,7 +971,7 @@ function pretty(instruction) {
                                       ])
                                   ]),
                                 "RR %s"
-                              ]), Registers$Yobml.to_string16(match$3[0]));
+                              ]), Registers$Yobml.to_string16(match$4[0]));
             case 2 : 
                 return Curry._1(Printf.sprintf(/* Format */[
                                 /* String_literal */Block.__(11, [
@@ -912,10 +985,10 @@ function pretty(instruction) {
                                       ])
                                   ]),
                                 "RR (%s)"
-                              ]), Registers$Yobml.to_string16(match$3[0]));
+                              ]), Registers$Yobml.to_string16(match$4[0]));
             
           }
-      case 20 : 
+      case 23 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "RST ",
@@ -934,7 +1007,7 @@ function pretty(instruction) {
                             ]),
                           "RST %02XH"
                         ]), instruction[0]);
-      case 21 : 
+      case 24 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "SRL ",
@@ -945,7 +1018,7 @@ function pretty(instruction) {
                             ]),
                           "SRL %s"
                         ]), Registers$Yobml.to_string(instruction[0]));
-      case 22 : 
+      case 25 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "SWAP ",
@@ -956,7 +1029,7 @@ function pretty(instruction) {
                             ]),
                           "SWAP %s"
                         ]), Registers$Yobml.to_string(instruction[0]));
-      case 23 : 
+      case 26 : 
           return Curry._1(Printf.sprintf(/* Format */[
                           /* String_literal */Block.__(11, [
                               "XOR ",

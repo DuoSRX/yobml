@@ -14,13 +14,16 @@ type instruction =
   | Adc_d8
   | Add(register)
   | Add_d8
+  | Add_hl_r16(register16)
   | And_d8
   | And(register)
   | And_hl
   | Call
   | CallCond(Cpu.cpu_flag, bool)
+  | Cp(register)
   | Cp_n
   | Cpl
+  | Daa
   | Dec(register)
   | Dec16(register16)
   | Dec_hl
@@ -29,6 +32,8 @@ type instruction =
   | Inc(register)
   | Inc16(register16)
   | Jp
+  | JpCond(Cpu.cpu_flag, bool)
+  | Jp_hl
   | Jr_e8
   | Jr(Cpu.cpu_flag, bool)
   | Ld_sp
@@ -88,8 +93,10 @@ let decode = (opcode) => switch(opcode) {
     }
   | 0x01 => Ld_nn(BC)
   | 0x03 => Inc16(BC)
+  | 0x04 => Inc(B)
   | 0x05 => Dec(B)
   | 0x06 => Ld_n(B)
+  | 0x09 => Add_hl_r16(BC)
   | 0x0A => Ld_a_r16(BC)
   | 0x0B => Dec16(BC)
   | 0x0C => Inc(C)
@@ -101,8 +108,10 @@ let decode = (opcode) => switch(opcode) {
   | 0x14 => Inc(D)
   | 0x16 => Ld_n(D)
   | 0x18 => Jr_e8
+  | 0x19 => Add_hl_r16(DE)
   | 0x1A => Ld_a_r16(DE)
   | 0x1C => Inc(E)
+  | 0x1D => Dec(E)
   | 0x1F => Rra
   | 0x1E => Ld_n(E)
   | 0x20 => Jr(Z, false)
@@ -112,7 +121,9 @@ let decode = (opcode) => switch(opcode) {
   | 0x24 => Inc(H)
   | 0x25 => Dec(H)
   | 0x26 => Ld_n(H)
+  | 0x27 => Daa
   | 0x28 => Jr(Z, true)
+  | 0x29 => Add_hl_r16(DE)
   | 0x2A => Ldi_a_hl
   | 0x2C => Inc(L)
   | 0x2D => Dec(L)
@@ -123,6 +134,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x32 => Ldd_hl_a
   | 0x35 => Dec_hl
   | 0x36 => Ld_hl_d8
+  | 0x3C => Inc(A)
   | 0x3D => Dec(A)
   | 0x3E => Ld_n(A)
   | 0x46 => Ld_r_hl(B)
@@ -168,8 +180,17 @@ let decode = (opcode) => switch(opcode) {
   | 0xB5 => Or(L)
   | 0xB6 => Or_hl
   | 0xB7 => Or(A)
+  | 0xB8 => Cp(B)
+  | 0xB9 => Cp(C)
+  | 0xBA => Cp(D)
+  | 0xBB => Cp(E)
+  | 0xBC => Cp(H)
+  | 0xBD => Cp(L)
+  // | 0xBE => Cp_hl
+  | 0xBF => Cp(A)
   | 0xC0 => RetCond(Z, false)
   | 0xC1 => Pop16(BC)
+  | 0xC2 => JpCond(Z, false)
   | 0xC3 => Jp
   | 0xC4 => CallCond(Z, false)
   | 0xC5 => Push16(BC)
@@ -177,15 +198,18 @@ let decode = (opcode) => switch(opcode) {
   | 0xC7 => Rst(0)
   | 0xC8 => RetCond(Z, true)
   | 0xC9 => Ret
+  | 0xCA => JpCond(Z, true)
   | 0xCE => Adc_d8
   | 0xCF => Rst(0x8)
   | 0xCD => Call
   | 0xD0 => RetCond(C, false)
   | 0xD1 => Pop16(DE)
+  | 0xD2 => JpCond(C, false)
   | 0xD5 => Push16(DE)
   | 0xD6 => Sub_d8
   | 0xD7 => Rst(0x10)
   | 0xD8 => RetCond(C, true)
+  | 0xDA => JpCond(C, true)
   | 0xDF => Rst(0x18)
   | 0xE0 => Ld_write_io_n
   | 0xE1 => Pop16(HL)
@@ -193,6 +217,7 @@ let decode = (opcode) => switch(opcode) {
   | 0xE5 => Push16(HL)
   | 0xE6 => And_d8
   | 0xE7 => Rst(0x20)
+  | 0xE9 => Jp_hl
   | 0xEA => Ld_a16_a
   | 0xEE => Xor_d8
   | 0xEF => Rst(0x28)
@@ -241,6 +266,7 @@ let decode_cb = (opcode) => switch(opcode) {
 let pretty = (instruction) => switch(instruction) {
   | Adc_d8 => "ADC d8"
   | Add_d8 => "ADD A, d8"
+  | Add_hl_r16(r) => sprintf("ADD HL, %s", to_string16(r))
   | Add(r) => sprintf("ADD A, %s", to_string(r))
   | And_d8 => "AND d8"
   | And(r) => sprintf("AND %s", to_string(r))
@@ -251,13 +277,20 @@ let pretty = (instruction) => switch(instruction) {
   | CallCond(Z, true) => "CALL Z, d16"
   | CallCond(Z, false) => "CALL NZ, d16"
   | CallCond(_,_) => "unreachable"
+  | Cp(r) => sprintf("CP %s", to_string(r))
   | Cp_n => "CP n"
   | Cpl => "CPL"
+  | Daa => "DAA"
   | Dec(r) => sprintf("DEC %s", to_string(r))
   | Dec16(r) => sprintf("DEC %s", to_string16(r))
   | Dec_hl => "DEC (HL)"
   | Di => "DI"
   | Ei => "EI"
+  | JpCond(C, true) => "JP C, a16"
+  | JpCond(C, false) => "JP NC, a16"
+  | JpCond(Z, true) => "JP Z, a16"
+  | JpCond(Z, false) => "JP NZ, a16"
+  | JpCond(_,_) => "JP unreachable"
   | Ld_sp => "LD sp, nn"
   | Ld_n(r) => sprintf("LD %s, n", to_string(r))
   | Ld_r_hl(r) => sprintf("LD %s, (HL)", to_string(r))
@@ -279,6 +312,7 @@ let pretty = (instruction) => switch(instruction) {
   | Inc(r) => sprintf("INC %s", to_string(r))
   | Inc16(r) => sprintf("INC %s", to_string16(r))
   | Jp => "JP nn"
+  | Jp_hl => "JP (HL)"
   | Jr_e8 => "JR e8"
   | Jr(Z, false) => "JR NZ, nn"
   | Jr(C, false) => "JR NC, nn"
