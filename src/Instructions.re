@@ -49,6 +49,7 @@ type instruction =
   | Ldi_a_hl
   | Ldi_hl_a
   | Ld_a16_a
+  | Ld_a16_sp
   | Ld_a_a16
   | Ld_a_r16(register16)
   | Ld_n(register)
@@ -98,6 +99,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x04 => Inc(B)
   | 0x05 => Dec(B)
   | 0x06 => Ld_n(B)
+  | 0x08 => Ld_a16_sp
   | 0x09 => Add_hl_r16(BC)
   | 0x0A => Ld_a_r16(BC)
   | 0x0B => Dec16(BC)
@@ -270,13 +272,6 @@ let decode_cb = (opcode) => switch(opcode) {
   | 0xAE => Res_hl(5)
   | 0xB6 => Res_hl(6)
   | 0xBE => Res_hl(7)
-  // | 0x80 | 0x81 | 0x82 | 0x83 | 0x84 | 0x85 | 0x87 // RES 0, r
-  // | 0x88 | 0x89 | 0x8A | 0x8B | 0x8C | 0x8D | 0x8F // RES 1, r
-  // | 0x90 | 0x91 | 0x92 | 0x93 | 0x94 | 0x95 | 0x97 // RES 2, r
-  // | 0x98 | 0x99 | 0x9A | 0x9B | 0x9C | 0x9D | 0x9F // RES 3, r
-  // | 0x60 | 0x61 | 0x62 | 0x63 | 0x64 | 0x65 | 0x67 // RES 4, r
-  // | 0x68 | 0x69 | 0x6A | 0x6B | 0x6C | 0x6D | 0x6F // RES 5, r
-  // | 0x78 | 0x79 | 0x7A | 0x7B | 0x7C | 0x7D | 0x7F // RES 6, r
   | _ when opcode >= 0x80 && opcode <= 0xBF => {
       let reg = regs[opcode land 7];
       let bit = opcode lsr 3 land 7;
@@ -327,6 +322,7 @@ let pretty = (instruction) => switch(instruction) {
   | Ldd_hl_a => "LDD (HL), A"
   | Ld_a_a16 => "LD A,(a16)"
   | Ld_a16_a => "LD (a16), A"
+  | Ld_a16_sp => "LD (a16), SP"
   | Ld_read_io_n => "LDH A, (FF00+n)"
   | Ld_write_io_n => "LDH (FF00+n), A"
   | Ld_read_io_c => "LD A, (FF00+C)"

@@ -162,7 +162,6 @@ function step(cpu) {
   var match;
   if (opcode !== 203) {
     var instruction = Instructions$Yobml.decode(opcode);
-    trace(cpu, instruction);
     match = /* tuple */[
       /* record */[
         /* sp */cpu[/* sp */0],
@@ -178,7 +177,6 @@ function step(cpu) {
   } else {
     var $$byte = Memory$Yobml.load(cpu[/* memory */5], cpu[/* pc */1] + 1 | 0);
     var instruction$1 = Instructions$Yobml.decode_cb($$byte);
-    trace(cpu, instruction$1);
     match = /* tuple */[
       /* record */[
         /* sp */cpu[/* sp */0],

@@ -10,7 +10,7 @@ let load = (cpu, address) => Memory.load(cpu.memory, address)
 let load16 = (cpu, address) => Memory.load16(cpu.memory, address)
 let store = (cpu, address, value) => {
   if (address == 0xFF01 || address == 0xFF02) {
-    cpu.serial = [char_of_int(value), ...cpu.serial];
+    cpu.serial = [String.make(1, Char.chr(value)), ...cpu.serial];
   }
   Memory.store(cpu.memory, address, value)
 }
@@ -66,7 +66,7 @@ let ret_cond = (cpu, flag, condition) => {
      let sp = wrapping_add16(cpu.sp, 2)
     bump({...cpu, sp}, pc, 20)
   } else {
-    bump(cpu, cpu.pc + 2, 8)
+    bump(cpu, cpu.pc, 8)
   }
 }
 
@@ -207,7 +207,16 @@ let ld_r_hl = (cpu, r) => {
 
 let ld_read_io_n = (cpu) => {
   let n = load_next(cpu);
-  let byte = load(cpu, wrapping_add16(0xFF00, n));
+  let byte = if (n == 0x44) {
+    // Hacks to boot Tetris...
+    switch (cpu.pc - 1) {
+    | 0x0233 => 0x94
+    | 0x2828 => 0x91
+    | _ => 0
+    }
+  } else {
+    load(cpu, wrapping_add16(0xFF00, n));
+  }
   set_register(cpu, A, byte);
   bump(cpu, cpu.pc + 1, 12)
 }
@@ -242,6 +251,12 @@ let ld_a16_a = (cpu) => {
   let address = load_next16(cpu)
   store(cpu, address, get_register(cpu, A))
   bump(cpu, cpu.pc + 2, 16)
+}
+
+let ld_a16_sp = (cpu) => {
+  let address = load_next16(cpu)
+  store16(cpu, address, cpu.sp)
+  bump(cpu, cpu.pc + 2, 20)
 }
 
 let inc = (cpu, r) => {
@@ -351,7 +366,11 @@ let jp_hl = (cpu) => {
 let jr_e8 = (cpu) => {
   let byte = load_next(cpu);
   // Treat the byte as a signed integer
-  let offset = (byte < 0x80) ? byte : (byte - 0x100);
+  let offset = if (byte > 0x7F) {
+    -((lnot(byte) + 1) land 0xFF)
+  } else {
+    byte
+  }
   bump(cpu, cpu.pc + offset + 1, 12)
 }
 
@@ -361,7 +380,12 @@ let jr = (cpu, flag, condition) => {
   if (do_jump) {
     let byte = load_next(cpu);
     // Treat the byte as a signed integer
-    let offset = (byte < 0x80) ? byte : (byte - 0x100);
+    let offset = if (byte > 0x7F) {
+      -((lnot(byte) + 1) land 0xFF)
+    } else {
+      byte
+    }
+
     bump(cpu, cpu.pc + offset + 1, 12)
   } else {
     bump(cpu, cpu.pc + 1, 8)
@@ -442,7 +466,7 @@ let rra = (cpu) => {
 }
 
 let rst = (cpu, n) => {
-  let sp = wrapping_add(cpu.sp, -2)
+  let sp = wrapping_add16(cpu.sp, -2)
   store16(cpu, sp, cpu.pc)
   bump({...cpu, sp}, n, 16)
 }
@@ -544,6 +568,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ld_read_io_c => ld_read_io_c(cpu)
   | Ld_write_io_c => ld_write_io_c(cpu)
   | Ld_a_r16(r) => ld_a_r16(cpu, r)
+  | Ld_a16_sp => ld_a16_sp(cpu)
   | Ld_r16_a(r) => ld_r16_a(cpu, r)
   | Ld_a_a16 => ld_a_a16(cpu)
   | Ld_rr(r1, r2) => ld_rr(cpu, r1, r2)
