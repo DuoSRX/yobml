@@ -1,6 +1,6 @@
-# Basic Reason Template
+# YOBML
 
-Hello! This project allows you to quickly get started with Reason and BuckleScript. If you wanted a more sophisticated version, try the `react` template (`bsb -theme react -init .`).
+Yes. Yes. Another GameBoy emulator.
 
 # Build
 ```
@@ -13,6 +13,8 @@ npm run build
 npm run start
 ```
 
+# Run
 
-# Editor
-If you use `vscode`, Press `Windows + Shift + B` it will build automatically
+```
+node src/Main.bs.js
+```
