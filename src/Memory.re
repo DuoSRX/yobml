@@ -41,7 +41,8 @@ let load = (mem, address) => {
   } else if (address >= 0xFEA0 && address <= 0xFEFF) {
     0 // Some games try to read/write here. No-op
   } else if (address >= 0xFF00 && address < 0xFF80) {
-    mem.io[address land 0x7F]
+    0x94
+    // mem.io[address land 0x7F]
   } else if (address >= 0xFF80) {
     mem.hram[address land 0x7F]
   } else {

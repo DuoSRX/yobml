@@ -37,7 +37,7 @@ function load(mem, address) {
   } else if (address >= 65184 && address <= 65279) {
     return 0;
   } else if (address >= 65280 && address < 65408) {
-    return Caml_array.caml_array_get(mem[/* io */5], address & 127);
+    return 148;
   } else if (address >= 65408) {
     return Caml_array.caml_array_get(mem[/* hram */6], address & 127);
   } else {

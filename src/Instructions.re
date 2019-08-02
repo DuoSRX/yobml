@@ -18,20 +18,24 @@ type instruction =
   | Call
   | CallCond(Cpu.cpu_flag, bool)
   | Cp_n
+  | Cpl
   | Dec(register)
+  | Dec16(register16)
+  | Dec_hl
   | Di
-  | Ld_sp
-  | Ld_r16_a(register16)
-  | Ld_rr(register, register)
+  | Ei
   | Inc(register)
   | Inc16(register16)
   | Jp
   | Jr_e8
   | Jr(Cpu.cpu_flag, bool)
+  | Ld_sp
+  | Ld_r16_a(register16)
+  | Ld_rr(register, register)
   | Ld_read_io_n
   | Ld_write_io_n
-  // | Ld_read_io_c
-  // | Ld_write_io_c
+  | Ld_read_io_c
+  | Ld_write_io_c
   | Ld_hl_r(register)
   | Ld_r_hl(register)
   | Ldd_hl_a
@@ -91,6 +95,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x1A => Ld_a_r16(DE)
   | 0x1C => Inc(E)
   | 0x1F => Rra
+  | 0x0B => Dec16(BC)
   | 0x0C => Inc(C)
   | 0x0D => Dec(C)
   | 0x0E => Ld_n(C)
@@ -107,15 +112,20 @@ let decode = (opcode) => switch(opcode) {
   | 0x2C => Inc(L)
   | 0x2D => Dec(L)
   | 0x2E => Ld_n(L)
+  | 0x2F => Cpl
   | 0x30 => Jr(C, false)
   | 0x31 => Ld_sp
   | 0x32 => Ldd_hl_a
+  | 0x35 => Dec_hl
   | 0x36 => Ld_hl_d8
   | 0x3D => Dec(A)
   | 0x3E => Ld_n(A)
   | 0x46 => Ld_r_hl(B)
-  | 0x4E => Ld_r_hl(E)
+  | 0x4E => Ld_r_hl(C)
   | 0x56 => Ld_r_hl(D)
+  | 0x5E => Ld_r_hl(E)
+  | 0x66 => Ld_r_hl(H)
+  | 0x6E => Ld_r_hl(L)
   | 0x70 => Ld_hl_r(B)
   | 0x71 => Ld_hl_r(C)
   | 0x72 => Ld_hl_r(D)
@@ -124,6 +134,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x75 => Ld_hl_r(L)
   // 0x75 => HALT
   | 0x77 => Ld_hl_r(A)
+  | 0x7E => Ld_r_hl(A)
   // | 0x41 => Ld_rr(B, C)
   // | 0x42 => Ld_rr(B, D)
   // | 0x47 => Ld_rr(B, A)
@@ -160,18 +171,19 @@ let decode = (opcode) => switch(opcode) {
   | 0xD8 => RetCond(C, true)
   | 0xE0 => Ld_write_io_n
   | 0xE1 => Pop16(HL)
+  | 0xE2 => Ld_write_io_c
   | 0xE5 => Push16(HL)
   | 0xE6 => And_d8
   | 0xEA => Ld_a16_a
   | 0xEE => Xor_d8
+  | 0xF0 => Ld_read_io_n
   | 0xF1 => Pop16(AF)
+  | 0xF2 => Ld_read_io_c
+  | 0xF3 => Di
   | 0xF5 => Push16(AF)
   | 0xFA => Ld_a_a16
+  | 0xFB => Ei
   | 0xFE => Cp_n
-  // | 0xE2 => Ld_write_io_c
-  | 0xF0 => Ld_read_io_n
-  // | 0xF2 => Ld_read_io_c
-  | 0xF3 => Di
   // | n => Js.log(sprintf("Opcode not implemented: %02X", n)); Nop
   | n => raise(OpcodeNotImplemented(sprintf("0x%02X", n)))
 }
@@ -207,7 +219,12 @@ let pretty = (instruction) => switch(instruction) {
   | CallCond(Z, false) => "CALL NZ, d16"
   | CallCond(_,_) => "unreachable"
   | Cp_n => "CP n"
-  | Di => "Di"
+  | Cpl => "CPL"
+  | Dec(r) => sprintf("DEC %s", to_string(r))
+  | Dec16(r) => sprintf("DEC %s", to_string16(r))
+  | Dec_hl => "DEC (HL)"
+  | Di => "DI"
+  | Ei => "EI"
   | Ld_sp => "LD sp, nn"
   | Ld_n(r) => sprintf("LD %s, n", to_string(r))
   | Ld_r_hl(r) => sprintf("LD %s, (HL)", to_string(r))
@@ -224,11 +241,10 @@ let pretty = (instruction) => switch(instruction) {
   | Ld_a16_a => "LD (a16), A"
   | Ld_read_io_n => "LDH A, (FF00+n)"
   | Ld_write_io_n => "LDH (FF00+n), A"
-  // | Ld_read_io_c => "LD A, (FF00+C)"
-  // | Ld_write_io_c => "LD (FF00+c), A"
+  | Ld_read_io_c => "LD A, (FF00+C)"
+  | Ld_write_io_c => "LD (FF00+C), A"
   | Inc(r) => sprintf("INC %s", to_string(r))
   | Inc16(r) => sprintf("INC %s", to_string16(r))
-  | Dec(r) => sprintf("DEC %s", to_string(r))
   | Jp => "JP nn"
   | Jr_e8 => "JR e8"
   | Jr(Z, false) => "JR NZ, nn"

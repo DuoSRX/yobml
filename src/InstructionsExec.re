@@ -78,8 +78,17 @@ let cp_n = (cpu) => {
   bump(cpu, cpu.pc + 1, 8)
 }
 
+let cpl = (cpu) => {
+  get_register(cpu, A) lxor 0xFF |> set_register(cpu, A);
+  set_flags(cpu, ~n=true, ~h=true, ())
+  bump(cpu, cpu.pc, 4)
+}
+
 let di = (cpu) =>
   bump({...cpu, ime: false}, cpu.pc, 4)
+
+let ei = (cpu) =>
+  bump({...cpu, ime: true}, cpu.pc, 4)
 
 let ld_rr = (cpu, r1, r2) => {
   get_register(cpu, r2) |> set_register(cpu, r1)
@@ -168,6 +177,20 @@ let ld_write_io_n = (cpu) => {
   bump(cpu, cpu.pc + 1, 12)
 }
 
+let ld_read_io_c = (cpu) => {
+  let n = get_register(cpu, C)
+  let byte = load(cpu, wrapping_add16(0xFF00, n));
+  set_register(cpu, A, byte);
+  bump(cpu, cpu.pc + 1, 12)
+}
+
+let ld_write_io_c = (cpu) => {
+  let n = get_register(cpu, C)
+  let address = wrapping_add16(0xFF00, n);
+  store(cpu, address, get_register(cpu, A));
+  bump(cpu, cpu.pc + 1, 12)
+}
+
 let ld_sp = (cpu) => {
   let word = load_next16(cpu)
   bump({...cpu, sp:word}, cpu.pc + 2, 12)
@@ -201,6 +224,23 @@ let dec = (cpu, r) => {
   let h = (value land 0xF) > (reg land 0xF);
   set_flags(cpu, ~z=(value == 0), ~n=true, ~h, ());
   bump(cpu, cpu.pc, 4)
+}
+
+let dec16 = (cpu, r) => {
+  let reg = get_register16(cpu, r);
+  let value = wrapping_add(reg, -1);
+  set_register16(cpu, r, value);
+  bump(cpu, cpu.pc, 8)
+}
+
+let dec_hl = (cpu) => {
+  let address = get_register16(cpu, HL)
+  let a = load(cpu, address)
+  let value = wrapping_add(a, -1);
+  store(cpu, address, value);
+  let h = (value land 0xF) > (a land 0xF);
+  set_flags(cpu, ~z=(value == 0), ~n=true, ~h, ());
+  bump(cpu, cpu.pc, 12)
 }
 
 let adc_d8 = (cpu) => {
@@ -373,15 +413,19 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Call => call(cpu)
   | CallCond(flag ,cond) => call_cond(cpu, flag, cond)
   | Cp_n => cp_n(cpu)
+  | Cpl => cpl(cpu)
   | Dec(r) => dec(cpu, r)
+  | Dec16(r) => dec16(cpu, r)
+  | Dec_hl => dec_hl(cpu)
   | Di => di(cpu)
+  | Ei => ei(cpu)
   | Inc(r) => inc(cpu, r)
   | Inc16(r) => inc16(cpu, r)
   | Ld_sp => ld_sp(cpu)
   | Ld_read_io_n => ld_read_io_n(cpu)
   | Ld_write_io_n => ld_write_io_n(cpu)
-  // | Ld_read_io_c => ld_read_io_c(cpu)
-  // | Ld_write_io_c => ld_write_io_c(cpu)
+  | Ld_read_io_c => ld_read_io_c(cpu)
+  | Ld_write_io_c => ld_write_io_c(cpu)
   | Ld_a_r16(r) => ld_a_r16(cpu, r)
   | Ld_r16_a(r) => ld_r16_a(cpu, r)
   | Ld_a_a16 => ld_a_a16(cpu)
