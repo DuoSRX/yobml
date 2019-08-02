@@ -5,8 +5,8 @@ type t = {
 };
 
 let make = () => {
-  let file = Node.Fs.readFileSync("./roms/tetris.gb", `binary);
-  // let file = Node.Fs.readFileSync("./roms/01-special.gb", `binary);
+  // let file = Node.Fs.readFileSync("./roms/tetris.gb", `binary);
+  let file = Node.Fs.readFileSync("./roms/01-special.gb", `binary);
   let rom = Array.make(String.length(file), 0)
     |> Array.mapi((n, _) => String.get(file, n) |> int_of_char );
 
@@ -20,7 +20,7 @@ let make = () => {
 let run = (console) => {
   let rec loop = (console, steps) => {
     // let (cpu, instruction) = CpuExec.step(~cpu=console.cpu, ~breakpoints=[]);
-    let (cpu, instruction) = CpuExec.step(~cpu=console.cpu);
+    let (cpu, _instruction) = CpuExec.step(~cpu=console.cpu);
     // if (steps < 10000000000 && cpu.pc != 0xC068) {
     if (steps < 10000000000) {
       loop({...console, cpu}, steps + 1);

@@ -99,6 +99,14 @@ let and_hl = (cpu) => {
   bump(cpu, cpu.pc, 8)
 }
 
+let cp = (cpu, r) => {
+  let a = get_register(cpu, A);
+  let b = get_register(cpu, r)
+  let h = (a land 0xF) > (b land 0xF);
+  set_flags(cpu, ~z=(a == b), ~n=true, ~h, ~c=(a < b), ());
+  bump(cpu, cpu.pc + 1, 8)
+}
+
 let cp_n = (cpu) => {
   let reg = get_register(cpu, A);
   let byte = load_next(cpu);
@@ -110,6 +118,11 @@ let cp_n = (cpu) => {
 let cpl = (cpu) => {
   get_register(cpu, A) lxor 0xFF |> set_register(cpu, A);
   set_flags(cpu, ~n=true, ~h=true, ())
+  bump(cpu, cpu.pc, 4)
+}
+
+let daa = (cpu) => {
+  // TODO: Implement whatever the hell this is supposed to do
   bump(cpu, cpu.pc, 4)
 }
 
@@ -295,6 +308,16 @@ let add_d8 = (cpu) => {
   bump(cpu, cpu.pc + 1, 8)
 }
 
+let add_hl_r16 = (cpu, r) => {
+  let hl = get_register16(cpu, HL)
+  let a = get_register16(cpu, r)
+  let result = hl + a
+  let h = (hl land 0xFFF) + (a land 0xFFF) > 0xFFF
+  set_register16(cpu, HL, result land 0xFFFF)
+  set_flags(cpu, ~h, ~c=(result > 0xFFFF), ~n=false, ())
+  bump(cpu, cpu.pc, 8)
+}
+
 let sub_d8 = (cpu) => {
   let a = get_register(cpu, A)
   let b = load_next(cpu)
@@ -309,6 +332,20 @@ let sub_d8 = (cpu) => {
 let jp = (cpu) => {
   let address = load_next16(cpu)
   bump(cpu, address, 16)
+}
+
+let jp_cond = (cpu, flag, condition) => {
+  if (has_flag(cpu, flag) == condition) {
+    let address = load_next16(cpu)
+    bump(cpu, address, 16)
+  } else {
+    bump(cpu, cpu.pc + 2, 12)
+  }
+}
+
+let jp_hl = (cpu) => {
+  let address = get_register16(cpu, HL)
+  bump(cpu, address, 4)
 }
 
 let jr_e8 = (cpu) => {
@@ -465,14 +502,17 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Nop => cpu
   | Add(r) => add(cpu, r)
   | Add_d8 => add_d8(cpu)
+  | Add_hl_r16(r) => add_hl_r16(cpu, r)
   | Adc_d8 => adc_d8(cpu)
   | And(r) => and_(cpu, r)
   | And_hl => and_hl(cpu)
   | And_d8 => and_d8(cpu)
   | Call => call(cpu)
   | CallCond(flag ,cond) => call_cond(cpu, flag, cond)
+  | Cp(r) => cp(cpu, r)
   | Cp_n => cp_n(cpu)
   | Cpl => cpl(cpu)
+  | Daa => daa(cpu)
   | Dec(r) => dec(cpu, r)
   | Dec16(r) => dec16(cpu, r)
   | Dec_hl => dec_hl(cpu)
@@ -480,6 +520,11 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ei => ei(cpu)
   | Inc(r) => inc(cpu, r)
   | Inc16(r) => inc16(cpu, r)
+  | Jp => jp(cpu)
+  | JpCond(flag, cond) => jp_cond(cpu, flag, cond)
+  | Jp_hl => jp_hl(cpu)
+  | Jr_e8 => jr_e8(cpu)
+  | Jr(flag, cond) => jr(cpu, flag, cond)
   | Ld_sp => ld_sp(cpu)
   | Ld_read_io_n => ld_read_io_n(cpu)
   | Ld_write_io_n => ld_write_io_n(cpu)
@@ -498,9 +543,6 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ldi_a_hl => ldi_a_hl(cpu)
   | Ldi_hl_a => ldi_hl_a(cpu)
   | Ld_a16_a => ld_a16_a(cpu)
-  | Jp => jp(cpu)
-  | Jr_e8 => jr_e8(cpu)
-  | Jr(flag, cond) => jr(cpu, flag, cond)
   | Or(r) => ora(cpu, r)
   | Or_hl => or_hl(cpu)
   | Pop16(r) => pop16(cpu, r)
