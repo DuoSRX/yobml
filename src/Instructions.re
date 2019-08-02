@@ -12,9 +12,11 @@ type storage =
 
 type instruction =
   | Adc_d8
+  | Add(register)
   | Add_d8
   | And_d8
-  // | And(register)
+  | And(register)
+  | And_hl
   | Call
   | CallCond(Cpu.cpu_flag, bool)
   | Cp_n
@@ -57,8 +59,11 @@ type instruction =
   | RetCond(Cpu.cpu_flag, bool)
   | Rra
   | Rr(storage)
+  | Rst(int)
   | Srl(register)
   | Srl_hl
+  | Swap(register)
+  | Swap_hl
   | Sub_d8
   | Xor(register)
   | Xor_d8
@@ -86,6 +91,10 @@ let decode = (opcode) => switch(opcode) {
   | 0x05 => Dec(B)
   | 0x06 => Ld_n(B)
   | 0x0A => Ld_a_r16(BC)
+  | 0x0B => Dec16(BC)
+  | 0x0C => Inc(C)
+  | 0x0D => Dec(C)
+  | 0x0E => Ld_n(C)
   | 0x11 => Ld_nn(DE)
   | 0x12 => Ld_r16_a(DE)
   | 0x13 => Inc16(DE)
@@ -95,10 +104,6 @@ let decode = (opcode) => switch(opcode) {
   | 0x1A => Ld_a_r16(DE)
   | 0x1C => Inc(E)
   | 0x1F => Rra
-  | 0x0B => Dec16(BC)
-  | 0x0C => Inc(C)
-  | 0x0D => Dec(C)
-  | 0x0E => Ld_n(C)
   | 0x1E => Ld_n(E)
   | 0x20 => Jr(Z, false)
   | 0x21 => Ld_nn(HL)
@@ -138,6 +143,15 @@ let decode = (opcode) => switch(opcode) {
   // | 0x41 => Ld_rr(B, C)
   // | 0x42 => Ld_rr(B, D)
   // | 0x47 => Ld_rr(B, A)
+  | 0x87 => Add(A)
+  | 0xA0 => And(B)
+  | 0xA1 => And(C)
+  | 0xA2 => And(D)
+  | 0xA3 => And(E)
+  | 0xA4 => And(H)
+  | 0xA5 => And(L)
+  // | 0xA6 => And_hl
+  | 0xA7 => And(A)
   | 0xA8 => Xor(B)
   | 0xA9 => Xor(C)
   | 0xAA => Xor(D)
@@ -160,30 +174,38 @@ let decode = (opcode) => switch(opcode) {
   | 0xC4 => CallCond(Z, false)
   | 0xC5 => Push16(BC)
   | 0xC6 => Add_d8
+  | 0xC7 => Rst(0)
   | 0xC8 => RetCond(Z, true)
   | 0xC9 => Ret
   | 0xCE => Adc_d8
+  | 0xCF => Rst(0x8)
   | 0xCD => Call
   | 0xD0 => RetCond(C, false)
   | 0xD1 => Pop16(DE)
   | 0xD5 => Push16(DE)
   | 0xD6 => Sub_d8
+  | 0xD7 => Rst(0x10)
   | 0xD8 => RetCond(C, true)
+  | 0xDF => Rst(0x18)
   | 0xE0 => Ld_write_io_n
   | 0xE1 => Pop16(HL)
   | 0xE2 => Ld_write_io_c
   | 0xE5 => Push16(HL)
   | 0xE6 => And_d8
+  | 0xE7 => Rst(0x20)
   | 0xEA => Ld_a16_a
   | 0xEE => Xor_d8
+  | 0xEF => Rst(0x28)
   | 0xF0 => Ld_read_io_n
   | 0xF1 => Pop16(AF)
   | 0xF2 => Ld_read_io_c
   | 0xF3 => Di
   | 0xF5 => Push16(AF)
+  | 0xF7 => Rst(0x30)
   | 0xFA => Ld_a_a16
   | 0xFB => Ei
   | 0xFE => Cp_n
+  | 0xFF => Rst(0x38)
   // | n => Js.log(sprintf("Opcode not implemented: %02X", n)); Nop
   | n => raise(OpcodeNotImplemented(sprintf("0x%02X", n)))
 }
@@ -197,6 +219,14 @@ let decode_cb = (opcode) => switch(opcode) {
   | 0x1D => Rr(Register(L))
   | 0x1E => Rr(Pointer(HL))
   | 0x1F => Rr(Register(A))
+  | 0x30 => Swap(B)
+  | 0x31 => Swap(C)
+  | 0x32 => Swap(D)
+  | 0x33 => Swap(E)
+  | 0x34 => Swap(H)
+  | 0x35 => Swap(L)
+  | 0x36 => Swap_hl
+  | 0x37 => Swap(A)
   | 0x38 => Srl(B)
   | 0x39 => Srl(C)
   | 0x3A => Srl(D)
@@ -211,7 +241,10 @@ let decode_cb = (opcode) => switch(opcode) {
 let pretty = (instruction) => switch(instruction) {
   | Adc_d8 => "ADC d8"
   | Add_d8 => "ADD A, d8"
+  | Add(r) => sprintf("ADD A, %s", to_string(r))
   | And_d8 => "AND d8"
+  | And(r) => sprintf("AND %s", to_string(r))
+  | And_hl => "NAD (HL)"
   | Call => "CALL d16"
   | CallCond(C, true) => "CALL C, d16"
   | CallCond(C, false) => "CALL NC, d16"
@@ -267,8 +300,11 @@ let pretty = (instruction) => switch(instruction) {
   | Rr(Register16(r)) => sprintf("RR %s", to_string16(r))
   | Rr(Pointer(r)) => sprintf("RR (%s)", to_string16(r))
   | Rra => "RRA"
+  | Rst(n) => sprintf("RST %02XH", n)
   | Srl(r) => sprintf("SRL %s", to_string(r))
   | Srl_hl => "SRL (HL)"
+  | Swap(r) => sprintf("SWAP %s", to_string(r))
+  | Swap_hl => "SWAP (HL)"
   | Sub_d8 => "SUB d8"
   | Xor(r) => sprintf("XOR %s", to_string(r))
   | Xor_d8 => "XOR d8"

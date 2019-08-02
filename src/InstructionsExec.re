@@ -70,6 +70,35 @@ let ret_cond = (cpu, flag, condition) => {
   }
 }
 
+let add = (cpu, r) => {
+  let a = get_register(cpu, A)
+  let b = get_register(cpu, r)
+  let result = (a + b) land 0xFF
+  set_register(cpu, A, result)
+  let h = (result land 0xF) < (b land 0xF)
+  let c = result < b
+  set_flags(cpu, ~c, ~h, ~n=false, ~z=(result == 0), ())
+  bump(cpu, cpu.pc, 8)
+}
+
+let and_ = (cpu, r) => {
+  let a = get_register(cpu, A)
+  let b = get_register(cpu, r)
+  let result = a land b
+  set_register(cpu, r, result)
+  set_flags(cpu, ~z=(result == 0), ~n=false, ~h=true, ~c=false, ())
+  bump(cpu, cpu.pc, 4)
+}
+
+let and_hl = (cpu) => {
+  let a = get_register(cpu, A)
+  let b = load(cpu, get_register16(cpu, HL))
+  let result = a land b
+  set_register(cpu, A, result)
+  set_flags(cpu, ~z=(result == 0), ~n=false, ~h=true, ~c=false, ())
+  bump(cpu, cpu.pc, 8)
+}
+
 let cp_n = (cpu) => {
   let reg = get_register(cpu, A);
   let byte = load_next(cpu);
@@ -362,6 +391,12 @@ let rra = (cpu) => {
   bump(cpu, cpu.pc, 8)
 }
 
+let rst = (cpu, n) => {
+  let sp = wrapping_add(cpu.sp, -2)
+  store16(cpu, sp, cpu.pc)
+  bump({...cpu, sp}, n, 16)
+}
+
 let srl = (cpu, r) => {
   let a = get_register(cpu, r)
   let result = a lsr 1
@@ -375,6 +410,27 @@ let srl_hl = (cpu) => {
   let result = a lsr 1
   store(cpu, a, result)
   set_flags(cpu, ~h=false, ~n=false, ~z=(result == 0), ~c=(a land 1 == 1), ())
+  bump(cpu, cpu.pc, 16)
+}
+
+let swap = (cpu, r) => {
+  let a = get_register(cpu, r)
+  let lo = (a land 0xF) lsl 4
+  let hi = (a land 0xF0) lsr 4
+  let result = lo lor hi
+  set_register(cpu, r, result)
+  set_flags(cpu, ~z=(result == 0), ~c=false, ~n=false, ~h=false, ())
+  bump(cpu, cpu.pc, 8)
+}
+
+let swap_hl = (cpu) => {
+  let address = get_register16(cpu, HL)
+  let a = load(cpu, address)
+  let lo = (a land 0xF) lsl 4
+  let hi = (a land 0xF0) lsr 4
+  let result = lo lor hi
+  store(cpu, address, result)
+  set_flags(cpu, ~z=(result == 0), ~c=false, ~n=false, ~h=false, ())
   bump(cpu, cpu.pc, 16)
 }
 
@@ -407,8 +463,11 @@ let xor_hl = (cpu) => {
 
 let execute = (cpu, instruction) => switch(instruction) {
   | Nop => cpu
-  | Adc_d8 => adc_d8(cpu)
+  | Add(r) => add(cpu, r)
   | Add_d8 => add_d8(cpu)
+  | Adc_d8 => adc_d8(cpu)
+  | And(r) => and_(cpu, r)
+  | And_hl => and_hl(cpu)
   | And_d8 => and_d8(cpu)
   | Call => call(cpu)
   | CallCond(flag ,cond) => call_cond(cpu, flag, cond)
@@ -450,8 +509,11 @@ let execute = (cpu, instruction) => switch(instruction) {
   | RetCond(flag, cond) => ret_cond(cpu, flag, cond)
   | Rr(s) => rr(cpu, s)
   | Rra => rra(cpu)
+  | Rst(n) => rst(cpu, n)
   | Srl(r) => srl(cpu, r)
   | Srl_hl => srl_hl(cpu)
+  | Swap(r) => swap(cpu, r)
+  | Swap_hl => swap_hl(cpu)
   | Sub_d8 => sub_d8(cpu)
   | Xor(r) => xor(cpu, r)
   | Xor_d8 => xor_d8(cpu)
