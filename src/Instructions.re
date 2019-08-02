@@ -60,6 +60,8 @@ type instruction =
   | Pop16(register16)
   // | Push(register)
   | Push16(register16)
+  | Res(int, register)
+  | Res_hl(int)
   | Ret
   | RetCond(Cpu.cpu_flag, bool)
   | Rra
@@ -260,6 +262,26 @@ let decode_cb = (opcode) => switch(opcode) {
   | 0x3D => Srl(L)
   | 0x3E => Srl_hl
   | 0x3F => Srl(A)
+  | 0x86 => Res_hl(0)
+  | 0x8E => Res_hl(1)
+  | 0x96 => Res_hl(2)
+  | 0x9E => Res_hl(3)
+  | 0xA6 => Res_hl(4)
+  | 0xAE => Res_hl(5)
+  | 0xB6 => Res_hl(6)
+  | 0xBE => Res_hl(7)
+  // | 0x80 | 0x81 | 0x82 | 0x83 | 0x84 | 0x85 | 0x87 // RES 0, r
+  // | 0x88 | 0x89 | 0x8A | 0x8B | 0x8C | 0x8D | 0x8F // RES 1, r
+  // | 0x90 | 0x91 | 0x92 | 0x93 | 0x94 | 0x95 | 0x97 // RES 2, r
+  // | 0x98 | 0x99 | 0x9A | 0x9B | 0x9C | 0x9D | 0x9F // RES 3, r
+  // | 0x60 | 0x61 | 0x62 | 0x63 | 0x64 | 0x65 | 0x67 // RES 4, r
+  // | 0x68 | 0x69 | 0x6A | 0x6B | 0x6C | 0x6D | 0x6F // RES 5, r
+  // | 0x78 | 0x79 | 0x7A | 0x7B | 0x7C | 0x7D | 0x7F // RES 6, r
+  | _ when opcode >= 0x80 && opcode <= 0xBF => {
+      let reg = regs[opcode land 7];
+      let bit = opcode lsr 3 land 7;
+      Res(bit, reg)
+    }
   | n => raise(CBOpcodeNotImplemented(sprintf("0x%02X", n)))
 }
 
@@ -324,6 +346,8 @@ let pretty = (instruction) => switch(instruction) {
   | Pop16(r) => sprintf("POP %s", to_string16(r))
   // | Push(r) => sprintf("PUSH %s", to_string(r))
   | Push16(r) => sprintf("PUSH %s", to_string16(r))
+  | Res(n, r) => sprintf("RES %d, %s", n, to_string(r))
+  | Res_hl(n) => sprintf("RES %d, (HL)", n)
   | Ret => "RET"
   | RetCond(Z, false) => "RET NZ"
   | RetCond(C, false) => "RET NC"

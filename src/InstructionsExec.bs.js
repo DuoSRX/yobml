@@ -525,6 +525,19 @@ function pop16(cpu, r16) {
             ], cpu[/* pc */1], 12);
 }
 
+function res(cpu, bit, r) {
+  var reg = Cpu$Yobml.get_register(cpu, r);
+  Cpu$Yobml.set_register(cpu, r, reg & Pervasives.lnot((1 << bit)));
+  return bump(cpu, cpu[/* pc */1], 8);
+}
+
+function res_hl(cpu, bit) {
+  var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  var $$byte = Memory$Yobml.load(cpu[/* memory */5], address);
+  store(cpu, address, $$byte & Pervasives.lnot((1 << bit)));
+  return bump(cpu, cpu[/* pc */1], 16);
+}
+
 function rr(cpu, storage) {
   var a = storage_load(cpu, storage);
   var match = Cpu$Yobml.has_flag(cpu, /* C */3);
@@ -745,16 +758,20 @@ function execute(cpu, instruction) {
       case 20 : 
           return push16(cpu, instruction[0]);
       case 21 : 
-          return ret_cond(cpu, instruction[0], instruction[1]);
+          return res(cpu, instruction[0], instruction[1]);
       case 22 : 
-          return rr(cpu, instruction[0]);
+          return res_hl(cpu, instruction[0]);
       case 23 : 
-          return rst(cpu, instruction[0]);
+          return ret_cond(cpu, instruction[0], instruction[1]);
       case 24 : 
-          return srl(cpu, instruction[0]);
+          return rr(cpu, instruction[0]);
       case 25 : 
-          return swap(cpu, instruction[0]);
+          return rst(cpu, instruction[0]);
       case 26 : 
+          return srl(cpu, instruction[0]);
+      case 27 : 
+          return swap(cpu, instruction[0]);
+      case 28 : 
           return xor(cpu, instruction[0]);
       
     }
@@ -824,6 +841,8 @@ exports.ora = ora;
 exports.or_hl = or_hl;
 exports.push16 = push16;
 exports.pop16 = pop16;
+exports.res = res;
+exports.res_hl = res_hl;
 exports.rr = rr;
 exports.rra = rra;
 exports.rst = rst;

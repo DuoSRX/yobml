@@ -9,7 +9,7 @@ var Caml_string = require("bs-platform/lib/js/caml_string.js");
 var CpuExec$Yobml = require("./CpuExec.bs.js");
 
 function make(param) {
-  var file = Fs.readFileSync("./roms/01-special.gb", "binary");
+  var file = Fs.readFileSync("./roms/tetris.gb", "binary");
   var rom = $$Array.mapi((function (n, param) {
           return Caml_string.get(file, n);
         }), Caml_array.caml_make_vect(file.length, 0));
