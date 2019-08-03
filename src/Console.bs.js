@@ -85,7 +85,7 @@ function run($$console) {
       gpu[/* interrupts */8] = 0;
     }
     var cpu$1 = interrupt(cpu);
-    if (gpu[/* new_frame */9] && lcd_on && steps % 100000 === 0) {
+    if (gpu[/* new_frame */9] && lcd_on && steps % 10000 === 0) {
       Curry._1(Printf.printf(/* Format */[
                 /* String */Block.__(2, [
                     /* No_padding */0,

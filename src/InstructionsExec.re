@@ -529,6 +529,16 @@ let res_hl = (cpu, bit) => {
   bump(cpu, cpu.pc, 16)
 }
 
+let rlca = (cpu) => {
+  let a = get_register(cpu, A)
+  let c = a land 0x80 > 0
+  let a = a lsl 1
+  let a = c ? a lor 1 : a
+  set_flags(cpu, ~c, ~n=false, ~h=false, ~z=false, ())
+  set_register(cpu, A, a)
+  bump(cpu, cpu.pc, 4)
+}
+
 let rr = (cpu, storage) => {
   let a = storage_load(cpu, storage)
   let carry = has_flag(cpu, C) ? 1 : 0
@@ -687,6 +697,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ret => ret(cpu)
   | Reti => reti(cpu)
   | RetCond(flag, cond) => ret_cond(cpu, flag, cond)
+  | Rlca => rlca(cpu)
   | Rr(s) => rr(cpu, s)
   | Rra => rra(cpu)
   | Rst(n) => rst(cpu, n)

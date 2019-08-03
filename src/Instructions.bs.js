@@ -36,6 +36,8 @@ function decode(opcode) {
         return /* Dec */Block.__(6, [/* B */1]);
     case 6 : 
         return /* Ld_n */Block.__(17, [/* B */1]);
+    case 7 : 
+        return /* Rlca */36;
     case 8 : 
         return /* Ld_a16_sp */26;
     case 9 : 
@@ -75,7 +77,7 @@ function decode(opcode) {
     case 30 : 
         return /* Ld_n */Block.__(17, [/* E */4]);
     case 31 : 
-        return /* Rra */36;
+        return /* Rra */37;
     case 32 : 
         return /* Jr */Block.__(11, [
                   /* Z */0,
@@ -132,7 +134,7 @@ function decode(opcode) {
     case 54 : 
         return /* Ld_hl_d8 */29;
     case 55 : 
-        return /* Scf */37;
+        return /* Scf */38;
     case 56 : 
         return /* Jr */Block.__(11, [
                   /* C */3,
@@ -273,7 +275,7 @@ function decode(opcode) {
     case 173 : 
         return /* Xor */Block.__(29, [/* L */7]);
     case 174 : 
-        return /* Xor_hl */42;
+        return /* Xor_hl */43;
     case 175 : 
         return /* Xor */Block.__(29, [/* A */0]);
     case 176 : 
@@ -374,7 +376,7 @@ function decode(opcode) {
     case 213 : 
         return /* Push16 */Block.__(21, [/* DE */2]);
     case 214 : 
-        return /* Sub_d8 */40;
+        return /* Sub_d8 */41;
     case 215 : 
         return /* Rst */Block.__(26, [16]);
     case 216 : 
@@ -415,7 +417,7 @@ function decode(opcode) {
     case 234 : 
         return /* Ld_a16_a */25;
     case 238 : 
-        return /* Xor_d8 */41;
+        return /* Xor_d8 */42;
     case 239 : 
         return /* Rst */Block.__(26, [40]);
     case 240 : 
@@ -439,7 +441,6 @@ function decode(opcode) {
     case 251 : 
         return /* Ei */12;
     case 2 : 
-    case 7 : 
     case 15 : 
     case 16 : 
     case 21 : 
@@ -616,7 +617,7 @@ function decode_cb(opcode) {
       case 29 : 
           return /* Swap */Block.__(28, [/* L */7]);
       case 30 : 
-          return /* Swap_hl */39;
+          return /* Swap_hl */40;
       case 31 : 
           return /* Swap */Block.__(28, [/* A */0]);
       case 32 : 
@@ -632,7 +633,7 @@ function decode_cb(opcode) {
       case 37 : 
           return /* Srl */Block.__(27, [/* L */7]);
       case 38 : 
-          return /* Srl_hl */38;
+          return /* Srl_hl */39;
       case 39 : 
           return /* Srl */Block.__(27, [/* A */0]);
       
@@ -755,18 +756,20 @@ function pretty(instruction) {
       case 35 : 
           return "RETI";
       case 36 : 
-          return "RRA";
+          return "RLCA";
       case 37 : 
-          return "SCF";
+          return "RRA";
       case 38 : 
-          return "SRL (HL)";
+          return "SCF";
       case 39 : 
-          return "SWAP (HL)";
+          return "SRL (HL)";
       case 40 : 
-          return "SUB d8";
+          return "SWAP (HL)";
       case 41 : 
-          return "XOR d8";
+          return "SUB d8";
       case 42 : 
+          return "XOR d8";
+      case 43 : 
           return "XOR A, (HL)";
       
     }
