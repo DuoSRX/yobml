@@ -113,6 +113,13 @@ let and_hl = (cpu) => {
   bump(cpu, cpu.pc, 8)
 }
 
+let bit = (cpu, bit, r) => {
+  let a = get_register(cpu, r);
+  let z = (a lsr bit) land 1 == 1;
+  set_flags(cpu, ~z, ~h=true, ~n=false, ())
+  bump(cpu, cpu.pc, 8)
+}
+
 let ccf = (cpu) => {
   set_flags(cpu, ~h=false, ~n=false, ~c=(!has_flag(cpu, C)), ())
   bump(cpu, cpu.pc, 4)
@@ -628,6 +635,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | And(r) => and_(cpu, r)
   | And_hl => and_hl(cpu)
   | And_d8 => and_d8(cpu)
+  | Bit(n,r) => bit(cpu, n, r)
   | Call => call(cpu)
   | CallCond(flag ,cond) => call_cond(cpu, flag, cond)
   | Ccf => ccf(cpu)

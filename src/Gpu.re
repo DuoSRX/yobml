@@ -11,7 +11,7 @@ type t = {
   frame: array(array(int)),
   vram: array(int),
   rom: array(int),
-  interrupts: int,
+  mutable interrupts: int,
   mutable new_frame: bool
 }
 
@@ -100,7 +100,7 @@ let set_mode = (gpu, mode) => {
   }
 }
 
-let step = (gpu, cycles) => {
+let step = (gpu, cycles, lcd_on) => {
   let cycles = gpu.cycles + cycles
   let gpu = {...gpu, interrupts: 0} // reset interrupts... bleh
 
@@ -111,7 +111,7 @@ let step = (gpu, cycles) => {
     }
   | LcdTransfer when cycles >= 172 => {
       let cycles = cycles - 172;
-      render_background(gpu);
+      if (lcd_on) { render_background(gpu) };
       // TODO: render window
       // TODO: render objs
       set_mode({...gpu, cycles, interrupts:2}, HBlank)
