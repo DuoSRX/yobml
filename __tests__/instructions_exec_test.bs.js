@@ -15,7 +15,8 @@ function reset(pc) {
           /* ime */init[/* ime */2],
           /* registers */init[/* registers */3],
           /* memory */init[/* memory */4],
-          /* serial */init[/* serial */5]
+          /* gpu */init[/* gpu */5],
+          /* serial */init[/* serial */6]
         ];
 }
 

@@ -26,6 +26,7 @@ let make = (~rom) => {
 exception MemoryAccessUnimplement(string)
 
 let load = (mem, address) => {
+  // sprintf("Read @ %04X", address) |> Js.log
   if (address < 0x8000) {
     mem.rom[address]
   } else if (address < 0xA000) {
@@ -50,6 +51,14 @@ let load = (mem, address) => {
 }
 
 let store = (mem, address, value) => {
+  // sprintf("Write @ %04X", address) |> Js.log
+          // Js.log(Memory.load(cpu.memory, 0x89B0))
+        // Js.log(Memory.load(cpu.memory, 0x9820))
+
+  // if (address == 0x89B0 || address == 0x9820) {
+  //   Js.log(sprintf("%04X = %02X", address, value))
+  // }
+
   if (address < 0x8000) {
     mem.rom[address] = value
   } else if (address < 0xA000) {

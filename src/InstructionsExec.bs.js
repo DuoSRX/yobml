@@ -28,9 +28,9 @@ function load16(cpu, address) {
 
 function store(cpu, address, value) {
   if (address === 65281) {
-    cpu[/* serial */5] = /* :: */[
+    cpu[/* serial */6] = /* :: */[
       $$String.make(1, Char.chr(value)),
-      cpu[/* serial */5]
+      cpu[/* serial */6]
     ];
   }
   return Memory$Yobml.store(cpu[/* memory */4], address, value);
@@ -80,7 +80,8 @@ function bump(cpu, pc, cycles) {
           /* ime */cpu[/* ime */2],
           /* registers */cpu[/* registers */3],
           /* memory */cpu[/* memory */4],
-          /* serial */cpu[/* serial */5]
+          /* gpu */cpu[/* gpu */5],
+          /* serial */cpu[/* serial */6]
         ];
 }
 
@@ -121,7 +122,8 @@ function reti(cpu) {
               /* ime */true,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* serial */cpu[/* serial */5]
+              /* gpu */cpu[/* gpu */5],
+              /* serial */cpu[/* serial */6]
             ], pc, 16);
 }
 
@@ -206,7 +208,8 @@ function di(cpu) {
               /* ime */false,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* serial */cpu[/* serial */5]
+              /* gpu */cpu[/* gpu */5],
+              /* serial */cpu[/* serial */6]
             ], cpu[/* pc */0], 4);
 }
 
@@ -217,7 +220,8 @@ function ei(cpu) {
               /* ime */true,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* serial */cpu[/* serial */5]
+              /* gpu */cpu[/* gpu */5],
+              /* serial */cpu[/* serial */6]
             ], cpu[/* pc */0], 4);
 }
 
