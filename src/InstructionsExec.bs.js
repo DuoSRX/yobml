@@ -28,9 +28,9 @@ function load16(cpu, address) {
 
 function store(cpu, address, value) {
   if (address === 65281) {
-    cpu[/* serial */6] = /* :: */[
+    cpu[/* serial */5] = /* :: */[
       $$String.make(1, Char.chr(value)),
-      cpu[/* serial */6]
+      cpu[/* serial */5]
     ];
   }
   return Memory$Yobml.store(cpu[/* memory */4], address, value);
@@ -80,8 +80,7 @@ function bump(cpu, pc, cycles) {
           /* ime */cpu[/* ime */2],
           /* registers */cpu[/* registers */3],
           /* memory */cpu[/* memory */4],
-          /* gpu */cpu[/* gpu */5],
-          /* serial */cpu[/* serial */6]
+          /* serial */cpu[/* serial */5]
         ];
 }
 
@@ -122,8 +121,7 @@ function reti(cpu) {
               /* ime */true,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* gpu */cpu[/* gpu */5],
-              /* serial */cpu[/* serial */6]
+              /* serial */cpu[/* serial */5]
             ], pc, 16);
 }
 
@@ -208,8 +206,7 @@ function di(cpu) {
               /* ime */false,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* gpu */cpu[/* gpu */5],
-              /* serial */cpu[/* serial */6]
+              /* serial */cpu[/* serial */5]
             ], cpu[/* pc */0], 4);
 }
 
@@ -220,8 +217,7 @@ function ei(cpu) {
               /* ime */true,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* gpu */cpu[/* gpu */5],
-              /* serial */cpu[/* serial */6]
+              /* serial */cpu[/* serial */5]
             ], cpu[/* pc */0], 4);
 }
 
@@ -318,16 +314,8 @@ function ld_sp_hl(cpu) {
 
 function ld_read_io_n(cpu) {
   var n = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-  var $$byte;
-  if (n === 68) {
-    var match = cpu[/* pc */0] - 1 | 0;
-    $$byte = match !== 563 ? (
-        match !== 10280 ? 0 : 145
-      ) : 148;
-  } else {
-    var address = wrapping_add16(65280, n);
-    $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
-  }
+  var address = wrapping_add16(65280, n);
+  var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   Cpu$Yobml.set_register(cpu, /* A */0, $$byte);
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
 }
