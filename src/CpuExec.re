@@ -22,7 +22,6 @@ let trace = (cpu, instruction) => {
   );
 }
 
-// let step = (~cpu, ~breakpoints) => {
 let step = (~cpu) => {
   let (cpu, instruction) = switch(Memory.load(cpu.memory, cpu.pc)) {
   | 0xCB => {
@@ -38,10 +37,5 @@ let step = (~cpu) => {
     }
   };
 
-  // if (List.mem(cpu.pc, breakpoints)) {
-  //   ()
-  // };
-
-  // let cpu = {...cpu, pc: cpu.pc + 1};
   (InstructionsExec.execute(cpu, instruction), instruction)
 }
