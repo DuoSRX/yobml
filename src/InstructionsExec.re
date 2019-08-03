@@ -9,10 +9,13 @@ let wrapping_add16 = (a, b) => (a + b) land 0xFFFF
 let load = (cpu, address) => Memory.load(cpu.memory, address)
 let load16 = (cpu, address) => Memory.load16(cpu.memory, address)
 let store = (cpu, address, value) => {
-  if (address == 0xFF01) {  //|| address == 0xFF02) {
+  if (address == 0xFF01) {
     cpu.serial = [String.make(1, Char.chr(value)), ...cpu.serial];
-    // print_char(Char.chr(value))
   }
+  // if (address == 0xFFB6) {
+  //   Js.log(Instructions.decode(Memory.load(cpu.memory, cpu.pc - 1)) |> Instructions.pretty)
+  //   Js.log(Printf.sprintf("%04X: %04X = %02X [B:%02X, C:%02X, HL:%04X]", cpu.pc, address, value, cpu.registers.b, cpu.registers.c, get_register16(cpu, HL)));
+  //  };
   Memory.store(cpu.memory, address, value)
 }
 let store16 = (cpu, address, value) => Memory.store16(cpu.memory, address, value)
@@ -147,9 +150,7 @@ let daa = (cpu) => {
   // let adj3 = if (has_flag(cpu, N)) {
   //   wrapping_add(a, -adj2)
   // } else {
-
   // }
-
 
   bump(cpu, cpu.pc, 4)
 }
@@ -158,7 +159,7 @@ let di = (cpu) =>
   bump({...cpu, ime: false}, cpu.pc, 4)
 
 let ei = (cpu) => {
-  // load(cpu, 0xFFFF) |> store(cpu, 0xFF0F)
+  load(cpu, 0xFFFF) |> store(cpu, 0xFF0F)
   bump({...cpu, ime: true}, cpu.pc, 4)
 }
 
@@ -255,16 +256,6 @@ let ld_sp_hl = (cpu) => {
 
 let ld_read_io_n = (cpu) => {
   let n = load_next(cpu);
-  // let byte = if (n == 0x44) {
-    // Hacks to boot Tetris...
-    // switch (cpu.pc - 1) {
-    // | 0x0233 => 0x94
-    // | 0x2828 => 0x91
-    // | _ => 0
-    // }
-  // } else {
-    // load(cpu, wrapping_add16(0xFF00, n));
-  // }
   let byte = load(cpu, wrapping_add16(0xFF00, n));
   set_register(cpu, A, byte);
   bump(cpu, cpu.pc + 1, 12)
@@ -281,14 +272,14 @@ let ld_read_io_c = (cpu) => {
   let n = get_register(cpu, C)
   let byte = load(cpu, wrapping_add16(0xFF00, n));
   set_register(cpu, A, byte);
-  bump(cpu, cpu.pc + 1, 12)
+  bump(cpu, cpu.pc, 12)
 }
 
 let ld_write_io_c = (cpu) => {
   let n = get_register(cpu, C)
   let address = wrapping_add16(0xFF00, n);
   store(cpu, address, get_register(cpu, A));
-  bump(cpu, cpu.pc + 1, 12)
+  bump(cpu, cpu.pc, 12)
 }
 
 let ld_sp = (cpu) => {
@@ -321,6 +312,14 @@ let inc16 = (cpu, r) => {
   let value = get_register16(cpu, r)
   set_register16(cpu, r, wrapping_add16(value, 1))
   bump(cpu, cpu.pc, 8)
+}
+
+let inc_hl = (cpu) => {
+  let hl = get_register16(cpu, HL)
+  let value = wrapping_add(load(cpu, hl), 1)
+  set_flags(cpu, ~z=(value==0), ~h=(value land 0xF == 0), ~n=false, ());
+  store(cpu, hl, value)
+  bump(cpu, cpu.pc, 12)
 }
 
 let dec = (cpu, r) => {
@@ -643,6 +642,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ei => ei(cpu)
   | Inc(r) => inc(cpu, r)
   | Inc16(r) => inc16(cpu, r)
+  | Inc_hl => inc_hl(cpu)
   | Jp => jp(cpu)
   | JpCond(flag, cond) => jp_cond(cpu, flag, cond)
   | Jp_hl => jp_hl(cpu)

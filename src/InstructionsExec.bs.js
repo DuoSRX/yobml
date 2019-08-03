@@ -211,6 +211,7 @@ function di(cpu) {
 }
 
 function ei(cpu) {
+  store(cpu, 65295, Memory$Yobml.load(cpu[/* memory */4], 65535));
   return bump(/* record */[
               /* pc */cpu[/* pc */0],
               /* cycle */cpu[/* cycle */1],
@@ -332,14 +333,14 @@ function ld_read_io_c(cpu) {
   var address = wrapping_add16(65280, n);
   var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   Cpu$Yobml.set_register(cpu, /* A */0, $$byte);
-  return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
+  return bump(cpu, cpu[/* pc */0], 12);
 }
 
 function ld_write_io_c(cpu) {
   var n = Cpu$Yobml.get_register(cpu, /* C */2);
   var address = wrapping_add16(65280, n);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
-  return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
+  return bump(cpu, cpu[/* pc */0], 12);
 }
 
 function ld_sp(cpu) {
@@ -372,6 +373,14 @@ function inc16(cpu, r) {
   var value = Cpu$Yobml.get_register16(cpu, r);
   Cpu$Yobml.set_register16(cpu, r, wrapping_add16(value, 1));
   return bump(cpu, cpu[/* pc */0], 8);
+}
+
+function inc_hl(cpu) {
+  var hl = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  var value = wrapping_add(Memory$Yobml.load(cpu[/* memory */4], hl), 1);
+  Cpu$Yobml.set_flags(cpu, value === 0, false, (value & 15) === 0, undefined, /* () */0);
+  store(cpu, hl, value);
+  return bump(cpu, cpu[/* pc */0], 12);
 }
 
 function dec(cpu, r) {
@@ -689,62 +698,64 @@ function execute(cpu, instruction) {
       case 12 : 
           return ei(cpu);
       case 13 : 
-          return jp(cpu);
+          return inc_hl(cpu);
       case 14 : 
-          return jp_hl(cpu);
+          return jp(cpu);
       case 15 : 
-          return jr_e8(cpu);
+          return jp_hl(cpu);
       case 16 : 
-          return ld_sp(cpu);
+          return jr_e8(cpu);
       case 17 : 
-          return ld_read_io_n(cpu);
+          return ld_sp(cpu);
       case 18 : 
-          return ld_write_io_n(cpu);
+          return ld_read_io_n(cpu);
       case 19 : 
-          return ld_read_io_c(cpu);
+          return ld_write_io_n(cpu);
       case 20 : 
-          return ld_write_io_c(cpu);
+          return ld_read_io_c(cpu);
       case 21 : 
-          return ldd_hl_a(cpu);
+          return ld_write_io_c(cpu);
       case 22 : 
-          return ldi_a_hl(cpu);
+          return ldd_hl_a(cpu);
       case 23 : 
-          return ldi_hl_a(cpu);
+          return ldi_a_hl(cpu);
       case 24 : 
-          return ld_a16_a(cpu);
+          return ldi_hl_a(cpu);
       case 25 : 
-          return ld_a16_sp(cpu);
+          return ld_a16_a(cpu);
       case 26 : 
-          return ld_sp_hl(cpu);
+          return ld_a16_sp(cpu);
       case 27 : 
-          return ld_a_a16(cpu);
+          return ld_sp_hl(cpu);
       case 28 : 
-          return ld_hl_d8(cpu);
+          return ld_a_a16(cpu);
       case 29 : 
-          return ld_hl_sp_e8(cpu);
+          return ld_hl_d8(cpu);
       case 30 : 
-          return or_hl(cpu);
+          return ld_hl_sp_e8(cpu);
       case 31 : 
-          return cpu;
+          return or_hl(cpu);
       case 32 : 
-          return pop_af(cpu);
+          return cpu;
       case 33 : 
-          return ret(cpu);
+          return pop_af(cpu);
       case 34 : 
-          return reti(cpu);
+          return ret(cpu);
       case 35 : 
-          return rra(cpu);
+          return reti(cpu);
       case 36 : 
-          return scf(cpu);
+          return rra(cpu);
       case 37 : 
-          return srl_hl(cpu);
+          return scf(cpu);
       case 38 : 
-          return swap_hl(cpu);
+          return srl_hl(cpu);
       case 39 : 
-          return sub_d8(cpu);
+          return swap_hl(cpu);
       case 40 : 
-          return xor_d8(cpu);
+          return sub_d8(cpu);
       case 41 : 
+          return xor_d8(cpu);
+      case 42 : 
           return xor_hl(cpu);
       
     }
@@ -865,6 +876,7 @@ exports.ld_a16_a = ld_a16_a;
 exports.ld_a16_sp = ld_a16_sp;
 exports.inc = inc;
 exports.inc16 = inc16;
+exports.inc_hl = inc_hl;
 exports.dec = dec;
 exports.dec16 = dec16;
 exports.dec_hl = dec_hl;

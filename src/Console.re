@@ -31,20 +31,82 @@ let make = () => {
   }
 };
 
+let interrupt = (cpu: Cpu.t) => {
+  if (cpu.ime) {
+    let ise = Memory.load(cpu.memory, 0xFFFF)
+    let isf = Memory.load(cpu.memory, 0xFF0F)
+
+    if (isf == 0) {
+      cpu
+    } else {
+      // Js.log(sprintf("ISE %02X - ISF %02X", ise, isf))
+      // TODO: Refactor this bullshit
+      if (ise land 1 > 0 && isf land 1 > 0) { // VBLANK
+        // Js.log("VBLANK")
+        let sp = Cpu.get_register16(cpu, SP) + 2
+        Memory.store16(cpu.memory, sp, cpu.pc)
+        Cpu.set_register16(cpu, SP, sp);
+        Memory.store(cpu.memory, 0xFF0F, isf land 0x1111_1110);
+        {...cpu, pc:0x40, ime:false }
+      } else if (ise land 2 > 0 && isf land 2 > 0) { //LCDSTATS
+        // Js.log("LCDSTATS")
+        let sp = Cpu.get_register16(cpu, SP) + 2
+        Memory.store16(cpu.memory, sp, cpu.pc)
+        Cpu.set_register16(cpu, SP, sp);
+        Memory.store(cpu.memory, 0xFF0F, isf land 0x1111_1101);
+        {...cpu, pc:0x48, ime:false }
+      } else { // TODO: Timer, Serial, Joypad ints
+        cpu
+      }
+    }
+  } else {
+    cpu
+  }
+}
+
 let run = (console) => {
   let rec loop = (console, steps) => {
     let prev_cy = console.cpu.cycle
     let (cpu, instruction) = CpuExec.step(~cpu=console.cpu);
-    let gpu = Gpu.step(console.gpu, cpu.cycle - prev_cy)
+    let gpu = Gpu.step(console.gpu, cpu.cycle - prev_cy);
+
+    let gpu = if (gpu.interrupts > 0) {
+      let isf = Memory.load(cpu.memory, 0xFF0F);
+      Memory.store(cpu.memory, 0xFF0F, isf lor gpu.interrupts);
+      {...gpu, interrupts: 0}
+    } else { gpu }
+
+    // let cpu = interrupt(cpu)
+
+    if (gpu.new_frame) {
+      printf("%s", "\033c")
+      Array.iter((row) => {
+        Array.iter((px) => {
+          //  .:-=+*#%@
+          let sigil = switch(px) {
+          | 0 => " " //"."
+          | 1 => "."//"-"
+          | 2 => "=" //"o"
+          | 3 => "@" //"X"
+          | _ => "?"
+          }
+          Printf.printf("%s", sigil)
+        }, row);
+        Printf.printf("\n")
+      }, console.gpu.frame);
+      gpu.new_frame = false
+    }
 
     let memory = {...cpu.memory, gpu}
     let cpu = {...cpu, memory}
-    if (steps < 200000) {
+
+    if (steps < 220000) {
       loop({...console, cpu, gpu, memory}, steps + 1)
     } else {
         CpuExec.trace(cpu, instruction)
         // Js.log(sprintf("%02X", Gpu.load(console.gpu, 0x9949)))
         // Js.log(Js.Array.joinWith("", Array.of_list(cpu.serial |> List.rev)))
+        // print_string("\e[3J")
         // Array.iter((row) => {
         //   Array.iter((px) => {
         //     //  .:-=+*#%@
