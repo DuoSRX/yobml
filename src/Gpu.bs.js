@@ -121,7 +121,7 @@ function set_mode(gpu, mode) {
   }
 }
 
-function step(gpu, cycles) {
+function step(gpu, cycles, lcd_on) {
   var cycles$1 = gpu[/* cycles */4] + cycles | 0;
   var gpu$1 = /* record */[
     /* mode */gpu[/* mode */0],
@@ -230,7 +230,9 @@ function step(gpu, cycles) {
     case 3 : 
         if (cycles$1 >= 172) {
           var cycles$5 = cycles$1 - 172 | 0;
-          render_background(gpu$1);
+          if (lcd_on) {
+            render_background(gpu$1);
+          }
           return set_mode(/* record */[
                       /* mode */gpu$1[/* mode */0],
                       /* lcd */gpu$1[/* lcd */1],

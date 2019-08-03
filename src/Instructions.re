@@ -19,6 +19,7 @@ type instruction =
   | And_d8
   | And(register)
   | And_hl
+  | Bit(int, register)
   | Call
   | CallCond(Cpu.cpu_flag, bool)
   | Ccf
@@ -170,7 +171,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x73 => Ld_hl_r(E)
   | 0x74 => Ld_hl_r(H)
   | 0x75 => Ld_hl_r(L)
-  // 0x75 => HALT
+  | 0x76 => Nop // HALT
   | 0x77 => Ld_hl_r(A)
   | 0x7E => Ld_r_hl(A)
   // | 0x41 => Ld_rr(B, C)
@@ -302,6 +303,11 @@ let decode_cb = (opcode) => switch(opcode) {
   | 0xAE => Res_hl(5)
   | 0xB6 => Res_hl(6)
   | 0xBE => Res_hl(7)
+  | _ when opcode >= 0x40 && opcode <= 0x7F => {
+      let reg = regs[opcode land 7];
+      let bit = opcode lsr 3 land 7;
+      Bit(bit, reg)
+    }
   | _ when opcode >= 0x80 && opcode <= 0xBF => {
       let reg = regs[opcode land 7];
       let bit = opcode lsr 3 land 7;
@@ -319,6 +325,7 @@ let pretty = (instruction) => switch(instruction) {
   | And_d8 => "AND d8"
   | And(r) => sprintf("AND %s", to_string(r))
   | And_hl => "NAD (HL)"
+  | Bit(n,r) => sprintf("BIT %d, %s", n, to_string(r))
   | Call => "CALL d16"
   | CallCond(C, true) => "CALL C, d16"
   | CallCond(C, false) => "CALL NC, d16"

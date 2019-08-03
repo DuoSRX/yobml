@@ -14,7 +14,7 @@ var Memory$Yobml = require("./Memory.bs.js");
 var CpuExec$Yobml = require("./CpuExec.bs.js");
 
 function make(param) {
-  var file = Fs.readFileSync("./roms/tetris.gb", "binary");
+  var file = Fs.readFileSync("./roms/Dr. Mario (World).gb", "binary");
   var rom = $$Array.mapi((function (n, param) {
           return Caml_string.get(file, n);
         }), Caml_array.caml_make_vect(file.length, 0));
@@ -35,7 +35,7 @@ function interrupt(cpu) {
     if (isf === 0) {
       return cpu;
     } else if ((ise & 1) > 0 && (isf & 1) > 0) {
-      var sp = Cpu$Yobml.get_register16(cpu, /* SP */4) + 2 | 0;
+      var sp = Cpu$Yobml.get_register16(cpu, /* SP */4) - 2 | 0;
       Memory$Yobml.store16(cpu[/* memory */4], sp, cpu[/* pc */0]);
       Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
       Memory$Yobml.store(cpu[/* memory */4], 65295, isf & 286331152);
@@ -48,7 +48,7 @@ function interrupt(cpu) {
               /* serial */cpu[/* serial */5]
             ];
     } else if ((ise & 2) > 0 && (isf & 2) > 0) {
-      var sp$1 = Cpu$Yobml.get_register16(cpu, /* SP */4) + 2 | 0;
+      var sp$1 = Cpu$Yobml.get_register16(cpu, /* SP */4) - 2 | 0;
       Memory$Yobml.store16(cpu[/* memory */4], sp$1, cpu[/* pc */0]);
       Cpu$Yobml.set_register16(cpu, /* SP */4, sp$1);
       Memory$Yobml.store(cpu[/* memory */4], 65295, isf & 286331137);
@@ -77,27 +77,15 @@ function run($$console) {
     var prev_cy = $$console$1[/* cpu */0][/* cycle */1];
     var match = CpuExec$Yobml.step($$console$1[/* cpu */0]);
     var cpu = match[0];
-    var gpu = Gpu$Yobml.step($$console$1[/* gpu */1], cpu[/* cycle */1] - prev_cy | 0);
-    var gpu$1;
+    var lcd_on = (Memory$Yobml.load(cpu[/* memory */4], 65344) & 128) > 0;
+    var gpu = Gpu$Yobml.step($$console$1[/* gpu */1], cpu[/* cycle */1] - prev_cy | 0, lcd_on);
     if (gpu[/* interrupts */8] > 0) {
       var isf = Memory$Yobml.load(cpu[/* memory */4], 65295);
       Memory$Yobml.store(cpu[/* memory */4], 65295, isf | gpu[/* interrupts */8]);
-      gpu$1 = /* record */[
-        /* mode */gpu[/* mode */0],
-        /* lcd */gpu[/* lcd */1],
-        /* control */gpu[/* control */2],
-        /* ly */gpu[/* ly */3],
-        /* cycles */gpu[/* cycles */4],
-        /* frame */gpu[/* frame */5],
-        /* vram */gpu[/* vram */6],
-        /* rom */gpu[/* rom */7],
-        /* interrupts */0,
-        /* new_frame */gpu[/* new_frame */9]
-      ];
-    } else {
-      gpu$1 = gpu;
+      gpu[/* interrupts */8] = 0;
     }
-    if (gpu$1[/* new_frame */9]) {
+    var cpu$1 = interrupt(cpu);
+    if (gpu[/* new_frame */9] && lcd_on && steps % 100000 === 0) {
       Curry._1(Printf.printf(/* Format */[
                 /* String */Block.__(2, [
                     /* No_padding */0,
@@ -140,9 +128,9 @@ function run($$console) {
                           "\n"
                         ]);
             }), $$console$1[/* gpu */1][/* frame */5]);
-      gpu$1[/* new_frame */9] = false;
+      gpu[/* new_frame */9] = false;
     }
-    var init = cpu[/* memory */4];
+    var init = cpu$1[/* memory */4];
     var memory_000 = /* rom */init[/* rom */0];
     var memory_001 = /* wram */init[/* wram */1];
     var memory_002 = /* exram */init[/* exram */2];
@@ -156,26 +144,26 @@ function run($$console) {
       memory_003,
       memory_004,
       memory_005,
-      /* gpu */gpu$1
+      /* gpu */gpu
     ];
-    var cpu$1 = /* record */[
-      /* pc */cpu[/* pc */0],
-      /* cycle */cpu[/* cycle */1],
-      /* ime */cpu[/* ime */2],
-      /* registers */cpu[/* registers */3],
+    var cpu$2 = /* record */[
+      /* pc */cpu$1[/* pc */0],
+      /* cycle */cpu$1[/* cycle */1],
+      /* ime */cpu$1[/* ime */2],
+      /* registers */cpu$1[/* registers */3],
       /* memory */memory,
-      /* serial */cpu[/* serial */5]
+      /* serial */cpu$1[/* serial */5]
     ];
-    if (steps < 220000) {
+    if (steps < 1000000000) {
       _steps = steps + 1 | 0;
       _console = /* record */[
-        /* cpu */cpu$1,
-        /* gpu */gpu$1,
+        /* cpu */cpu$2,
+        /* gpu */gpu,
         /* memory */memory
       ];
       continue ;
     } else {
-      return CpuExec$Yobml.trace(cpu$1, match[1]);
+      return CpuExec$Yobml.trace(cpu$2, match[1]);
     }
   };
 }

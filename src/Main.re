@@ -6,4 +6,6 @@ let console = Console.make();
 //   Memory.store(console.memory, 0xFFB6 + n, byte)
 // })
 
+Printf.printf("%02X", Memory.load(console.memory, 0x7FF3))
+
 let () = Console.run(console)
