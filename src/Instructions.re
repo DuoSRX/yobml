@@ -33,6 +33,7 @@ type instruction =
   | Ei
   | Inc(register)
   | Inc16(register16)
+  | Inc_hl
   | Jp
   | JpCond(Cpu.cpu_flag, bool)
   | Jp_hl
@@ -146,6 +147,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x31 => Ld_sp
   | 0x32 => Ldd_hl_a
   | 0x33 => Inc16(SP)
+  | 0x34 => Inc_hl
   | 0x35 => Dec_hl
   | 0x36 => Ld_hl_d8
   | 0x37 => Scf
@@ -335,6 +337,7 @@ let pretty = (instruction) => switch(instruction) {
   | Ei => "EI"
   | Inc(r) => sprintf("INC %s", to_string(r))
   | Inc16(r) => sprintf("INC %s", to_string16(r))
+  | Inc_hl => "INC (HL)"
   | Jp => "JP nn"
   | Jp_hl => "JP (HL)"
   | JpCond(C, true) => "JP C, a16"

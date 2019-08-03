@@ -39,9 +39,9 @@ function load(mem, address) {
   } else if (address >= 65184 && address <= 65279) {
     return 0;
   } else if (address >= 65280 && address < 65408) {
-    return Caml_array.caml_array_get(mem[/* io */4], address & 127);
-  } else if (address >= 65408) {
-    return Caml_array.caml_array_get(mem[/* hram */5], address & 127);
+    return Caml_array.caml_array_get(mem[/* io */4], address - 65280 | 0);
+  } else if (address >= 65408 && address <= 65535) {
+    return Caml_array.caml_array_get(mem[/* hram */5], address - 65408 | 0);
   } else {
     throw [
           MemoryAccessUnimplement,
@@ -77,9 +77,9 @@ function store(mem, address, value) {
   } else if (address >= 65184 && address <= 65279) {
     return /* () */0;
   } else if (address >= 65280 && address < 65408) {
-    return Caml_array.caml_array_set(mem[/* io */4], address & 127, value);
-  } else if (address >= 65408) {
-    return Caml_array.caml_array_set(mem[/* hram */5], address & 127, value);
+    return Caml_array.caml_array_set(mem[/* io */4], address - 65280 | 0, value);
+  } else if (address >= 65408 && address <= 65535) {
+    return Caml_array.caml_array_set(mem[/* hram */5], address - 65408 | 0, value);
   } else {
     throw [
           MemoryAccessUnimplement,

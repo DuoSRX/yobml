@@ -10,7 +10,9 @@ type t = {
   cycles: int,
   frame: array(array(int)),
   vram: array(int),
-  rom: array(int)
+  rom: array(int),
+  interrupts: int,
+  mutable new_frame: bool
 }
 
 let make = (~rom) => {
@@ -21,7 +23,9 @@ let make = (~rom) => {
   cycles: 0,
   frame: Array.make_matrix(144, 160, 0),
   vram: Array.make(0x2000, 0),
-  rom
+  rom,
+  interrupts: 0,
+  new_frame: false
 }
 
 let load = (gpu, address) => {
@@ -81,6 +85,11 @@ let render_background = (gpu) => {
   }
 }
 
+// let interrupt = (memory, int_dst) => {
+//   let current = Memory.load(memory, 0xFF0F);
+//   Memory.store(memory, 0xFF0F, current lor int_dst)
+// }
+
 let set_mode = (gpu, mode) => {
   let cleared = gpu.lcd land 0b1111_1100
   switch(mode) {
@@ -93,6 +102,8 @@ let set_mode = (gpu, mode) => {
 
 let step = (gpu, cycles) => {
   let cycles = gpu.cycles + cycles
+  let gpu = {...gpu, interrupts: 0} // reset interrupts... bleh
+
   let gpu' = switch (gpu.mode) {
   | OamRead when cycles >= 80 => {
       let cycles = cycles - 80;
@@ -103,27 +114,25 @@ let step = (gpu, cycles) => {
       render_background(gpu);
       // TODO: render window
       // TODO: render objs
-      // TODO: trigger interrupt
-      set_mode({...gpu, cycles}, HBlank)
+      set_mode({...gpu, cycles, interrupts:2}, HBlank)
     }
   | HBlank when cycles >= 204 => {
       let cycles = cycles - 204;
       let ly = gpu.ly + 1
       if (ly == 144) {
         // TODO: set redraw
-        // TODO: interrupts (Vblank + LcdStats)
-        set_mode({...gpu, cycles, ly}, VBlank)
+        // Vblank + LcdStats
+        set_mode({...gpu, cycles, ly, interrupts: 3, new_frame: true}, VBlank)
       } else {
-        // TODO: interrupt LCD Stats
-        set_mode({...gpu, cycles, ly}, OamRead)
+        // interrupt(memory, 0x2)
+        set_mode({...gpu, cycles, ly, interrupts: 2}, OamRead)
       }
     }
   | VBlank when cycles >= 456 => {
       let cycles = cycles - 456
       let ly = gpu.ly + 1
       if (ly == 154) {
-        // TODO: interrupt LCD stats
-        set_mode({...gpu, cycles, ly:0}, OamRead)
+        set_mode({...gpu, cycles, ly:0, interrupts: 2}, OamRead)
       } else {
         {...gpu, cycles, ly}
       }

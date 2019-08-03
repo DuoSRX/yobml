@@ -14,7 +14,9 @@ function make(rom) {
           /* cycles */0,
           /* frame */$$Array.make_matrix(144, 160, 0),
           /* vram */Caml_array.caml_make_vect(8192, 0),
-          /* rom */rom
+          /* rom */rom,
+          /* interrupts */0,
+          /* new_frame */false
         ];
 }
 
@@ -72,7 +74,9 @@ function set_mode(gpu, mode) {
                 /* cycles */gpu[/* cycles */4],
                 /* frame */gpu[/* frame */5],
                 /* vram */gpu[/* vram */6],
-                /* rom */gpu[/* rom */7]
+                /* rom */gpu[/* rom */7],
+                /* interrupts */gpu[/* interrupts */8],
+                /* new_frame */gpu[/* new_frame */9]
               ];
     case 1 : 
         return /* record */[
@@ -83,7 +87,9 @@ function set_mode(gpu, mode) {
                 /* cycles */gpu[/* cycles */4],
                 /* frame */gpu[/* frame */5],
                 /* vram */gpu[/* vram */6],
-                /* rom */gpu[/* rom */7]
+                /* rom */gpu[/* rom */7],
+                /* interrupts */gpu[/* interrupts */8],
+                /* new_frame */gpu[/* new_frame */9]
               ];
     case 2 : 
         return /* record */[
@@ -94,7 +100,9 @@ function set_mode(gpu, mode) {
                 /* cycles */gpu[/* cycles */4],
                 /* frame */gpu[/* frame */5],
                 /* vram */gpu[/* vram */6],
-                /* rom */gpu[/* rom */7]
+                /* rom */gpu[/* rom */7],
+                /* interrupts */gpu[/* interrupts */8],
+                /* new_frame */gpu[/* new_frame */9]
               ];
     case 3 : 
         return /* record */[
@@ -105,7 +113,9 @@ function set_mode(gpu, mode) {
                 /* cycles */gpu[/* cycles */4],
                 /* frame */gpu[/* frame */5],
                 /* vram */gpu[/* vram */6],
-                /* rom */gpu[/* rom */7]
+                /* rom */gpu[/* rom */7],
+                /* interrupts */gpu[/* interrupts */8],
+                /* new_frame */gpu[/* new_frame */9]
               ];
     
   }
@@ -113,34 +123,50 @@ function set_mode(gpu, mode) {
 
 function step(gpu, cycles) {
   var cycles$1 = gpu[/* cycles */4] + cycles | 0;
-  var match = gpu[/* mode */0];
+  var gpu$1 = /* record */[
+    /* mode */gpu[/* mode */0],
+    /* lcd */gpu[/* lcd */1],
+    /* control */gpu[/* control */2],
+    /* ly */gpu[/* ly */3],
+    /* cycles */gpu[/* cycles */4],
+    /* frame */gpu[/* frame */5],
+    /* vram */gpu[/* vram */6],
+    /* rom */gpu[/* rom */7],
+    /* interrupts */0,
+    /* new_frame */gpu[/* new_frame */9]
+  ];
+  var match = gpu$1[/* mode */0];
   var exit = 0;
   switch (match) {
     case 0 : 
         if (cycles$1 >= 456) {
           var cycles$2 = cycles$1 - 456 | 0;
-          var ly = gpu[/* ly */3] + 1 | 0;
+          var ly = gpu$1[/* ly */3] + 1 | 0;
           if (ly === 154) {
             return set_mode(/* record */[
-                        /* mode */gpu[/* mode */0],
-                        /* lcd */gpu[/* lcd */1],
-                        /* control */gpu[/* control */2],
+                        /* mode */gpu$1[/* mode */0],
+                        /* lcd */gpu$1[/* lcd */1],
+                        /* control */gpu$1[/* control */2],
                         /* ly */0,
                         /* cycles */cycles$2,
-                        /* frame */gpu[/* frame */5],
-                        /* vram */gpu[/* vram */6],
-                        /* rom */gpu[/* rom */7]
+                        /* frame */gpu$1[/* frame */5],
+                        /* vram */gpu$1[/* vram */6],
+                        /* rom */gpu$1[/* rom */7],
+                        /* interrupts */2,
+                        /* new_frame */gpu$1[/* new_frame */9]
                       ], /* OamRead */2);
           } else {
             return /* record */[
-                    /* mode */gpu[/* mode */0],
-                    /* lcd */gpu[/* lcd */1],
-                    /* control */gpu[/* control */2],
+                    /* mode */gpu$1[/* mode */0],
+                    /* lcd */gpu$1[/* lcd */1],
+                    /* control */gpu$1[/* control */2],
                     /* ly */ly,
                     /* cycles */cycles$2,
-                    /* frame */gpu[/* frame */5],
-                    /* vram */gpu[/* vram */6],
-                    /* rom */gpu[/* rom */7]
+                    /* frame */gpu$1[/* frame */5],
+                    /* vram */gpu$1[/* vram */6],
+                    /* rom */gpu$1[/* rom */7],
+                    /* interrupts */gpu$1[/* interrupts */8],
+                    /* new_frame */gpu$1[/* new_frame */9]
                   ];
           }
         } else {
@@ -150,28 +176,32 @@ function step(gpu, cycles) {
     case 1 : 
         if (cycles$1 >= 204) {
           var cycles$3 = cycles$1 - 204 | 0;
-          var ly$1 = gpu[/* ly */3] + 1 | 0;
+          var ly$1 = gpu$1[/* ly */3] + 1 | 0;
           if (ly$1 === 144) {
             return set_mode(/* record */[
-                        /* mode */gpu[/* mode */0],
-                        /* lcd */gpu[/* lcd */1],
-                        /* control */gpu[/* control */2],
+                        /* mode */gpu$1[/* mode */0],
+                        /* lcd */gpu$1[/* lcd */1],
+                        /* control */gpu$1[/* control */2],
                         /* ly */ly$1,
                         /* cycles */cycles$3,
-                        /* frame */gpu[/* frame */5],
-                        /* vram */gpu[/* vram */6],
-                        /* rom */gpu[/* rom */7]
+                        /* frame */gpu$1[/* frame */5],
+                        /* vram */gpu$1[/* vram */6],
+                        /* rom */gpu$1[/* rom */7],
+                        /* interrupts */3,
+                        /* new_frame */true
                       ], /* VBlank */0);
           } else {
             return set_mode(/* record */[
-                        /* mode */gpu[/* mode */0],
-                        /* lcd */gpu[/* lcd */1],
-                        /* control */gpu[/* control */2],
+                        /* mode */gpu$1[/* mode */0],
+                        /* lcd */gpu$1[/* lcd */1],
+                        /* control */gpu$1[/* control */2],
                         /* ly */ly$1,
                         /* cycles */cycles$3,
-                        /* frame */gpu[/* frame */5],
-                        /* vram */gpu[/* vram */6],
-                        /* rom */gpu[/* rom */7]
+                        /* frame */gpu$1[/* frame */5],
+                        /* vram */gpu$1[/* vram */6],
+                        /* rom */gpu$1[/* rom */7],
+                        /* interrupts */2,
+                        /* new_frame */gpu$1[/* new_frame */9]
                       ], /* OamRead */2);
           }
         } else {
@@ -182,14 +212,16 @@ function step(gpu, cycles) {
         if (cycles$1 >= 80) {
           var cycles$4 = cycles$1 - 80 | 0;
           return set_mode(/* record */[
-                      /* mode */gpu[/* mode */0],
-                      /* lcd */gpu[/* lcd */1],
-                      /* control */gpu[/* control */2],
-                      /* ly */gpu[/* ly */3],
+                      /* mode */gpu$1[/* mode */0],
+                      /* lcd */gpu$1[/* lcd */1],
+                      /* control */gpu$1[/* control */2],
+                      /* ly */gpu$1[/* ly */3],
                       /* cycles */cycles$4,
-                      /* frame */gpu[/* frame */5],
-                      /* vram */gpu[/* vram */6],
-                      /* rom */gpu[/* rom */7]
+                      /* frame */gpu$1[/* frame */5],
+                      /* vram */gpu$1[/* vram */6],
+                      /* rom */gpu$1[/* rom */7],
+                      /* interrupts */gpu$1[/* interrupts */8],
+                      /* new_frame */gpu$1[/* new_frame */9]
                     ], /* LcdTransfer */3);
         } else {
           exit = 1;
@@ -198,16 +230,18 @@ function step(gpu, cycles) {
     case 3 : 
         if (cycles$1 >= 172) {
           var cycles$5 = cycles$1 - 172 | 0;
-          render_background(gpu);
+          render_background(gpu$1);
           return set_mode(/* record */[
-                      /* mode */gpu[/* mode */0],
-                      /* lcd */gpu[/* lcd */1],
-                      /* control */gpu[/* control */2],
-                      /* ly */gpu[/* ly */3],
+                      /* mode */gpu$1[/* mode */0],
+                      /* lcd */gpu$1[/* lcd */1],
+                      /* control */gpu$1[/* control */2],
+                      /* ly */gpu$1[/* ly */3],
                       /* cycles */cycles$5,
-                      /* frame */gpu[/* frame */5],
-                      /* vram */gpu[/* vram */6],
-                      /* rom */gpu[/* rom */7]
+                      /* frame */gpu$1[/* frame */5],
+                      /* vram */gpu$1[/* vram */6],
+                      /* rom */gpu$1[/* rom */7],
+                      /* interrupts */2,
+                      /* new_frame */gpu$1[/* new_frame */9]
                     ], /* HBlank */1);
         } else {
           exit = 1;
@@ -217,14 +251,16 @@ function step(gpu, cycles) {
   }
   if (exit === 1) {
     return /* record */[
-            /* mode */gpu[/* mode */0],
-            /* lcd */gpu[/* lcd */1],
-            /* control */gpu[/* control */2],
-            /* ly */gpu[/* ly */3],
+            /* mode */gpu$1[/* mode */0],
+            /* lcd */gpu$1[/* lcd */1],
+            /* control */gpu$1[/* control */2],
+            /* ly */gpu$1[/* ly */3],
             /* cycles */cycles$1,
-            /* frame */gpu[/* frame */5],
-            /* vram */gpu[/* vram */6],
-            /* rom */gpu[/* rom */7]
+            /* frame */gpu$1[/* frame */5],
+            /* vram */gpu$1[/* vram */6],
+            /* rom */gpu$1[/* rom */7],
+            /* interrupts */gpu$1[/* interrupts */8],
+            /* new_frame */gpu$1[/* new_frame */9]
           ];
   }
   

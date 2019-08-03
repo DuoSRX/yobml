@@ -3,6 +3,9 @@
 
 var Fs = require("fs");
 var $$Array = require("bs-platform/lib/js/array.js");
+var Block = require("bs-platform/lib/js/block.js");
+var Curry = require("bs-platform/lib/js/curry.js");
+var Printf = require("bs-platform/lib/js/printf.js");
 var Cpu$Yobml = require("./Cpu.bs.js");
 var Gpu$Yobml = require("./Gpu.bs.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
@@ -25,6 +28,46 @@ function make(param) {
         ];
 }
 
+function interrupt(cpu) {
+  if (cpu[/* ime */2]) {
+    var ise = Memory$Yobml.load(cpu[/* memory */4], 65535);
+    var isf = Memory$Yobml.load(cpu[/* memory */4], 65295);
+    if (isf === 0) {
+      return cpu;
+    } else if ((ise & 1) > 0 && (isf & 1) > 0) {
+      var sp = Cpu$Yobml.get_register16(cpu, /* SP */4) + 2 | 0;
+      Memory$Yobml.store16(cpu[/* memory */4], sp, cpu[/* pc */0]);
+      Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
+      Memory$Yobml.store(cpu[/* memory */4], 65295, isf & 286331152);
+      return /* record */[
+              /* pc */64,
+              /* cycle */cpu[/* cycle */1],
+              /* ime */false,
+              /* registers */cpu[/* registers */3],
+              /* memory */cpu[/* memory */4],
+              /* serial */cpu[/* serial */5]
+            ];
+    } else if ((ise & 2) > 0 && (isf & 2) > 0) {
+      var sp$1 = Cpu$Yobml.get_register16(cpu, /* SP */4) + 2 | 0;
+      Memory$Yobml.store16(cpu[/* memory */4], sp$1, cpu[/* pc */0]);
+      Cpu$Yobml.set_register16(cpu, /* SP */4, sp$1);
+      Memory$Yobml.store(cpu[/* memory */4], 65295, isf & 286331137);
+      return /* record */[
+              /* pc */72,
+              /* cycle */cpu[/* cycle */1],
+              /* ime */false,
+              /* registers */cpu[/* registers */3],
+              /* memory */cpu[/* memory */4],
+              /* serial */cpu[/* serial */5]
+            ];
+    } else {
+      return cpu;
+    }
+  } else {
+    return cpu;
+  }
+}
+
 function run($$console) {
   var _console = $$console;
   var _steps = 0;
@@ -35,6 +78,70 @@ function run($$console) {
     var match = CpuExec$Yobml.step($$console$1[/* cpu */0]);
     var cpu = match[0];
     var gpu = Gpu$Yobml.step($$console$1[/* gpu */1], cpu[/* cycle */1] - prev_cy | 0);
+    var gpu$1;
+    if (gpu[/* interrupts */8] > 0) {
+      var isf = Memory$Yobml.load(cpu[/* memory */4], 65295);
+      Memory$Yobml.store(cpu[/* memory */4], 65295, isf | gpu[/* interrupts */8]);
+      gpu$1 = /* record */[
+        /* mode */gpu[/* mode */0],
+        /* lcd */gpu[/* lcd */1],
+        /* control */gpu[/* control */2],
+        /* ly */gpu[/* ly */3],
+        /* cycles */gpu[/* cycles */4],
+        /* frame */gpu[/* frame */5],
+        /* vram */gpu[/* vram */6],
+        /* rom */gpu[/* rom */7],
+        /* interrupts */0,
+        /* new_frame */gpu[/* new_frame */9]
+      ];
+    } else {
+      gpu$1 = gpu;
+    }
+    if (gpu$1[/* new_frame */9]) {
+      Curry._1(Printf.printf(/* Format */[
+                /* String */Block.__(2, [
+                    /* No_padding */0,
+                    /* End_of_format */0
+                  ]),
+                "%s"
+              ]), "!c");
+      $$Array.iter((function (row) {
+              $$Array.iter((function (px) {
+                      var tmp;
+                      switch (px) {
+                        case 0 : 
+                            tmp = " ";
+                            break;
+                        case 1 : 
+                            tmp = ".";
+                            break;
+                        case 2 : 
+                            tmp = "=";
+                            break;
+                        case 3 : 
+                            tmp = "@";
+                            break;
+                        default:
+                          tmp = "?";
+                      }
+                      return Curry._1(Printf.printf(/* Format */[
+                                      /* String */Block.__(2, [
+                                          /* No_padding */0,
+                                          /* End_of_format */0
+                                        ]),
+                                      "%s"
+                                    ]), tmp);
+                    }), row);
+              return Printf.printf(/* Format */[
+                          /* Char_literal */Block.__(12, [
+                              /* "\n" */10,
+                              /* End_of_format */0
+                            ]),
+                          "\n"
+                        ]);
+            }), $$console$1[/* gpu */1][/* frame */5]);
+      gpu$1[/* new_frame */9] = false;
+    }
     var init = cpu[/* memory */4];
     var memory_000 = /* rom */init[/* rom */0];
     var memory_001 = /* wram */init[/* wram */1];
@@ -49,7 +156,7 @@ function run($$console) {
       memory_003,
       memory_004,
       memory_005,
-      /* gpu */gpu
+      /* gpu */gpu$1
     ];
     var cpu$1 = /* record */[
       /* pc */cpu[/* pc */0],
@@ -59,11 +166,11 @@ function run($$console) {
       /* memory */memory,
       /* serial */cpu[/* serial */5]
     ];
-    if (steps < 200000) {
+    if (steps < 220000) {
       _steps = steps + 1 | 0;
       _console = /* record */[
         /* cpu */cpu$1,
-        /* gpu */gpu,
+        /* gpu */gpu$1,
         /* memory */memory
       ];
       continue ;
@@ -74,5 +181,6 @@ function run($$console) {
 }
 
 exports.make = make;
+exports.interrupt = interrupt;
 exports.run = run;
 /* fs Not a pure module */

@@ -28,7 +28,6 @@ let make = (~rom, ~gpu) => {
 exception MemoryAccessUnimplement(string)
 
 let load = (mem, address) => {
-  // sprintf("Read @ %04X", address) |> Js.log
   if (address == 0xFF44) {
     mem.gpu.ly
   } else if (address < 0x8000) {
@@ -46,18 +45,16 @@ let load = (mem, address) => {
   } else if (address >= 0xFEA0 && address <= 0xFEFF) {
     0 // Some games try to read/write here. No-op
   } else if (address >= 0xFF00 && address < 0xFF80) {
-    mem.io[address land 0x7F]
-  } else if (address >= 0xFF80) {
-    mem.hram[address land 0x7F]
+    mem.io[address - 0xFF00]
+  } else if (address >= 0xFF80 && address <= 0xFFFF) {
+    mem.hram[address - 0xFF80]
   } else {
     raise(MemoryAccessUnimplement(sprintf("%04X", address)))
   }
 }
 
 let store = (mem, address, value) => {
-  // sprintf("Write @ %04X", address) |> Js.log
-          // Js.log(Memory.load(cpu.memory, 0x89B0))
-        // Js.log(Memory.load(cpu.memory, 0x9820))
+  // if (address == 0xFFB6) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
 
   if (address < 0x8000) {
     mem.rom[address] = value
@@ -74,9 +71,9 @@ let store = (mem, address, value) => {
   } else if (address >= 0xFEA0 && address <= 0xFEFF) {
     () // Some games try to read/write here. No-op
   } else if (address >= 0xFF00 && address < 0xFF80) {
-    mem.io[address land 0x7F] = value
-  } else if (address >= 0xFF80) {
-    mem.hram[address land 0x7F] = value
+    mem.io[address - 0xFF00] = value
+  } else if (address >= 0xFF80 && address <= 0xFFFF) {
+    mem.hram[address - 0xFF80] = value
   } else {
     raise(MemoryAccessUnimplement(sprintf("%04X", address)))
   }
