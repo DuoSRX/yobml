@@ -81,7 +81,7 @@ let run = (console) => {
 
     let cpu = interrupt(cpu)
 
-    if (gpu.new_frame && lcd_on && steps mod 100000 == 0) {
+    if (gpu.new_frame && lcd_on && steps mod 10000 == 0) {
       printf("%s", "\033c")
       Array.iter((row) => {
         Array.iter((px) => {

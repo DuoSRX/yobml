@@ -575,6 +575,16 @@ function res_hl(cpu, bit) {
   return bump(cpu, cpu[/* pc */0], 16);
 }
 
+function rlca(cpu) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var c = (a & 128) > 0;
+  var a$1 = (a << 1);
+  var a$2 = c ? a$1 | 1 : a$1;
+  Cpu$Yobml.set_flags(cpu, false, false, false, c, /* () */0);
+  Cpu$Yobml.set_register(cpu, /* A */0, a$2);
+  return bump(cpu, cpu[/* pc */0], 4);
+}
+
 function rr(cpu, storage) {
   var a = storage_load(cpu, storage);
   var match = Cpu$Yobml.has_flag(cpu, /* C */3);
@@ -751,18 +761,20 @@ function execute(cpu, instruction) {
       case 35 : 
           return reti(cpu);
       case 36 : 
-          return rra(cpu);
+          return rlca(cpu);
       case 37 : 
-          return scf(cpu);
+          return rra(cpu);
       case 38 : 
-          return srl_hl(cpu);
+          return scf(cpu);
       case 39 : 
-          return swap_hl(cpu);
+          return srl_hl(cpu);
       case 40 : 
-          return sub_d8(cpu);
+          return swap_hl(cpu);
       case 41 : 
-          return xor_d8(cpu);
+          return sub_d8(cpu);
       case 42 : 
+          return xor_d8(cpu);
+      case 43 : 
           return xor_hl(cpu);
       
     }
@@ -908,6 +920,7 @@ exports.pop16 = pop16;
 exports.pop_af = pop_af;
 exports.res = res;
 exports.res_hl = res_hl;
+exports.rlca = rlca;
 exports.rr = rr;
 exports.rra = rra;
 exports.rst = rst;

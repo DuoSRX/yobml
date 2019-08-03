@@ -73,6 +73,7 @@ type instruction =
   | Ret
   | Reti
   | RetCond(Cpu.cpu_flag, bool)
+  | Rlca
   | Rra
   | Rr(storage)
   | Rst(int)
@@ -108,6 +109,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x04 => Inc(B)
   | 0x05 => Dec(B)
   | 0x06 => Ld_n(B)
+  | 0x07 => Rlca
   | 0x08 => Ld_a16_sp
   | 0x09 => Add_hl_r16(BC)
   | 0x0A => Ld_a_r16(BC)
@@ -394,6 +396,7 @@ let pretty = (instruction) => switch(instruction) {
   | RetCond(Z, true) => "RET Z"
   | RetCond(C, true) => "RET C"
   | RetCond(_,_) => "Unreachable RET"
+  | Rlca => "RLCA"
   | Rr(Register(r)) => sprintf("RR %s", to_string(r))
   | Rr(Register16(r)) => sprintf("RR %s", to_string16(r))
   | Rr(Pointer(r)) => sprintf("RR (%s)", to_string16(r))
