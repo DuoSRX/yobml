@@ -2,93 +2,73 @@
 'use strict';
 
 var Fs = require("fs");
-var List = require("bs-platform/lib/js/list.js");
 var $$Array = require("bs-platform/lib/js/array.js");
-var Block = require("bs-platform/lib/js/block.js");
-var Curry = require("bs-platform/lib/js/curry.js");
-var Printf = require("bs-platform/lib/js/printf.js");
 var Cpu$Yobml = require("./Cpu.bs.js");
 var Gpu$Yobml = require("./Gpu.bs.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Caml_string = require("bs-platform/lib/js/caml_string.js");
+var Memory$Yobml = require("./Memory.bs.js");
 var CpuExec$Yobml = require("./CpuExec.bs.js");
 
 function make(param) {
-  var file = Fs.readFileSync("./roms/01-special.gb", "binary");
+  var file = Fs.readFileSync("./roms/tetris.gb", "binary");
   var rom = $$Array.mapi((function (n, param) {
           return Caml_string.get(file, n);
         }), Caml_array.caml_make_vect(file.length, 0));
+  var gpu = Gpu$Yobml.make(rom);
+  var memory = Memory$Yobml.make(rom, gpu);
+  var cpu = Cpu$Yobml.make(memory);
   return /* record */[
-          /* cpu */Cpu$Yobml.make(rom),
-          /* running */true
+          /* cpu */cpu,
+          /* gpu */gpu,
+          /* memory */memory
         ];
 }
 
-function run($$console$1) {
-  var _console = $$console$1;
+function run($$console) {
+  var _console = $$console;
   var _steps = 0;
-  var _cycles = 0;
   while(true) {
-    var cycles = _cycles;
     var steps = _steps;
-    var $$console$2 = _console;
-    var match = CpuExec$Yobml.step($$console$2[/* cpu */0]);
+    var $$console$1 = _console;
+    var prev_cy = $$console$1[/* cpu */0][/* cycle */1];
+    var match = CpuExec$Yobml.step($$console$1[/* cpu */0]);
     var cpu = match[0];
-    var gpu = Gpu$Yobml.step(cpu[/* gpu */5], cpu[/* memory */4], cycles);
-    if (steps < 140000) {
-      _cycles = cpu[/* cycle */1] - cycles | 0;
+    var gpu = Gpu$Yobml.step($$console$1[/* gpu */1], cpu[/* cycle */1] - prev_cy | 0);
+    var init = cpu[/* memory */4];
+    var memory_000 = /* rom */init[/* rom */0];
+    var memory_001 = /* wram */init[/* wram */1];
+    var memory_002 = /* exram */init[/* exram */2];
+    var memory_003 = /* oam */init[/* oam */3];
+    var memory_004 = /* io */init[/* io */4];
+    var memory_005 = /* hram */init[/* hram */5];
+    var memory = /* record */[
+      memory_000,
+      memory_001,
+      memory_002,
+      memory_003,
+      memory_004,
+      memory_005,
+      /* gpu */gpu
+    ];
+    var cpu$1 = /* record */[
+      /* pc */cpu[/* pc */0],
+      /* cycle */cpu[/* cycle */1],
+      /* ime */cpu[/* ime */2],
+      /* registers */cpu[/* registers */3],
+      /* memory */memory,
+      /* serial */cpu[/* serial */5]
+    ];
+    if (steps < 200000) {
       _steps = steps + 1 | 0;
       _console = /* record */[
-        /* cpu : record */[
-          /* pc */cpu[/* pc */0],
-          /* cycle */cpu[/* cycle */1],
-          /* ime */cpu[/* ime */2],
-          /* registers */cpu[/* registers */3],
-          /* memory */cpu[/* memory */4],
-          /* gpu */gpu,
-          /* serial */cpu[/* serial */6]
-        ],
-        /* running */$$console$2[/* running */1]
+        /* cpu */cpu$1,
+        /* gpu */gpu,
+        /* memory */memory
       ];
       continue ;
     } else {
-      CpuExec$Yobml.trace(cpu, match[1]);
-      console.log($$Array.of_list(List.rev(cpu[/* serial */6])).join(""));
-      return $$Array.iter((function (row) {
-                    $$Array.iter((function (px) {
-                            var tmp;
-                            switch (px) {
-                              case 0 : 
-                                  tmp = ".";
-                                  break;
-                              case 1 : 
-                                  tmp = "-";
-                                  break;
-                              case 2 : 
-                                  tmp = "o";
-                                  break;
-                              case 3 : 
-                                  tmp = "X";
-                                  break;
-                              default:
-                                tmp = "?";
-                            }
-                            return Curry._1(Printf.printf(/* Format */[
-                                            /* String */Block.__(2, [
-                                                /* No_padding */0,
-                                                /* End_of_format */0
-                                              ]),
-                                            "%s"
-                                          ]), tmp);
-                          }), row);
-                    return Printf.printf(/* Format */[
-                                /* Char_literal */Block.__(12, [
-                                    /* "\n" */10,
-                                    /* End_of_format */0
-                                  ]),
-                                "\n"
-                              ]);
-                  }), cpu[/* gpu */5][/* frame */5]);
+      return CpuExec$Yobml.trace(cpu$1, match[1]);
     }
   };
 }

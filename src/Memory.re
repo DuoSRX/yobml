@@ -3,18 +3,20 @@ open Printf
 type t = {
   rom: array(int),
   wram: array(int),
-  vram: array(int),
+  // vram: array(int),
   exram: array(int),
   oam: array(int),
   io: array(int),
-  hram: array(int)
+  hram: array(int),
+  gpu: Gpu.t
 }
 
-let make = (~rom) => {
+let make = (~rom, ~gpu) => {
   {
     rom,
+    gpu,
     wram: Array.make(0x2000, 0),
-    vram: Array.make(0x2000, 0),
+    // vram: Array.make(0x2000, 0),
     // External ram FIXME: this depends on the mapper
     exram: Array.make(0x2000, 0),
     oam: Array.make(0xA0, 0),
@@ -27,10 +29,12 @@ exception MemoryAccessUnimplement(string)
 
 let load = (mem, address) => {
   // sprintf("Read @ %04X", address) |> Js.log
-  if (address < 0x8000) {
+  if (address == 0xFF44) {
+    mem.gpu.ly
+  } else if (address < 0x8000) {
     mem.rom[address]
   } else if (address < 0xA000) {
-    mem.vram[address land 0x1FFF]
+    mem.gpu.vram[address land 0x1FFF]
   } else if (address >= 0xA000 && address < 0xC000) { // FIXME: mapper
     mem.exram[address land 0x1FFF]
   } else if (address >= 0xC000 && address < 0xE000) {
@@ -55,14 +59,10 @@ let store = (mem, address, value) => {
           // Js.log(Memory.load(cpu.memory, 0x89B0))
         // Js.log(Memory.load(cpu.memory, 0x9820))
 
-  // if (address == 0x89B0 || address == 0x9820) {
-  //   Js.log(sprintf("%04X = %02X", address, value))
-  // }
-
   if (address < 0x8000) {
     mem.rom[address] = value
   } else if (address < 0xA000) {
-    mem.vram[address land 0x1FFF] = value
+    mem.gpu.vram[address land 0x1FFF] = value
   } else if (address >= 0xA000 && address < 0xC000) { // FIXME: mapper
     mem.exram[address land 0x1FFF] = value
   } else if (address >= 0xC000 && address < 0xE000) {

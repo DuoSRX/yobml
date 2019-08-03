@@ -255,16 +255,17 @@ let ld_sp_hl = (cpu) => {
 
 let ld_read_io_n = (cpu) => {
   let n = load_next(cpu);
-  let byte = if (n == 0x44) {
+  // let byte = if (n == 0x44) {
     // Hacks to boot Tetris...
-    switch (cpu.pc - 1) {
-    | 0x0233 => 0x94
-    | 0x2828 => 0x91
-    | _ => 0
-    }
-  } else {
-    load(cpu, wrapping_add16(0xFF00, n));
-  }
+    // switch (cpu.pc - 1) {
+    // | 0x0233 => 0x94
+    // | 0x2828 => 0x91
+    // | _ => 0
+    // }
+  // } else {
+    // load(cpu, wrapping_add16(0xFF00, n));
+  // }
+  let byte = load(cpu, wrapping_add16(0xFF00, n));
   set_register(cpu, A, byte);
   bump(cpu, cpu.pc + 1, 12)
 }

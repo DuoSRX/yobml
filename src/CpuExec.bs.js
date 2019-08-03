@@ -169,8 +169,7 @@ function step(cpu) {
         /* ime */cpu[/* ime */2],
         /* registers */cpu[/* registers */3],
         /* memory */cpu[/* memory */4],
-        /* gpu */cpu[/* gpu */5],
-        /* serial */cpu[/* serial */6]
+        /* serial */cpu[/* serial */5]
       ],
       instruction
     ];
@@ -184,8 +183,7 @@ function step(cpu) {
         /* ime */cpu[/* ime */2],
         /* registers */cpu[/* registers */3],
         /* memory */cpu[/* memory */4],
-        /* gpu */cpu[/* gpu */5],
-        /* serial */cpu[/* serial */6]
+        /* serial */cpu[/* serial */5]
       ],
       instruction$1
     ];
