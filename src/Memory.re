@@ -32,6 +32,8 @@ let load = (mem, address) => {
 
   if (address == 0xFF44) {
     mem.gpu.ly
+  } else if (address == 0xFF00) {
+    0xFF // TODO: Joypad input
   } else if (address < 0x8000) {
     mem.rom[address]
   } else if (address < 0xA000) {
