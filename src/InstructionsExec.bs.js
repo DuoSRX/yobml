@@ -614,6 +614,34 @@ function rst(cpu, n) {
   return bump(cpu, n, 16);
 }
 
+function sbc(cpu, r) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var b = Cpu$Yobml.get_register(cpu, r);
+  var match = Cpu$Yobml.has_flag(cpu, /* C */3);
+  var carry = match ? 1 : 0;
+  var result = (a - b | 0) - carry | 0;
+  Cpu$Yobml.set_register(cpu, /* A */0, result & 255);
+  var c = result < 0;
+  var h = (((a & 15) - (b & 15) | 0) - carry | 0) < 0;
+  var z = (result & 255) === 0;
+  Cpu$Yobml.set_flags(cpu, z, true, h, c, /* () */0);
+  return bump(cpu, cpu[/* pc */0], 4);
+}
+
+function sbc_d8(cpu) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
+  var match = Cpu$Yobml.has_flag(cpu, /* C */3);
+  var carry = match ? 1 : 0;
+  var result = (a - b | 0) - carry | 0;
+  Cpu$Yobml.set_register(cpu, /* A */0, result & 255);
+  var c = result < 0;
+  var h = (((a & 15) - (b & 15) | 0) - carry | 0) < 0;
+  var z = (result & 255) === 0;
+  Cpu$Yobml.set_flags(cpu, z, true, h, c, /* () */0);
+  return bump(cpu, cpu[/* pc */0], 4);
+}
+
 function scf(cpu) {
   Cpu$Yobml.set_flags(cpu, undefined, false, false, true, /* () */0);
   return bump(cpu, cpu[/* pc */0], 4);
@@ -634,6 +662,16 @@ function srl_hl(cpu) {
   store(cpu, a, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, (a & 1) === 1, /* () */0);
   return bump(cpu, cpu[/* pc */0], 16);
+}
+
+function sub_r8(cpu, r) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var b = Cpu$Yobml.get_register(cpu, r);
+  var result = wrapping_add(a, -b | 0);
+  Cpu$Yobml.set_register(cpu, /* A */0, result);
+  var h = (result & 15) > (a & 15);
+  Cpu$Yobml.set_flags(cpu, a === b, true, h, result > a, /* () */0);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function swap(cpu, r) {
@@ -835,10 +873,14 @@ function execute(cpu, instruction) {
       case 26 : 
           return rst(cpu, instruction[0]);
       case 27 : 
-          return srl(cpu, instruction[0]);
+          return sbc(cpu, instruction[0]);
       case 28 : 
-          return swap(cpu, instruction[0]);
+          return srl(cpu, instruction[0]);
       case 29 : 
+          return sub_r8(cpu, instruction[0]);
+      case 30 : 
+          return swap(cpu, instruction[0]);
+      case 31 : 
           return xor(cpu, instruction[0]);
       
     }
@@ -924,9 +966,12 @@ exports.rlca = rlca;
 exports.rr = rr;
 exports.rra = rra;
 exports.rst = rst;
+exports.sbc = sbc;
+exports.sbc_d8 = sbc_d8;
 exports.scf = scf;
 exports.srl = srl;
 exports.srl_hl = srl_hl;
+exports.sub_r8 = sub_r8;
 exports.swap = swap;
 exports.swap_hl = swap_hl;
 exports.xor = xor;

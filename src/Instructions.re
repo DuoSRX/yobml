@@ -77,12 +77,15 @@ type instruction =
   | Rra
   | Rr(storage)
   | Rst(int)
+  | Sbc(register)
+  | Sbc_d8
   | Scf
   | Srl(register)
   | Srl_hl
+  | Sub(register)
+  | Sub_d8
   | Swap(register)
   | Swap_hl
-  | Sub_d8
   | Xor(register)
   | Xor_d8
   | Xor_hl
@@ -186,6 +189,22 @@ let decode = (opcode) => switch(opcode) {
   | 0x84 => Add(H)
   | 0x85 => Add(L)
   | 0x87 => Add(A)
+  | 0x90 => Sub(B)
+  | 0x91 => Sub(C)
+  | 0x92 => Sub(D)
+  | 0x93 => Sub(E)
+  | 0x94 => Sub(H)
+  | 0x95 => Sub(L)
+  // | 0x96 => Sub_hl
+  | 0x97 => Sub(A)
+  | 0x98 => Sbc(B)
+  | 0x99 => Sbc(C)
+  | 0x9A => Sbc(D)
+  | 0x9B => Sbc(E)
+  | 0x9C => Sbc(H)
+  | 0x9D => Sbc(L)
+  // | 0x9E => Sbc_hl
+  | 0x9F => Sbc(A)
   | 0xA0 => And(B)
   | 0xA1 => And(C)
   | 0xA2 => And(D)
@@ -244,6 +263,7 @@ let decode = (opcode) => switch(opcode) {
   | 0xD9 => Reti
   | 0xDA => JpCond(C, true)
   | 0xDC => CallCond(C, true)
+  | 0xDE => Sbc_d8
   | 0xDF => Rst(0x18)
   | 0xE0 => Ld_write_io_n
   | 0xE1 => Pop16(HL)
@@ -405,9 +425,12 @@ let pretty = (instruction) => switch(instruction) {
   | Scf => "SCF"
   | Srl(r) => sprintf("SRL %s", to_string(r))
   | Srl_hl => "SRL (HL)"
+  | Sub(r) => sprintf("SUB %s", to_string(r))
+  | Sbc(r) => sprintf("SBC A,%s", to_string(r))
+  | Sbc_d8 => "SBC A, d8"
+  | Sub_d8 => "SUB d8"
   | Swap(r) => sprintf("SWAP %s", to_string(r))
   | Swap_hl => "SWAP (HL)"
-  | Sub_d8 => "SUB d8"
   | Xor(r) => sprintf("XOR %s", to_string(r))
   | Xor_d8 => "XOR d8"
   | Xor_hl => "XOR A, (HL)"
