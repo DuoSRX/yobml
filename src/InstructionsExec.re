@@ -43,6 +43,7 @@ let bump = (cpu, pc, cycles) => {
 }
 
 let nop = (cpu) => bump(cpu, cpu.pc, 4)
+let halt = (cpu) => bump({...cpu, halted: true}, cpu.pc, 4)
 
 let call = (cpu) => {
   let address = load_next16(cpu)
@@ -719,6 +720,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Dec_hl => dec_hl(cpu)
   | Di => di(cpu)
   | Ei => ei(cpu)
+  | Halt => halt(cpu)
   | Inc(r) => inc(cpu, r)
   | Inc16(r) => inc16(cpu, r)
   | Inc_hl => inc_hl(cpu)

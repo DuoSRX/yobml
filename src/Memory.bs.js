@@ -22,6 +22,20 @@ function make(rom, gpu) {
 var MemoryAccessUnimplement = Caml_exceptions.create("Memory-Yobml.MemoryAccessUnimplement");
 
 function load(mem, address) {
+  if (address >= 65284 && address <= 65287) {
+    console.log(Curry._1(Printf.sprintf(/* Format */[
+                  /* Int */Block.__(4, [
+                      /* Int_X */8,
+                      /* Lit_padding */Block.__(0, [
+                          /* Zeros */2,
+                          4
+                        ]),
+                      /* No_precision */0,
+                      /* End_of_format */0
+                    ]),
+                  "%04X"
+                ]), address));
+  }
   if (address === 65348) {
     return mem[/* gpu */6][/* ly */3];
   } else if (address < 32768) {
@@ -62,6 +76,31 @@ function load(mem, address) {
 }
 
 function store(mem, address, value) {
+  if (address >= 65284 && address <= 65287) {
+    console.log(Curry._2(Printf.sprintf(/* Format */[
+                  /* Int */Block.__(4, [
+                      /* Int_X */8,
+                      /* Lit_padding */Block.__(0, [
+                          /* Zeros */2,
+                          4
+                        ]),
+                      /* No_precision */0,
+                      /* String_literal */Block.__(11, [
+                          " = ",
+                          /* Int */Block.__(4, [
+                              /* Int_X */8,
+                              /* Lit_padding */Block.__(0, [
+                                  /* Zeros */2,
+                                  2
+                                ]),
+                              /* No_precision */0,
+                              /* End_of_format */0
+                            ])
+                        ])
+                    ]),
+                  "%04X = %02X"
+                ]), address, value));
+  }
   if (address < 32768) {
     return Caml_array.caml_array_set(mem[/* rom */0], address, value);
   } else if (address < 40960) {

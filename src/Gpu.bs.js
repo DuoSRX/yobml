@@ -196,7 +196,7 @@ function step(gpu, cycles, lcd_on, io_regs) {
         if (cycles$1 >= 456) {
           var cycles$2 = cycles$1 - 456 | 0;
           var ly = gpu$1[/* ly */3] + 1 | 0;
-          if (ly === 154) {
+          if (ly >= 154) {
             return set_mode(/* record */[
                         /* mode */gpu$1[/* mode */0],
                         /* lcd */gpu$1[/* lcd */1],
