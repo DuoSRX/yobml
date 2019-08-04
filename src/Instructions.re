@@ -33,6 +33,7 @@ type instruction =
   | Dec_hl
   | Di
   | Ei
+  | Halt
   | Inc(register)
   | Inc16(register16)
   | Inc_hl
@@ -178,7 +179,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x73 => Ld_hl_r(E)
   | 0x74 => Ld_hl_r(H)
   | 0x75 => Ld_hl_r(L)
-  | 0x76 => Nop // HALT
+  | 0x76 => Halt
   | 0x77 => Ld_hl_r(A)
   | 0x7E => Ld_r_hl(A)
   | 0x80 => Add(B)
@@ -373,6 +374,7 @@ let pretty = (instruction) => switch(instruction) {
   | Dec_hl => "DEC (HL)"
   | Di => "DI"
   | Ei => "EI"
+  | Halt => "HALT"
   | Inc(r) => sprintf("INC %s", to_string(r))
   | Inc16(r) => sprintf("INC %s", to_string16(r))
   | Inc_hl => "INC (HL)"

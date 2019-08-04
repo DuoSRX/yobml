@@ -37,9 +37,9 @@ function load16(cpu, address) {
 
 function store(cpu, address, value) {
   if (address === 65281) {
-    cpu[/* serial */5] = /* :: */[
+    cpu[/* serial */6] = /* :: */[
       $$String.make(1, Char.chr(value)),
-      cpu[/* serial */5]
+      cpu[/* serial */6]
     ];
   }
   return Memory$Yobml.store(cpu[/* memory */4], address, value);
@@ -89,12 +89,25 @@ function bump(cpu, pc, cycles) {
           /* ime */cpu[/* ime */2],
           /* registers */cpu[/* registers */3],
           /* memory */cpu[/* memory */4],
-          /* serial */cpu[/* serial */5]
+          /* halted */cpu[/* halted */5],
+          /* serial */cpu[/* serial */6]
         ];
 }
 
 function nop(cpu) {
   return bump(cpu, cpu[/* pc */0], 4);
+}
+
+function halt(cpu) {
+  return bump(/* record */[
+              /* pc */cpu[/* pc */0],
+              /* cycle */cpu[/* cycle */1],
+              /* ime */cpu[/* ime */2],
+              /* registers */cpu[/* registers */3],
+              /* memory */cpu[/* memory */4],
+              /* halted */true,
+              /* serial */cpu[/* serial */6]
+            ], cpu[/* pc */0], 4);
 }
 
 function call(cpu) {
@@ -130,7 +143,8 @@ function reti(cpu) {
               /* ime */true,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* serial */cpu[/* serial */5]
+              /* halted */cpu[/* halted */5],
+              /* serial */cpu[/* serial */6]
             ], pc, 16);
 }
 
@@ -222,7 +236,8 @@ function di(cpu) {
               /* ime */false,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* serial */cpu[/* serial */5]
+              /* halted */cpu[/* halted */5],
+              /* serial */cpu[/* serial */6]
             ], cpu[/* pc */0], 4);
 }
 
@@ -233,7 +248,8 @@ function ei(cpu) {
               /* ime */true,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* serial */cpu[/* serial */5]
+              /* halted */cpu[/* halted */5],
+              /* serial */cpu[/* serial */6]
             ], cpu[/* pc */0], 4);
 }
 
@@ -779,70 +795,72 @@ function execute(cpu, instruction) {
       case 12 : 
           return ei(cpu);
       case 13 : 
-          return inc_hl(cpu);
+          return halt(cpu);
       case 14 : 
-          return jp(cpu);
+          return inc_hl(cpu);
       case 15 : 
-          return jp_hl(cpu);
+          return jp(cpu);
       case 16 : 
-          return jr_e8(cpu);
+          return jp_hl(cpu);
       case 17 : 
-          return ld_sp(cpu);
+          return jr_e8(cpu);
       case 18 : 
-          return ld_read_io_n(cpu);
+          return ld_sp(cpu);
       case 19 : 
-          return ld_write_io_n(cpu);
+          return ld_read_io_n(cpu);
       case 20 : 
-          return ld_read_io_c(cpu);
+          return ld_write_io_n(cpu);
       case 21 : 
-          return ld_write_io_c(cpu);
+          return ld_read_io_c(cpu);
       case 22 : 
-          return ldd_hl_a(cpu);
+          return ld_write_io_c(cpu);
       case 23 : 
-          return ldi_a_hl(cpu);
+          return ldd_hl_a(cpu);
       case 24 : 
-          return ldi_hl_a(cpu);
+          return ldi_a_hl(cpu);
       case 25 : 
-          return ld_a16_a(cpu);
+          return ldi_hl_a(cpu);
       case 26 : 
-          return ld_a16_sp(cpu);
+          return ld_a16_a(cpu);
       case 27 : 
-          return ld_sp_hl(cpu);
+          return ld_a16_sp(cpu);
       case 28 : 
-          return ld_a_a16(cpu);
+          return ld_sp_hl(cpu);
       case 29 : 
-          return ld_hl_d8(cpu);
+          return ld_a_a16(cpu);
       case 30 : 
-          return ld_hl_sp_e8(cpu);
+          return ld_hl_d8(cpu);
       case 31 : 
-          return or_d8(cpu);
+          return ld_hl_sp_e8(cpu);
       case 32 : 
-          return or_hl(cpu);
+          return or_d8(cpu);
       case 33 : 
-          return cpu;
+          return or_hl(cpu);
       case 34 : 
-          return pop_af(cpu);
+          return cpu;
       case 35 : 
-          return ret(cpu);
+          return pop_af(cpu);
       case 36 : 
-          return reti(cpu);
+          return ret(cpu);
       case 37 : 
-          return rlca(cpu);
+          return reti(cpu);
       case 38 : 
-          return rra(cpu);
+          return rlca(cpu);
       case 39 : 
-          return sbc_d8(cpu);
+          return rra(cpu);
       case 40 : 
-          return scf(cpu);
+          return sbc_d8(cpu);
       case 41 : 
-          return srl_hl(cpu);
+          return scf(cpu);
       case 42 : 
-          return sub_d8(cpu);
+          return srl_hl(cpu);
       case 43 : 
-          return swap_hl(cpu);
+          return sub_d8(cpu);
       case 44 : 
-          return xor_d8(cpu);
+          return swap_hl(cpu);
       case 45 : 
+          return xor_d8(cpu);
+      case 46 : 
           return xor_hl(cpu);
       
     }
@@ -933,6 +951,7 @@ exports.storage_load = storage_load;
 exports.storage_store = storage_store;
 exports.bump = bump;
 exports.nop = nop;
+exports.halt = halt;
 exports.call = call;
 exports.call_cond = call_cond;
 exports.ret = ret;

@@ -137,18 +137,15 @@ let step = (gpu, cycles, lcd_on, io_regs) => {
       let cycles = cycles - 204;
       let ly = gpu.ly + 1
       if (ly == 144) {
-        // TODO: set redraw
-        // Vblank + LcdStats
         set_mode({...gpu, cycles, ly, interrupts: 3, new_frame: true}, VBlank)
       } else {
-        // interrupt(memory, 0x2)
         set_mode({...gpu, cycles, ly, interrupts: 2}, OamRead)
       }
     }
   | VBlank when cycles >= 456 => {
       let cycles = cycles - 456
       let ly = gpu.ly + 1
-      if (ly == 154) {
+      if (ly >= 154) {
         set_mode({...gpu, cycles, ly:0, interrupts: 2}, OamRead)
       } else {
         {...gpu, cycles, ly}

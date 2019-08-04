@@ -8,6 +8,7 @@ type t = {
   registers: Registers.t,
   memory: Memory.t,
 
+  mutable halted: bool,
   mutable serial: list(string) // for debugging purpose only
 }
 
@@ -15,7 +16,7 @@ type cpu_flag = Z | N | H | C
 
 let make = (~memory) => {
   let registers = Registers.make();
-  { pc: 0x100, cycle: 0, ime: false, memory, registers, serial: [] };
+  { pc: 0x100, cycle: 0, ime: false, memory, registers, halted: false, serial: [] };
 };
 
 let get_register = (cpu, register) =>

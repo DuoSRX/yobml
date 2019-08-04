@@ -28,6 +28,8 @@ let make = (~rom, ~gpu) => {
 exception MemoryAccessUnimplement(string)
 
 let load = (mem, address) => {
+  if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X", address)) };
+
   if (address == 0xFF44) {
     mem.gpu.ly
   } else if (address < 0x8000) {
@@ -54,7 +56,7 @@ let load = (mem, address) => {
 }
 
 let store = (mem, address, value) => {
-  // if (address == 0xFFB6) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
+  if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
 
   if (address < 0x8000) {
     mem.rom[address] = value

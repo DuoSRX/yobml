@@ -11,7 +11,8 @@ function tToJs(param) {
           ime: param[/* ime */2],
           registers: param[/* registers */3],
           memory: param[/* memory */4],
-          serial: param[/* serial */5]
+          halted: param[/* halted */5],
+          serial: param[/* serial */6]
         };
 }
 
@@ -22,6 +23,7 @@ function tFromJs(param) {
           /* ime */param.ime,
           /* registers */param.registers,
           /* memory */param.memory,
+          /* halted */param.halted,
           /* serial */param.serial
         ];
 }
@@ -34,6 +36,7 @@ function make(memory) {
           /* ime */false,
           /* registers */registers,
           /* memory */memory,
+          /* halted */false,
           /* serial : [] */0
         ];
 }
@@ -143,7 +146,8 @@ function bump_pc(cpu, n) {
           /* ime */cpu[/* ime */2],
           /* registers */cpu[/* registers */3],
           /* memory */cpu[/* memory */4],
-          /* serial */cpu[/* serial */5]
+          /* halted */cpu[/* halted */5],
+          /* serial */cpu[/* serial */6]
         ];
 }
 

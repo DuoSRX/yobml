@@ -18,6 +18,7 @@ function make(rom) {
 }
 
 function interrupt(cpu) {
+  cpu[/* halted */5] = false;
   if (cpu[/* ime */2]) {
     var ise = Memory$Yobml.load(cpu[/* memory */4], 65535);
     var isf = Memory$Yobml.load(cpu[/* memory */4], 65295);
@@ -34,7 +35,8 @@ function interrupt(cpu) {
               /* ime */false,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* serial */cpu[/* serial */5]
+              /* halted */cpu[/* halted */5],
+              /* serial */cpu[/* serial */6]
             ];
     } else if ((ise & 2) > 0 && (isf & 2) > 0) {
       var sp$1 = Cpu$Yobml.get_register16(cpu, /* SP */4) - 2 | 0;
@@ -47,7 +49,8 @@ function interrupt(cpu) {
               /* ime */false,
               /* registers */cpu[/* registers */3],
               /* memory */cpu[/* memory */4],
-              /* serial */cpu[/* serial */5]
+              /* halted */cpu[/* halted */5],
+              /* serial */cpu[/* serial */6]
             ];
     } else {
       return cpu;
@@ -99,7 +102,8 @@ function run($$console) {
       /* ime */cpu$1[/* ime */2],
       /* registers */cpu$1[/* registers */3],
       /* memory */memory,
-      /* serial */cpu$1[/* serial */5]
+      /* halted */cpu$1[/* halted */5],
+      /* serial */cpu$1[/* serial */6]
     ];
     if (steps < 4000000) {
       _steps = steps + 1 | 0;
@@ -117,8 +121,21 @@ function run($$console) {
 
 function step($$console) {
   var prev_cy = $$console[/* cpu */0][/* cycle */1];
-  var match = CpuExec$Yobml.step($$console[/* cpu */0]);
-  var cpu = match[0];
+  var cpu;
+  if ($$console[/* cpu */0][/* halted */5]) {
+    var init = $$console[/* cpu */0];
+    cpu = /* record */[
+      /* pc */init[/* pc */0],
+      /* cycle */$$console[/* cpu */0][/* cycle */1] + 4 | 0,
+      /* ime */init[/* ime */2],
+      /* registers */init[/* registers */3],
+      /* memory */init[/* memory */4],
+      /* halted */init[/* halted */5],
+      /* serial */init[/* serial */6]
+    ];
+  } else {
+    cpu = CpuExec$Yobml.step($$console[/* cpu */0])[0];
+  }
   var lcd_on = (Memory$Yobml.load(cpu[/* memory */4], 65344) & 128) > 0;
   var gpu = Gpu$Yobml.step($$console[/* gpu */1], cpu[/* cycle */1] - prev_cy | 0, lcd_on, cpu[/* memory */4][/* io */4]);
   if (gpu[/* interrupts */8] > 0) {
@@ -127,13 +144,13 @@ function step($$console) {
     gpu[/* interrupts */8] = 0;
   }
   var cpu$1 = interrupt(cpu);
-  var init = cpu$1[/* memory */4];
-  var memory_000 = /* rom */init[/* rom */0];
-  var memory_001 = /* wram */init[/* wram */1];
-  var memory_002 = /* exram */init[/* exram */2];
-  var memory_003 = /* oam */init[/* oam */3];
-  var memory_004 = /* io */init[/* io */4];
-  var memory_005 = /* hram */init[/* hram */5];
+  var init$1 = cpu$1[/* memory */4];
+  var memory_000 = /* rom */init$1[/* rom */0];
+  var memory_001 = /* wram */init$1[/* wram */1];
+  var memory_002 = /* exram */init$1[/* exram */2];
+  var memory_003 = /* oam */init$1[/* oam */3];
+  var memory_004 = /* io */init$1[/* io */4];
+  var memory_005 = /* hram */init$1[/* hram */5];
   var memory = /* record */[
     memory_000,
     memory_001,
@@ -149,7 +166,8 @@ function step($$console) {
     /* ime */cpu$1[/* ime */2],
     /* registers */cpu$1[/* registers */3],
     /* memory */memory,
-    /* serial */cpu$1[/* serial */5]
+    /* halted */cpu$1[/* halted */5],
+    /* serial */cpu$1[/* serial */6]
   ];
   return /* record */[
           /* cpu */cpu$2,
