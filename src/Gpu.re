@@ -57,9 +57,6 @@ let render_background = (gpu, io_regs) => {
   let c2 = (palette lsr 4) land 3
   let c3 = (palette lsr 6) land 3
 
-  // TODO: fetch "colors" from palette
-  // TODO: set pixel color in frame
-
   let ly = gpu.ly
   // http://bgb.bircd.org/pandocs.htm#lcdpositionandscrolling
   let scroll_x = 0 // TODO: use actual x in FF41
@@ -83,12 +80,11 @@ let render_background = (gpu, io_regs) => {
     let colb = -(((px + scroll_x) mod 8) - 7)
     let coln = ((p1 lsr colb) land 1 == 1) ? 1 : 0
     let coln = (coln lsl 1) lor ((p0 lsr colb) land 1 == 1 ? 1 : 0)
-    // TODO: actual "colors" from palette
     let color = switch(coln) {
-      | 0x0 => c0 //0xA0
-      | 0x1 => c1 //0xFF
-      | 0x2 => c2 //0x60
-      | 0x3 => c3 //0x00
+      | 0x0 => c0
+      | 0x1 => c1
+      | 0x2 => c2
+      | 0x3 => c3
       | _ => failwith("impossiburu")
     }
     let color = switch(color) {

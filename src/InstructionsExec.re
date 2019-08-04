@@ -5,6 +5,7 @@ exception FooEx
 
 let wrapping_add = (a, b) => (a + b) land 0xFF
 let wrapping_add16 = (a, b) => (a + b) land 0xFFFF
+let signed = (v) => v > 0x7F ? -((lnot(v) + 1) land 0xFF) : v
 
 let load = (cpu, address) => Memory.load(cpu.memory, address)
 let load16 = (cpu, address) => Memory.load16(cpu.memory, address)
@@ -191,13 +192,11 @@ let ld_hl_d8 = (cpu) => {
   bump(cpu, cpu.pc + 1, 12)
 }
 
-// FIXME: this fails Blargg
 let ld_hl_sp_e8 = (cpu) => {
   let a = get_register16(cpu, SP)
-  let b = load_next(cpu)
-  let b = b > 0x80 ? -(0x80 - (b - 0x80)) : b
+  let b = load_next(cpu) |> signed
   let value = wrapping_add16(a, b)
-  let h = ((a land 0xF) + (a land 0xF)) > 0xF
+  let h = ((a land 0xF) + (b land 0xF)) > 0xF
   let c = ((a land 0xFF) + (b land 0xFF)) > 0xFF
   set_flags(cpu, ~h, ~c, ~n=false, ~z=false, ())
   set_register16(cpu, HL, value)
@@ -388,15 +387,10 @@ let add_hl_r16 = (cpu, r) => {
   bump(cpu, cpu.pc, 8)
 }
 
-// FIXME: this fails blargg
 let add_sp_e8 = (cpu) => {
   let a = get_register16(cpu, SP)
-  let b = load_next(cpu)
-  // let b = b > 0x80 ? -(0x80 - (b - 0x80)) : b
-  // let b = b > 0x7F ? -(0xFF - b) : b
-  // let b = b > 0x7F ? -((lnot(b) + 1) land 0xFF) : b
-  let b = (b land 0x80) > 0 ? b - 0x100 : b
-  let h = ((a land 0xF) + (a land 0xF)) > 0xF
+  let b = load_next(cpu) |> signed
+  let h = ((a land 0xF) + (b land 0xF)) > 0xF
   let c = ((a land 0xFF) + (b land 0xFF)) > 0xFF
   set_flags(cpu, ~h, ~c, ~n=false, ~z=false, ())
   let sp = wrapping_add16(a, b)
@@ -751,7 +745,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Srl_hl => srl_hl(cpu)
   | Sub(r) => sub_r8(cpu, r)
   | Sbc(r) => sbc(cpu, r)
-  | Sbc_d8 => sbc(cpu)
+  | Sbc_d8 => sbc_d8(cpu)
   | Sub_d8 => sub_d8(cpu)
   | Swap(r) => swap(cpu, r)
   | Swap_hl => swap_hl(cpu)
