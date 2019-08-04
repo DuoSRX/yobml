@@ -25,7 +25,7 @@ let make = (~rom, ~gpu) => {
   }
 }
 
-exception MemoryAccessUnimplement(string)
+exception InvalidMemoryAccess(string)
 
 let load = (mem, address) => {
   if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X", address)) };
@@ -53,7 +53,7 @@ let load = (mem, address) => {
   } else if (address >= 0xFF80 && address <= 0xFFFF) {
     mem.hram[address - 0xFF80]
   } else {
-    raise(MemoryAccessUnimplement(sprintf("%04X", address)))
+    raise(InvalidMemoryAccess(sprintf("Invalid memory access at %04X", address)))
   }
 }
 
@@ -79,7 +79,7 @@ let store = (mem, address, value) => {
   } else if (address >= 0xFF80 && address <= 0xFFFF) {
     mem.hram[address - 0xFF80] = value
   } else {
-    raise(MemoryAccessUnimplement(sprintf("%04X", address)))
+    raise(InvalidMemoryAccess(sprintf("Invalid memory write at %04X = %02X", address, value)))
   }
 }
 

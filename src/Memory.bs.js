@@ -19,7 +19,7 @@ function make(rom, gpu) {
         ];
 }
 
-var MemoryAccessUnimplement = Caml_exceptions.create("Memory-Yobml.MemoryAccessUnimplement");
+var InvalidMemoryAccess = Caml_exceptions.create("Memory-Yobml.InvalidMemoryAccess");
 
 function load(mem, address) {
   if (address >= 65284 && address <= 65287) {
@@ -60,18 +60,21 @@ function load(mem, address) {
     return Caml_array.caml_array_get(mem[/* hram */5], address - 65408 | 0);
   } else {
     throw [
-          MemoryAccessUnimplement,
+          InvalidMemoryAccess,
           Curry._1(Printf.sprintf(/* Format */[
-                    /* Int */Block.__(4, [
-                        /* Int_X */8,
-                        /* Lit_padding */Block.__(0, [
-                            /* Zeros */2,
-                            4
-                          ]),
-                        /* No_precision */0,
-                        /* End_of_format */0
+                    /* String_literal */Block.__(11, [
+                        "Invalid memory access at ",
+                        /* Int */Block.__(4, [
+                            /* Int_X */8,
+                            /* Lit_padding */Block.__(0, [
+                                /* Zeros */2,
+                                4
+                              ]),
+                            /* No_precision */0,
+                            /* End_of_format */0
+                          ])
                       ]),
-                    "%04X"
+                    "Invalid memory access at %04X"
                   ]), address)
         ];
   }
@@ -123,19 +126,33 @@ function store(mem, address, value) {
     return Caml_array.caml_array_set(mem[/* hram */5], address - 65408 | 0, value);
   } else {
     throw [
-          MemoryAccessUnimplement,
-          Curry._1(Printf.sprintf(/* Format */[
-                    /* Int */Block.__(4, [
-                        /* Int_X */8,
-                        /* Lit_padding */Block.__(0, [
-                            /* Zeros */2,
-                            4
-                          ]),
-                        /* No_precision */0,
-                        /* End_of_format */0
+          InvalidMemoryAccess,
+          Curry._2(Printf.sprintf(/* Format */[
+                    /* String_literal */Block.__(11, [
+                        "Invalid memory write at ",
+                        /* Int */Block.__(4, [
+                            /* Int_X */8,
+                            /* Lit_padding */Block.__(0, [
+                                /* Zeros */2,
+                                4
+                              ]),
+                            /* No_precision */0,
+                            /* String_literal */Block.__(11, [
+                                " = ",
+                                /* Int */Block.__(4, [
+                                    /* Int_X */8,
+                                    /* Lit_padding */Block.__(0, [
+                                        /* Zeros */2,
+                                        2
+                                      ]),
+                                    /* No_precision */0,
+                                    /* End_of_format */0
+                                  ])
+                              ])
+                          ])
                       ]),
-                    "%04X"
-                  ]), address)
+                    "Invalid memory write at %04X = %02X"
+                  ]), address, value)
         ];
   }
 }
@@ -154,7 +171,7 @@ function store16(mem, address, value) {
 }
 
 exports.make = make;
-exports.MemoryAccessUnimplement = MemoryAccessUnimplement;
+exports.InvalidMemoryAccess = InvalidMemoryAccess;
 exports.load = load;
 exports.store = store;
 exports.load16 = load16;

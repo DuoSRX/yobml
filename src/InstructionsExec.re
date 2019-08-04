@@ -132,6 +132,14 @@ let cp = (cpu, r) => {
   let b = get_register(cpu, r)
   let h = (a land 0xF) > (b land 0xF);
   set_flags(cpu, ~z=(a == b), ~n=true, ~h, ~c=(a < b), ());
+  bump(cpu, cpu.pc + 1, 4)
+}
+
+let cp_hl = (cpu) => {
+  let reg = get_register(cpu, A);
+  let byte = get_register16(cpu, HL) |> load(cpu)
+  let h = (byte land 0xF) > (reg land 0xF);
+  set_flags(cpu, ~z=(reg == byte), ~n=true, ~h, ~c=(reg < byte), ());
   bump(cpu, cpu.pc + 1, 8)
 }
 
@@ -379,6 +387,18 @@ let adc_d8 = (cpu) => {
   bump(cpu, cpu.pc + 1, 8)
 }
 
+let adc_hl = (cpu) => {
+  let a = get_register(cpu, A)
+  let b = get_register16(cpu, HL) |> load(cpu)
+  let carry = has_flag(cpu, C) ? 1 : 0
+  let result = a + b + carry
+  set_register(cpu, A, result land 0xFF)
+  let c = result > 0xFF
+  let h = (a land 0xF) + (b land 0xF) + carry > 0xF
+  set_flags(cpu, ~z=(result land 0xFF == 0), ~n=false, ~c, ~h, ())
+  bump(cpu, cpu.pc + 1, 8)
+}
+
 let add_d8 = (cpu) => {
   let a = get_register(cpu, A)
   let b = load_next(cpu)
@@ -388,6 +408,17 @@ let add_d8 = (cpu) => {
   let c = value < b
   set_flags(cpu, ~h, ~c, ~n=false, ~z=(value == 0), ());
   bump(cpu, cpu.pc + 1, 8)
+}
+
+let add_hl = (cpu) => {
+  let a = get_register(cpu, A)
+  let b = get_register16(cpu, HL) |> load(cpu)
+  let result = a + b
+  set_register(cpu, A, result land 0xFF)
+  let c = a > result
+  let h = (a land 0xF) > (result land 0xF)
+  set_flags(cpu, ~h, ~c, ~n=false, ~z=(result land 0xFF == 0), ())
+  bump(cpu, cpu.pc, 8)
 }
 
 let add_hl_r16 = (cpu, r) => {
@@ -707,8 +738,10 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Nop => cpu
   | Adc(r) => adc(cpu, r)
   | Adc_d8 => adc_d8(cpu)
+  | Adc_hl => adc_hl(cpu)
   | Add(r) => add(cpu, r)
   | Add_d8 => add_d8(cpu)
+  | Add_hl => add_hl(cpu)
   | Add_hl_r16(r) => add_hl_r16(cpu, r)
   | Add_sp_e8 => add_sp_e8(cpu)
   | And(r) => and_(cpu, r)
@@ -719,6 +752,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | CallCond(flag ,cond) => call_cond(cpu, flag, cond)
   | Ccf => ccf(cpu)
   | Cp(r) => cp(cpu, r)
+  | Cp_hl => cp_hl(cpu)
   | Cp_n => cp_n(cpu)
   | Cpl => cpl(cpu)
   | Daa => daa(cpu)

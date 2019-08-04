@@ -8,7 +8,6 @@ type t = {
   control: int,
   ly: int,
   cycles: int,
-  // frame: array(array(int)),
   frame: array(int),
   vram: array(int),
   rom: array(int),
@@ -22,7 +21,6 @@ let make = (~rom) => {
   control: 0,
   ly: 0,
   cycles: 0,
-  // frame: Array.make_matrix(144, 160, 0xFF),
   frame: Array.make(160 * 144 * 4, 0x7F),
   vram: Array.make(0x2000, 0),
   rom,
@@ -48,14 +46,17 @@ let store = (gpu, address, value) => {
   }
 }
 
-let render_background = (gpu, io_regs) => {
-  let signed = (v) => v > 0x7F ? -((lnot(v) + 1) land 0xFF) : v
+let color_map = [|0xFF, 0xA0, 0x50, 0x0|]
+let signed = (v) => v > 0x7F ? -((lnot(v) + 1) land 0xFF) : v
 
+let render_background = (gpu, io_regs) => {
   let palette = io_regs[0x47]
-  let c0 = palette land 3
-  let c1 = (palette lsr 2) land 3
-  let c2 = (palette lsr 4) land 3
-  let c3 = (palette lsr 6) land 3
+  let colors = [|
+    palette land 3,
+    (palette lsr 2) land 3,
+    (palette lsr 4) land 3,
+    (palette lsr 6) land 3,
+  |]
 
   let ly = gpu.ly
   // http://bgb.bircd.org/pandocs.htm#lcdpositionandscrolling
@@ -80,25 +81,13 @@ let render_background = (gpu, io_regs) => {
     let colb = -(((px + scroll_x) mod 8) - 7)
     let coln = ((p1 lsr colb) land 1 == 1) ? 1 : 0
     let coln = (coln lsl 1) lor ((p0 lsr colb) land 1 == 1 ? 1 : 0)
-    let color = switch(coln) {
-      | 0x0 => c0
-      | 0x1 => c1
-      | 0x2 => c2
-      | 0x3 => c3
-      | _ => failwith("impossiburu")
-    }
-    let color = switch(color) {
-    | 0 => 0xFF
-    | 1 => 0xA0
-    | 2 => 0x50
-    | 3 => 0
-    | _ => 0
-    }
+    let color = color_map[colors[coln]]
 
-    gpu.frame[(ly * 160 + px) * 4 + 0] = color
-    gpu.frame[(ly * 160 + px) * 4 + 1] = color
-    gpu.frame[(ly * 160 + px) * 4 + 2] = color
-    gpu.frame[(ly * 160 + px) * 4 + 3] = 0xFF
+    let offset = (ly * 160 + px) * 4 // 160 pixel per row, 4 byte per pixel (RGBA)
+    gpu.frame[offset + 0] = color
+    gpu.frame[offset + 1] = color
+    gpu.frame[offset + 2] = color
+    gpu.frame[offset + 3] = 0xFF
   }
 }
 

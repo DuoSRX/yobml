@@ -29,10 +29,17 @@ let display: (context, array(int)) => unit = [%bs.raw
 
 let steps = ref(0);
 
+exception ConsoleFailure(string)
+
 let rec step = (console:Console.t) => {
   let console = ref(console)
   while (!console^.gpu.new_frame) {
-    console := Console.step(console^)
+    console := (try (Console.step(console^)) {
+    | Memory.InvalidMemoryAccess(msg) => {
+      let msg = Printf.sprintf("Console crash at %04X. Reason: %s", console^.cpu.pc, msg)
+      raise(ConsoleFailure(msg))
+    }
+    })
   }
 
   display(ctx, console^.gpu.frame)
@@ -41,7 +48,7 @@ let rec step = (console:Console.t) => {
   steps := steps^ + 1
   if (steps^ < 2000) {
     // Js.log("Step")
-    setTimeout(() => step(console^), 16);
+    setTimeout(() => step(console^), 1);
   } else {
     Js.log("Done")
   }
@@ -56,10 +63,7 @@ fetch_rom("http://localhost:8000/roms/tetris.gb")
 // fetch_rom("http://localhost:8000/roms/10-bit_ops.gb")
 |> Js.Promise.then_(rom => {
   let console = Console.make(rom);
-  // let console = Console.step(console, ~on_frame=((frame) => display(ctx, frame)));
   step(console)
-
-  // this.nextFrameTimer = setTimeout(this.frame.bind(this), 1000 / GameboyJS.Screen.physics.FREQUENCY);
   Js.Promise.resolve()
 });
 

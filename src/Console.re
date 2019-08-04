@@ -126,12 +126,6 @@ let step = (console) => {
 
   let cpu = interrupt(cpu)
 
-  // if (gpu.new_frame && lcd_on && steps mod 10000 == 0) {
-  // if (gpu.new_frame && lcd_on) {
-    // on_frame(gpu.frame);
-    // gpu.new_frame = false
-  // }
-
   let memory = {...cpu.memory, gpu};
   let cpu = {...cpu, memory};
   {cpu, memory, gpu}

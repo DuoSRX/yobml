@@ -38,20 +38,30 @@ function store(gpu, address, value) {
   }
 }
 
+var color_map = /* array */[
+  255,
+  160,
+  80,
+  0
+];
+
+function signed(v) {
+  var match = v > 127;
+  if (match) {
+    return -(Pervasives.lnot(v) + 1 & 255) | 0;
+  } else {
+    return v;
+  }
+}
+
 function render_background(gpu, io_regs) {
-  var signed = function (v) {
-    var match = v > 127;
-    if (match) {
-      return -(Pervasives.lnot(v) + 1 & 255) | 0;
-    } else {
-      return v;
-    }
-  };
   var palette = Caml_array.caml_array_get(io_regs, 71);
-  var c0 = palette & 3;
-  var c1 = (palette >>> 2) & 3;
-  var c2 = (palette >>> 4) & 3;
-  var c3 = (palette >>> 6) & 3;
+  var colors = /* array */[
+    palette & 3,
+    (palette >>> 2) & 3,
+    (palette >>> 4) & 3,
+    (palette >>> 6) & 3
+  ];
   var ly = gpu[/* ly */3];
   var ff40 = Caml_array.caml_array_get(io_regs, 64);
   var match = (ff40 & 16) > 0;
@@ -74,44 +84,12 @@ function render_background(gpu, io_regs) {
     var coln$1 = (coln << 1) | (
       match$3 ? 1 : 0
     );
-    var color;
-    switch (coln$1) {
-      case 0 : 
-          color = c0;
-          break;
-      case 1 : 
-          color = c1;
-          break;
-      case 2 : 
-          color = c2;
-          break;
-      case 3 : 
-          color = c3;
-          break;
-      default:
-        color = Pervasives.failwith("impossiburu");
-    }
-    var color$1;
-    switch (color) {
-      case 0 : 
-          color$1 = 255;
-          break;
-      case 1 : 
-          color$1 = 160;
-          break;
-      case 2 : 
-          color$1 = 80;
-          break;
-      case 3 : 
-          color$1 = 0;
-          break;
-      default:
-        color$1 = 0;
-    }
-    Caml_array.caml_array_set(gpu[/* frame */5], ((Caml_int32.imul(ly, 160) + px | 0) << 2) + 0 | 0, color$1);
-    Caml_array.caml_array_set(gpu[/* frame */5], ((Caml_int32.imul(ly, 160) + px | 0) << 2) + 1 | 0, color$1);
-    Caml_array.caml_array_set(gpu[/* frame */5], ((Caml_int32.imul(ly, 160) + px | 0) << 2) + 2 | 0, color$1);
-    Caml_array.caml_array_set(gpu[/* frame */5], ((Caml_int32.imul(ly, 160) + px | 0) << 2) + 3 | 0, 255);
+    var color = Caml_array.caml_array_get(color_map, Caml_array.caml_array_get(colors, coln$1));
+    var offset = ((Caml_int32.imul(ly, 160) + px | 0) << 2);
+    Caml_array.caml_array_set(gpu[/* frame */5], offset + 0 | 0, color);
+    Caml_array.caml_array_set(gpu[/* frame */5], offset + 1 | 0, color);
+    Caml_array.caml_array_set(gpu[/* frame */5], offset + 2 | 0, color);
+    Caml_array.caml_array_set(gpu[/* frame */5], offset + 3 | 0, 255);
   }
   return /* () */0;
 }
@@ -325,6 +303,8 @@ function step(gpu, cycles, lcd_on, io_regs) {
 exports.make = make;
 exports.load = load;
 exports.store = store;
+exports.color_map = color_map;
+exports.signed = signed;
 exports.render_background = render_background;
 exports.set_mode = set_mode;
 exports.step = step;

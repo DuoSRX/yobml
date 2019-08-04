@@ -206,6 +206,15 @@ function cp(cpu, r) {
   var b = Cpu$Yobml.get_register(cpu, r);
   var h = (a & 15) > (b & 15);
   Cpu$Yobml.set_flags(cpu, a === b, true, h, a < b, /* () */0);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 4);
+}
+
+function cp_hl(cpu) {
+  var reg = Cpu$Yobml.get_register(cpu, /* A */0);
+  var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
+  var h = ($$byte & 15) > (reg & 15);
+  Cpu$Yobml.set_flags(cpu, reg === $$byte, true, h, reg < $$byte, /* () */0);
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
@@ -462,6 +471,20 @@ function adc_d8(cpu) {
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
+function adc_hl(cpu) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  var b = Memory$Yobml.load(cpu[/* memory */4], address);
+  var match = Cpu$Yobml.has_flag(cpu, /* C */3);
+  var carry = match ? 1 : 0;
+  var result = (a + b | 0) + carry | 0;
+  Cpu$Yobml.set_register(cpu, /* A */0, result & 255);
+  var c = result > 255;
+  var h = (((a & 15) + (b & 15) | 0) + carry | 0) > 15;
+  Cpu$Yobml.set_flags(cpu, (result & 255) === 0, false, h, c, /* () */0);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
+}
+
 function add_d8(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
@@ -471,6 +494,18 @@ function add_d8(cpu) {
   var c = value < b;
   Cpu$Yobml.set_flags(cpu, value === 0, false, h, c, /* () */0);
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
+}
+
+function add_hl(cpu) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  var b = Memory$Yobml.load(cpu[/* memory */4], address);
+  var result = a + b | 0;
+  Cpu$Yobml.set_register(cpu, /* A */0, result & 255);
+  var c = a > result;
+  var h = (a & 15) > (result & 15);
+  Cpu$Yobml.set_flags(cpu, (result & 255) === 0, false, h, c, /* () */0);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function add_hl_r16(cpu, r) {
@@ -778,96 +813,102 @@ function execute(cpu, instruction) {
       case 0 : 
           return adc_d8(cpu);
       case 1 : 
-          return add_d8(cpu);
+          return adc_hl(cpu);
       case 2 : 
-          return add_sp_e8(cpu);
+          return add_d8(cpu);
       case 3 : 
-          return and_d8(cpu);
+          return add_hl(cpu);
       case 4 : 
-          return and_hl(cpu);
+          return add_sp_e8(cpu);
       case 5 : 
-          return call(cpu);
+          return and_d8(cpu);
       case 6 : 
-          return ccf(cpu);
+          return and_hl(cpu);
       case 7 : 
-          return cp_n(cpu);
+          return call(cpu);
       case 8 : 
-          return cpl(cpu);
+          return ccf(cpu);
       case 9 : 
-          return daa(cpu);
+          return cp_hl(cpu);
       case 10 : 
-          return dec_hl(cpu);
+          return cp_n(cpu);
       case 11 : 
-          return di(cpu);
+          return cpl(cpu);
       case 12 : 
-          return ei(cpu);
+          return daa(cpu);
       case 13 : 
-          return halt(cpu);
+          return dec_hl(cpu);
       case 14 : 
-          return inc_hl(cpu);
+          return di(cpu);
       case 15 : 
-          return jp(cpu);
+          return ei(cpu);
       case 16 : 
-          return jp_hl(cpu);
+          return halt(cpu);
       case 17 : 
-          return jr_e8(cpu);
+          return inc_hl(cpu);
       case 18 : 
-          return ld_sp(cpu);
+          return jp(cpu);
       case 19 : 
-          return ld_read_io_n(cpu);
+          return jp_hl(cpu);
       case 20 : 
-          return ld_write_io_n(cpu);
+          return jr_e8(cpu);
       case 21 : 
-          return ld_read_io_c(cpu);
+          return ld_sp(cpu);
       case 22 : 
-          return ld_write_io_c(cpu);
+          return ld_read_io_n(cpu);
       case 23 : 
-          return ldd_hl_a(cpu);
+          return ld_write_io_n(cpu);
       case 24 : 
-          return ldi_a_hl(cpu);
+          return ld_read_io_c(cpu);
       case 25 : 
-          return ldi_hl_a(cpu);
+          return ld_write_io_c(cpu);
       case 26 : 
-          return ld_a16_a(cpu);
+          return ldd_hl_a(cpu);
       case 27 : 
-          return ld_a16_sp(cpu);
+          return ldi_a_hl(cpu);
       case 28 : 
-          return ld_sp_hl(cpu);
+          return ldi_hl_a(cpu);
       case 29 : 
-          return ld_a_a16(cpu);
+          return ld_a16_a(cpu);
       case 30 : 
-          return ld_hl_d8(cpu);
+          return ld_a16_sp(cpu);
       case 31 : 
-          return ld_hl_sp_e8(cpu);
+          return ld_sp_hl(cpu);
       case 32 : 
-          return or_d8(cpu);
+          return ld_a_a16(cpu);
       case 33 : 
-          return or_hl(cpu);
+          return ld_hl_d8(cpu);
       case 34 : 
-          return cpu;
+          return ld_hl_sp_e8(cpu);
       case 35 : 
-          return pop_af(cpu);
+          return or_d8(cpu);
       case 36 : 
-          return ret(cpu);
+          return or_hl(cpu);
       case 37 : 
-          return reti(cpu);
+          return cpu;
       case 38 : 
-          return rlca(cpu);
+          return pop_af(cpu);
       case 39 : 
-          return rra(cpu);
+          return ret(cpu);
       case 40 : 
-          return sbc_d8(cpu);
+          return reti(cpu);
       case 41 : 
-          return scf(cpu);
+          return rlca(cpu);
       case 42 : 
-          return srl_hl(cpu);
+          return rra(cpu);
       case 43 : 
-          return sub_d8(cpu);
+          return sbc_d8(cpu);
       case 44 : 
-          return swap_hl(cpu);
+          return scf(cpu);
       case 45 : 
-          return xor_d8(cpu);
+          return srl_hl(cpu);
       case 46 : 
+          return sub_d8(cpu);
+      case 47 : 
+          return swap_hl(cpu);
+      case 48 : 
+          return xor_d8(cpu);
+      case 49 : 
           return xor_hl(cpu);
       
     }
@@ -972,6 +1013,7 @@ exports.and_hl = and_hl;
 exports.bit = bit;
 exports.ccf = ccf;
 exports.cp = cp;
+exports.cp_hl = cp_hl;
 exports.cp_n = cp_n;
 exports.cpl = cpl;
 exports.NoDAA = NoDAA;
@@ -1007,7 +1049,9 @@ exports.dec16 = dec16;
 exports.dec_hl = dec_hl;
 exports.adc = adc;
 exports.adc_d8 = adc_d8;
+exports.adc_hl = adc_hl;
 exports.add_d8 = add_d8;
+exports.add_hl = add_hl;
 exports.add_hl_r16 = add_hl_r16;
 exports.add_sp_e8 = add_sp_e8;
 exports.sub_d8 = sub_d8;
