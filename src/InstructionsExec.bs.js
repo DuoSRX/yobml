@@ -18,6 +18,15 @@ function wrapping_add16(a, b) {
   return a + b & 65535;
 }
 
+function signed(v) {
+  var match = v > 127;
+  if (match) {
+    return -(Pervasives.lnot(v) + 1 & 255) | 0;
+  } else {
+    return v;
+  }
+}
+
 function load(cpu, address) {
   return Memory$Yobml.load(cpu[/* memory */4], address);
 }
@@ -252,12 +261,10 @@ function ld_hl_d8(cpu) {
 
 function ld_hl_sp_e8(cpu) {
   var a = Cpu$Yobml.get_register16(cpu, /* SP */4);
-  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-  var match = b > 128;
-  var b$1 = match ? -(128 - (b - 128 | 0) | 0) | 0 : b;
-  var value = wrapping_add16(a, b$1);
-  var h = ((a & 15) + (a & 15) | 0) > 15;
-  var c = ((a & 255) + (b$1 & 255) | 0) > 255;
+  var b = signed(Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]));
+  var value = wrapping_add16(a, b);
+  var h = ((a & 15) + (b & 15) | 0) > 15;
+  var c = ((a & 255) + (b & 255) | 0) > 255;
   Cpu$Yobml.set_flags(cpu, false, false, h, c, /* () */0);
   Cpu$Yobml.set_register16(cpu, /* HL */3, value);
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
@@ -450,13 +457,11 @@ function add_hl_r16(cpu, r) {
 
 function add_sp_e8(cpu) {
   var a = Cpu$Yobml.get_register16(cpu, /* SP */4);
-  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-  var match = (b & 128) > 0;
-  var b$1 = match ? b - 256 | 0 : b;
-  var h = ((a & 15) + (a & 15) | 0) > 15;
-  var c = ((a & 255) + (b$1 & 255) | 0) > 255;
+  var b = signed(Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]));
+  var h = ((a & 15) + (b & 15) | 0) > 15;
+  var c = ((a & 255) + (b & 255) | 0) > 255;
   Cpu$Yobml.set_flags(cpu, false, false, h, c, /* () */0);
-  var sp = wrapping_add16(a, b$1);
+  var sp = wrapping_add16(a, b);
   Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 16);
 }
@@ -803,16 +808,18 @@ function execute(cpu, instruction) {
       case 37 : 
           return rra(cpu);
       case 38 : 
-          return scf(cpu);
+          return sbc_d8(cpu);
       case 39 : 
-          return srl_hl(cpu);
+          return scf(cpu);
       case 40 : 
-          return swap_hl(cpu);
+          return srl_hl(cpu);
       case 41 : 
           return sub_d8(cpu);
       case 42 : 
-          return xor_d8(cpu);
+          return swap_hl(cpu);
       case 43 : 
+          return xor_d8(cpu);
+      case 44 : 
           return xor_hl(cpu);
       
     }
@@ -890,6 +897,7 @@ function execute(cpu, instruction) {
 exports.FooEx = FooEx;
 exports.wrapping_add = wrapping_add;
 exports.wrapping_add16 = wrapping_add16;
+exports.signed = signed;
 exports.load = load;
 exports.load16 = load16;
 exports.store = store;

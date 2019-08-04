@@ -44,7 +44,7 @@ function step($$console$1) {
   }
 }
 
-Curry._1(fetch_rom, "http://localhost:8000/roms/drmario.gb").then((function (rom) {
+Curry._1(fetch_rom, "http://localhost:8000/roms/03-op_sp_hl.gb").then((function (rom) {
         var $$console = Console$Yobml.make(rom);
         step($$console);
         return Promise.resolve(/* () */0);
