@@ -116,7 +116,7 @@ let and_hl = (cpu) => {
 
 let bit = (cpu, bit, r) => {
   let a = get_register(cpu, r);
-  let z = (a lsr bit) land 1 == 1;
+  let z = (a lsr bit) land 1 != 1;
   set_flags(cpu, ~z, ~h=true, ~n=false, ())
   bump(cpu, cpu.pc, 8)
 }
@@ -167,7 +167,7 @@ let di = (cpu) =>
   bump({...cpu, ime: false}, cpu.pc, 4)
 
 let ei = (cpu) => {
-  load(cpu, 0xFFFF) |> store(cpu, 0xFF0F)
+  // load(cpu, 0xFFFF) |> store(cpu, 0xFF0F)
   bump({...cpu, ime: true}, cpu.pc, 4)
 }
 
@@ -352,6 +352,18 @@ let dec_hl = (cpu) => {
   // let h = (value land 0xF) > (a land 0xF);
   // set_flags(cpu, ~z=(value == 0), ~n=true, ~h, ());
   bump(cpu, cpu.pc, 8)
+}
+
+let adc = (cpu, r) => {
+  let a = get_register(cpu, A)
+  let b = get_register(cpu, r)
+  let carry = has_flag(cpu, C) ? 1 : 0
+  let result = a + b + carry
+  set_register(cpu, A, result land 0xFF)
+  let c = result > 0xFF
+  let h = (a land 0xF) + (b land 0xF) + carry > 0xF
+  set_flags(cpu, ~z=(result land 0xFF == 0), ~n=false, ~c, ~h, ())
+  bump(cpu, cpu.pc + 1, 8)
 }
 
 let adc_d8 = (cpu) => {
@@ -685,11 +697,12 @@ let xor_hl = (cpu) => {
 
 let execute = (cpu, instruction) => switch(instruction) {
   | Nop => cpu
+  | Adc(r) => adc(cpu, r)
+  | Adc_d8 => adc_d8(cpu)
   | Add(r) => add(cpu, r)
   | Add_d8 => add_d8(cpu)
   | Add_hl_r16(r) => add_hl_r16(cpu, r)
   | Add_sp_e8 => add_sp_e8(cpu)
-  | Adc_d8 => adc_d8(cpu)
   | And(r) => and_(cpu, r)
   | And_hl => and_hl(cpu)
   | And_d8 => and_d8(cpu)

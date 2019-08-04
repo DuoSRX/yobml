@@ -11,6 +11,7 @@ type storage =
   | Pointer(register16)
 
 type instruction =
+  | Adc(register)
   | Adc_d8
   | Add(register)
   | Add_d8
@@ -187,6 +188,14 @@ let decode = (opcode) => switch(opcode) {
   | 0x84 => Add(H)
   | 0x85 => Add(L)
   | 0x87 => Add(A)
+  | 0x88 => Adc(B)
+  | 0x89 => Adc(C)
+  | 0x8A => Adc(D)
+  | 0x8B => Adc(E)
+  | 0x8C => Adc(H)
+  | 0x8D => Adc(L)
+  // | 0x8E => Adc_hl
+  | 0x8F => Adc(A)
   | 0x90 => Sub(B)
   | 0x91 => Sub(C)
   | 0x92 => Sub(D)
@@ -338,6 +347,7 @@ let decode_cb = (opcode) => switch(opcode) {
 }
 
 let pretty = (instruction) => switch(instruction) {
+  | Adc(r) => sprintf("ADC A, %s", to_string(r))
   | Adc_d8 => "ADC d8"
   | Add_d8 => "ADD A, d8"
   | Add_hl_r16(r) => sprintf("ADD HL, %s", to_string16(r))
