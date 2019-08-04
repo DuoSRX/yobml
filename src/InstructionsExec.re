@@ -566,6 +566,32 @@ let rst = (cpu, n) => {
   bump(cpu, n, 16)
 }
 
+let sbc = (cpu, r) => {
+  let a = get_register(cpu, A)
+  let b = get_register(cpu, r)
+  let carry = has_flag(cpu, C) ? 1 : 0
+  let result = a - b - carry
+  set_register(cpu, A, result land 0xFF)
+  let c = result < 0
+  let h = (a land 0xF) - (b land 0xF) - carry < 0
+  let z = result land 0xFF == 0
+  set_flags(cpu, ~c, ~h, ~z, ~n=true, ())
+  bump(cpu, cpu.pc, 4)
+}
+
+let sbc_d8 = (cpu) => {
+  let a = get_register(cpu, A)
+  let b = load_next(cpu)
+  let carry = has_flag(cpu, C) ? 1 : 0
+  let result = a - b - carry
+  set_register(cpu, A, result land 0xFF)
+  let c = result < 0
+  let h = (a land 0xF) - (b land 0xF) - carry < 0
+  let z = result land 0xFF == 0
+  set_flags(cpu, ~c, ~h, ~z, ~n=true, ())
+  bump(cpu, cpu.pc, 4)
+}
+
 let scf = (cpu) => {
   set_flags(cpu, ~c=true, ~h=false, ~n=false, ())
   bump(cpu, cpu.pc, 4)
@@ -586,6 +612,25 @@ let srl_hl = (cpu) => {
   set_flags(cpu, ~h=false, ~n=false, ~z=(result == 0), ~c=(a land 1 == 1), ())
   bump(cpu, cpu.pc, 16)
 }
+
+let sub_r8 = (cpu, r) => {
+  let a = get_register(cpu, A)
+  let b = get_register(cpu, r)
+  let result = wrapping_add(a, -b)
+  set_register(cpu, A, result)
+  let h = (result land 0xF) > (a land 0xF)
+  set_flags(cpu, ~h, ~z=(a == b), ~n=true, ~c=(result > a), ())
+  bump(cpu, cpu.pc, 4)
+}
+// let open Uint8 in
+  // let a = get_register cpu a in
+  // let r = get_register cpu reg in
+  // let res = sub a r in
+  // set_register cpu Registers.a (res);
+  // let hc = (res land (Char.chr 0x0F)) > (a land (Char.chr 0x0F)) in
+  // write_flags cpu.rg ~z:(a = r) ~hc ~n:true ~ca:(res > a);
+  // t, 8
+
 
 let swap = (cpu, r) => {
   let a = get_register(cpu, r)
@@ -704,9 +749,12 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Scf => scf(cpu)
   | Srl(r) => srl(cpu, r)
   | Srl_hl => srl_hl(cpu)
+  | Sub(r) => sub_r8(cpu, r)
+  | Sbc(r) => sbc(cpu, r)
+  | Sbc_d8 => sbc(cpu)
+  | Sub_d8 => sub_d8(cpu)
   | Swap(r) => swap(cpu, r)
   | Swap_hl => swap_hl(cpu)
-  | Sub_d8 => sub_d8(cpu)
   | Xor(r) => xor(cpu, r)
   | Xor_d8 => xor_d8(cpu)
   | Xor_hl => xor_hl(cpu)
