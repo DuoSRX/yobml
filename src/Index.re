@@ -51,7 +51,8 @@ let rec step = (console:Console.t) => {
 // fetch_rom("http://localhost:8000/roms/drmario.gb")
 // fetch_rom("http://localhost:8000/roms/01-special.gb")
 // fetch_rom("http://localhost:8000/roms/02-interrupts.gb")
-fetch_rom("http://localhost:8000/roms/03-op_sp_hl.gb")
+// fetch_rom("http://localhost:8000/roms/03-op_sp_hl.gb")
+fetch_rom("http://localhost:8000/roms/04-op_r_imm.gb")
 |> Js.Promise.then_(rom => {
   let console = Console.make(rom);
   // let console = Console.step(console, ~on_frame=((frame) => display(ctx, frame)));

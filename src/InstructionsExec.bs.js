@@ -430,7 +430,7 @@ function adc_d8(cpu) {
   Cpu$Yobml.set_register(cpu, /* A */0, result & 255);
   var c = result > 255;
   var h = (((a & 15) + (b & 15) | 0) + carry | 0) > 15;
-  Cpu$Yobml.set_flags(cpu, result === 0, false, h, c, /* () */0);
+  Cpu$Yobml.set_flags(cpu, (result & 255) === 0, false, h, c, /* () */0);
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
@@ -529,6 +529,15 @@ function ora(cpu, r) {
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   Cpu$Yobml.set_flags(cpu, value === 0, false, false, false, /* () */0);
   return bump(cpu, cpu[/* pc */0], 4);
+}
+
+function or_d8(cpu) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
+  var value = a | b;
+  Cpu$Yobml.set_register(cpu, /* A */0, value);
+  Cpu$Yobml.set_flags(cpu, value === 0, false, false, false, /* () */0);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
 function or_hl(cpu) {
@@ -644,7 +653,7 @@ function sbc_d8(cpu) {
   var h = (((a & 15) - (b & 15) | 0) - carry | 0) < 0;
   var z = (result & 255) === 0;
   Cpu$Yobml.set_flags(cpu, z, true, h, c, /* () */0);
-  return bump(cpu, cpu[/* pc */0], 4);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 4);
 }
 
 function scf(cpu) {
@@ -794,32 +803,34 @@ function execute(cpu, instruction) {
       case 30 : 
           return ld_hl_sp_e8(cpu);
       case 31 : 
-          return or_hl(cpu);
+          return or_d8(cpu);
       case 32 : 
-          return cpu;
+          return or_hl(cpu);
       case 33 : 
-          return pop_af(cpu);
+          return cpu;
       case 34 : 
-          return ret(cpu);
+          return pop_af(cpu);
       case 35 : 
-          return reti(cpu);
+          return ret(cpu);
       case 36 : 
-          return rlca(cpu);
+          return reti(cpu);
       case 37 : 
-          return rra(cpu);
+          return rlca(cpu);
       case 38 : 
-          return sbc_d8(cpu);
+          return rra(cpu);
       case 39 : 
-          return scf(cpu);
+          return sbc_d8(cpu);
       case 40 : 
-          return srl_hl(cpu);
+          return scf(cpu);
       case 41 : 
-          return sub_d8(cpu);
+          return srl_hl(cpu);
       case 42 : 
-          return swap_hl(cpu);
+          return sub_d8(cpu);
       case 43 : 
-          return xor_d8(cpu);
+          return swap_hl(cpu);
       case 44 : 
+          return xor_d8(cpu);
+      case 45 : 
           return xor_hl(cpu);
       
     }
@@ -964,6 +975,7 @@ exports.jr_e8 = jr_e8;
 exports.jr = jr;
 exports.and_d8 = and_d8;
 exports.ora = ora;
+exports.or_d8 = or_d8;
 exports.or_hl = or_hl;
 exports.push16 = push16;
 exports.pop16 = pop16;

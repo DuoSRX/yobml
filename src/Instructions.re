@@ -62,6 +62,7 @@ type instruction =
   | Ld_hl_sp_e8
   | Ld_nn(register16)
   | Or(register)
+  | Or_d8
   | Or_hl
   | Nop
   | Pop16(register16)
@@ -179,9 +180,6 @@ let decode = (opcode) => switch(opcode) {
   | 0x76 => Nop // HALT
   | 0x77 => Ld_hl_r(A)
   | 0x7E => Ld_r_hl(A)
-  // | 0x41 => Ld_rr(B, C)
-  // | 0x42 => Ld_rr(B, D)
-  // | 0x47 => Ld_rr(B, A)
   | 0x80 => Add(B)
   | 0x81 => Add(C)
   | 0x82 => Add(D)
@@ -281,6 +279,7 @@ let decode = (opcode) => switch(opcode) {
   | 0xF2 => Ld_read_io_c
   | 0xF3 => Di
   | 0xF5 => Push16(AF)
+  | 0xF6 => Or_d8
   | 0xF7 => Rst(0x30)
   | 0xF8 => Ld_hl_sp_e8
   | 0xF9 => Ld_sp_hl
@@ -402,6 +401,7 @@ let pretty = (instruction) => switch(instruction) {
   | Ld_read_io_c => "LD A, (FF00+C)"
   | Ld_write_io_c => "LD (FF00+C), A"
   | Or(r) => sprintf("OR %s", to_string(r))
+  | Or_d8 => "OR d8"
   | Or_hl => "OR (HL)"
   | Pop16(r) => sprintf("POP %s", to_string16(r))
   | Pop_af => "POP AF"

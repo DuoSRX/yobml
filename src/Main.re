@@ -1,8 +1,8 @@
 // let file = Node.Fs.readFileSync("./roms/tetris.gb", `binary);
 // let file = Node.Fs.readFileSync("./roms/01-special.gb", `binary); // PASS
 // let file = Node.Fs.readFileSync("./roms/02-interrupts.gb", `binary); // FAIL: e2 (EI)
-// let file = Node.Fs.readFileSync("./roms/03-op sp,hl.gb", `binary); // FAIL: e8 f8 (ADD SP, r8 and LD HL, SP+r8)
-// let file = Node.Fs.readFileSync("./roms/04-op r,imm.gb", `binary); // FAIL: missing opcodes
+// let file = Node.Fs.readFileSync("./roms/03-op sp,hl.gb", `binary); // PASS
+// let file = Node.Fs.readFileSync("./roms/04-op r,imm.gb", `binary); // PASS
 // let file = Node.Fs.readFileSync("./roms/05-op rp.gb", `binary); //PASS
 // let file = Node.Fs.readFileSync("./roms/06-ld r,r.gb", `binary); // PASS
 // let file = Node.Fs.readFileSync("./roms/07-jr,jp,call,ret,rst.gb", `binary); // PASS

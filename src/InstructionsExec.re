@@ -362,7 +362,7 @@ let adc_d8 = (cpu) => {
   set_register(cpu, A, result land 0xFF)
   let c = result > 0xFF
   let h = (a land 0xF) + (b land 0xF) + carry > 0xF
-  set_flags(cpu, ~z=(result == 0), ~n=false, ~c, ~h, ())
+  set_flags(cpu, ~z=(result land 0xFF == 0), ~n=false, ~c, ~h, ())
   bump(cpu, cpu.pc + 1, 8)
 }
 
@@ -475,6 +475,15 @@ let ora = (cpu, r) => {
   bump(cpu, cpu.pc, 4)
 }
 
+let or_d8 = (cpu) => {
+  let a = get_register(cpu, A)
+  let b = load_next(cpu)
+  let value = a lor b
+  set_register(cpu, A, value)
+  set_flags(cpu, ~z=(value == 0), ~n=false, ~c=false, ~h=false, ())
+  bump(cpu, cpu.pc + 1, 8)
+}
+
 let or_hl = (cpu) => {
   let a = get_register(cpu, A)
   let b = get_register16(cpu, HL) |> load(cpu)
@@ -583,7 +592,7 @@ let sbc_d8 = (cpu) => {
   let h = (a land 0xF) - (b land 0xF) - carry < 0
   let z = result land 0xFF == 0
   set_flags(cpu, ~c, ~h, ~z, ~n=true, ())
-  bump(cpu, cpu.pc, 4)
+  bump(cpu, cpu.pc + 1, 4)
 }
 
 let scf = (cpu) => {
@@ -727,6 +736,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ld_a16_a => ld_a16_a(cpu)
   | Ld_sp_hl => ld_sp_hl(cpu)
   | Or(r) => ora(cpu, r)
+  | Or_d8 => or_d8(cpu)
   | Or_hl => or_hl(cpu)
   | Pop16(r) => pop16(cpu, r)
   | Pop_af => pop_af(cpu)
