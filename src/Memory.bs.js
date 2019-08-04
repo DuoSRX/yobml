@@ -38,6 +38,8 @@ function load(mem, address) {
   }
   if (address === 65348) {
     return mem[/* gpu */6][/* ly */3];
+  } else if (address === 65280) {
+    return 255;
   } else if (address < 32768) {
     return Caml_array.caml_array_get(mem[/* rom */0], address);
   } else if (address < 40960) {
