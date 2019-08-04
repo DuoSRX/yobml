@@ -613,6 +613,13 @@ let scf = (cpu) => {
   bump(cpu, cpu.pc, 4)
 }
 
+let sla = (cpu, r) => {
+  let a = get_register(cpu, r)
+  let result = a lsl 1
+  set_flags(cpu, ~n=false, ~h=false, ~z=(result == 0), ~c=(result land 0x80 > 0), ())
+  bump(cpu, cpu.pc, 8)
+}
+
 let srl = (cpu, r) => {
   let a = get_register(cpu, r)
   let result = a lsr 1
@@ -766,6 +773,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Rra => rra(cpu)
   | Rst(n) => rst(cpu, n)
   | Scf => scf(cpu)
+  | Sla(r) => sla(cpu, r)
   | Srl(r) => srl(cpu, r)
   | Srl_hl => srl_hl(cpu)
   | Sub(r) => sub_r8(cpu, r)
