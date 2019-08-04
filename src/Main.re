@@ -1,6 +1,18 @@
-let console = Console.make();
+// let file = Node.Fs.readFileSync("./roms/tetris.gb", `binary);
+// let file = Node.Fs.readFileSync("./roms/01-special.gb", `binary); // PASS
+// let file = Node.Fs.readFileSync("./roms/02-interrupts.gb", `binary); // FAIL: e2 (EI)
+// let file = Node.Fs.readFileSync("./roms/03-op sp,hl.gb", `binary); // FAIL: e8 f8 (ADD SP, r8 and LD HL, SP+r8)
+// let file = Node.Fs.readFileSync("./roms/04-op r,imm.gb", `binary); // FAIL: missing opcodes
+// let file = Node.Fs.readFileSync("./roms/05-op rp.gb", `binary); //PASS
+// let file = Node.Fs.readFileSync("./roms/06-ld r,r.gb", `binary); // PASS
+// let file = Node.Fs.readFileSync("./roms/07-jr,jp,call,ret,rst.gb", `binary); // PASS
+// let file = Node.Fs.readFileSync("./roms/08-misc instrs.gb", `binary); // PASS
+// let file = Node.Fs.readFileSync("./roms/09-op r,r.gb", `binary); // FAIL: missing opcodes (ADC...etc)
+let file = Node.Fs.readFileSync("./roms/Dr. Mario (World).gb", `binary);
+let rom = Array.make(String.length(file), 0)
+  |> Array.mapi((n, _) => String.get(file, n) |> int_of_char);
 
-// let payload = [|0x3e,0xc0,0xe0,0x46,0x3e,0x28,0x3d,0x20,0xfd,0xc9|]
+let console = Console.make(rom);
 
 // Array.iteri((n, byte) => {
 //   Memory.store(console.memory, 0xFFB6 + n, byte)
