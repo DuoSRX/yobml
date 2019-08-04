@@ -83,6 +83,7 @@ type instruction =
   | Sbc(register)
   | Sbc_d8
   | Scf
+  | Sla(register)
   | Srl(register)
   | Srl_hl
   | Sub(register)
@@ -111,6 +112,7 @@ let decode = (opcode) => switch(opcode) {
       Ld_rr(dst, src);
     }
   | 0x01 => Ld_nn(BC)
+  | 0x02 => Ld_r16_a(BC)
   | 0x03 => Inc16(BC)
   | 0x04 => Inc(B)
   | 0x05 => Dec(B)
@@ -310,6 +312,14 @@ let decode_cb = (opcode) => switch(opcode) {
   | 0x1D => Rr(Register(L))
   | 0x1E => Rr(Pointer(HL))
   | 0x1F => Rr(Register(A))
+  | 0x20 => Sla(B)
+  | 0x21 => Sla(C)
+  | 0x22 => Sla(D)
+  | 0x23 => Sla(E)
+  | 0x24 => Sla(H)
+  | 0x25 => Sla(L)
+  // | 0x26 => Sla_hl
+  | 0x27 => Sla(A)
   | 0x30 => Swap(B)
   | 0x31 => Swap(C)
   | 0x32 => Swap(D)
@@ -435,6 +445,7 @@ let pretty = (instruction) => switch(instruction) {
   | Rra => "RRA"
   | Rst(n) => sprintf("RST %02XH", n)
   | Scf => "SCF"
+  | Sla(r) => sprintf("SLA %s", to_string(r))
   | Srl(r) => sprintf("SRL %s", to_string(r))
   | Srl_hl => "SRL (HL)"
   | Sub(r) => sprintf("SUB %s", to_string(r))

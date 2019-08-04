@@ -689,6 +689,13 @@ function scf(cpu) {
   return bump(cpu, cpu[/* pc */0], 4);
 }
 
+function sla(cpu, r) {
+  var a = Cpu$Yobml.get_register(cpu, r);
+  var result = (a << 1);
+  Cpu$Yobml.set_flags(cpu, result === 0, false, false, (result & 128) > 0, /* () */0);
+  return bump(cpu, cpu[/* pc */0], 8);
+}
+
 function srl(cpu, r) {
   var a = Cpu$Yobml.get_register(cpu, r);
   var result = (a >>> 1);
@@ -925,12 +932,14 @@ function execute(cpu, instruction) {
       case 28 : 
           return sbc(cpu, instruction[0]);
       case 29 : 
-          return srl(cpu, instruction[0]);
+          return sla(cpu, instruction[0]);
       case 30 : 
-          return sub_r8(cpu, instruction[0]);
+          return srl(cpu, instruction[0]);
       case 31 : 
-          return swap(cpu, instruction[0]);
+          return sub_r8(cpu, instruction[0]);
       case 32 : 
+          return swap(cpu, instruction[0]);
+      case 33 : 
           return xor(cpu, instruction[0]);
       
     }
@@ -1023,6 +1032,7 @@ exports.rst = rst;
 exports.sbc = sbc;
 exports.sbc_d8 = sbc_d8;
 exports.scf = scf;
+exports.sla = sla;
 exports.srl = srl;
 exports.srl_hl = srl_hl;
 exports.sub_r8 = sub_r8;
