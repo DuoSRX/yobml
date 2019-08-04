@@ -13,10 +13,12 @@ type storage =
 type instruction =
   | Adc(register)
   | Adc_d8
+  | Adc_hl
   | Add(register)
   | Add_d8
-  | Add_sp_e8
+  | Add_hl
   | Add_hl_r16(register16)
+  | Add_sp_e8
   | And_d8
   | And(register)
   | And_hl
@@ -25,6 +27,7 @@ type instruction =
   | CallCond(Cpu.cpu_flag, bool)
   | Ccf
   | Cp(register)
+  | Cp_hl
   | Cp_n
   | Cpl
   | Daa
@@ -190,6 +193,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x83 => Add(E)
   | 0x84 => Add(H)
   | 0x85 => Add(L)
+  | 0x86 => Add_hl
   | 0x87 => Add(A)
   | 0x88 => Adc(B)
   | 0x89 => Adc(C)
@@ -197,7 +201,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x8B => Adc(E)
   | 0x8C => Adc(H)
   | 0x8D => Adc(L)
-  // | 0x8E => Adc_hl
+  | 0x8E => Adc_hl
   | 0x8F => Adc(A)
   | 0x90 => Sub(B)
   | 0x91 => Sub(C)
@@ -245,7 +249,7 @@ let decode = (opcode) => switch(opcode) {
   | 0xBB => Cp(E)
   | 0xBC => Cp(H)
   | 0xBD => Cp(L)
-  // | 0xBE => Cp_hl
+  | 0xBE => Cp_hl
   | 0xBF => Cp(A)
   | 0xC0 => RetCond(Z, false)
   | 0xC1 => Pop16(BC)
@@ -360,9 +364,11 @@ let decode_cb = (opcode) => switch(opcode) {
 let pretty = (instruction) => switch(instruction) {
   | Adc(r) => sprintf("ADC A, %s", to_string(r))
   | Adc_d8 => "ADC d8"
-  | Add_d8 => "ADD A, d8"
-  | Add_hl_r16(r) => sprintf("ADD HL, %s", to_string16(r))
+  | Adc_hl => "ADC A, (HL)"
   | Add(r) => sprintf("ADD A, %s", to_string(r))
+  | Add_d8 => "ADD A, d8"
+  | Add_hl => "ADD A, (HL)"
+  | Add_hl_r16(r) => sprintf("ADD HL, %s", to_string16(r))
   | Add_sp_e8 => "ADD SP, r8"
   | And_d8 => "AND d8"
   | And(r) => sprintf("AND %s", to_string(r))
@@ -376,6 +382,7 @@ let pretty = (instruction) => switch(instruction) {
   | CallCond(_,_) => "unreachable"
   | Ccf => "CCF"
   | Cp(r) => sprintf("CP %s", to_string(r))
+  | Cp_hl => "CP (HL)"
   | Cp_n => "CP n"
   | Cpl => "CPL"
   | Daa => "DAA"

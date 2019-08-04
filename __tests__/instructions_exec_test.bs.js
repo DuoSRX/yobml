@@ -29,17 +29,17 @@ Jest.describe("CALL", (function (param) {
                 var cpu = reset(0);
                 Caml_array.caml_array_set(cpu[/* memory */4][/* rom */0], 0, 52);
                 Caml_array.caml_array_set(cpu[/* memory */4][/* rom */0], 1, 18);
-                var cpu$1 = InstructionsExec$Yobml.execute(cpu, /* Call */5);
+                var cpu$1 = InstructionsExec$Yobml.execute(cpu, /* Call */7);
                 return Jest.Expect[/* toEqual */12](4660, Jest.Expect[/* expect */0](cpu$1[/* pc */0]));
               }));
         Jest.test("Decrement SP by 2", (function (param) {
                 var __x = reset(0);
-                var cpu = InstructionsExec$Yobml.execute(__x, /* Call */5);
+                var cpu = InstructionsExec$Yobml.execute(__x, /* Call */7);
                 return Jest.Expect[/* toEqual */12](65532, Jest.Expect[/* expect */0](Cpu$Yobml.get_register16(cpu, /* SP */4)));
               }));
         return Jest.test("Stores PC+2 at SP", (function (param) {
                       var __x = reset(4660);
-                      var cpu = InstructionsExec$Yobml.execute(__x, /* Call */5);
+                      var cpu = InstructionsExec$Yobml.execute(__x, /* Call */7);
                       return Jest.Expect[/* toEqual */12](4662, Jest.Expect[/* expect */0](InstructionsExec$Yobml.load16(cpu, 65532)));
                     }));
       }));
