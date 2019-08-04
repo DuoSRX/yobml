@@ -10,6 +10,9 @@
     "type": "dev"
   }
   ],
+  "reason": {
+    "react-jsx": 3
+  },
   "package-specs": {
     "module": "commonjs",
     "in-source": true
@@ -17,7 +20,8 @@
   "suffix": ".bs.js",
   "bs-dependencies": [
     "@glennsl/bs-jest",
-    "bs-fetch"
+    "bs-fetch",
+    "reason-react"
   ],
   "warnings": {
     "error" : "+101"
