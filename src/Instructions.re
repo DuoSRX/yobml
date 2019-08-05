@@ -55,6 +55,7 @@ type instruction =
   | Ld_hl_r(register)
   | Ld_r_hl(register)
   | Ldd_hl_a
+  | Ldd_a_hl
   | Ldi_a_hl
   | Ldi_hl_a
   | Ld_a16_a
@@ -79,6 +80,7 @@ type instruction =
   | Ret
   | Reti
   | RetCond(Cpu.cpu_flag, bool)
+  | Rla
   | Rlca
   | Rra
   | Rr(storage)
@@ -132,7 +134,9 @@ let decode = (opcode) => switch(opcode) {
   | 0x12 => Ld_r16_a(DE)
   | 0x13 => Inc16(DE)
   | 0x14 => Inc(D)
+  | 0x15 => Dec(D)
   | 0x16 => Ld_n(D)
+  | 0x17 => Rla
   | 0x18 => Jr_e8
   | 0x19 => Add_hl_r16(DE)
   | 0x1A => Ld_a_r16(DE)
@@ -167,6 +171,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x37 => Scf
   | 0x38 => Jr(C, true)
   | 0x39 => Add_hl_r16(SP)
+  | 0x3A => Ldd_a_hl
   | 0x3B => Dec16(SP)
   | 0x3C => Inc(A)
   | 0x3D => Dec(A)
@@ -420,6 +425,7 @@ let pretty = (instruction) => switch(instruction) {
   | Ld_a_r16(r) => sprintf("LD A, [%s]", to_string16(r))
   | Ldi_hl_a => "LDI (HL), A"
   | Ld_sp_hl => "LD SP, HL"
+  | Ldd_a_hl => "LDD A, (HL)"
   | Ldi_a_hl => "LDI A, (HL)"
   | Ldd_hl_a => "LDD (HL), A"
   | Ld_a_a16 => "LD A,(a16)"
@@ -445,11 +451,12 @@ let pretty = (instruction) => switch(instruction) {
   | RetCond(Z, true) => "RET Z"
   | RetCond(C, true) => "RET C"
   | RetCond(_,_) => "Unreachable RET"
+  | Rla => "RLA"
   | Rlca => "RLCA"
+  | Rra => "RRA"
   | Rr(Register(r)) => sprintf("RR %s", to_string(r))
   | Rr(Register16(r)) => sprintf("RR %s", to_string16(r))
   | Rr(Pointer(r)) => sprintf("RR (%s)", to_string16(r))
-  | Rra => "RRA"
   | Rst(n) => sprintf("RST %02XH", n)
   | Scf => "SCF"
   | Sla(r) => sprintf("SLA %s", to_string(r))

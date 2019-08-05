@@ -244,6 +244,13 @@ let ldi_a_hl = (cpu) => {
   bump(cpu, cpu.pc, 8)
 }
 
+let ldd_a_hl = (cpu) => {
+  let address = get_register16(cpu, HL);
+  load(cpu, address) |> set_register(cpu, A);
+  set_register16(cpu, HL, wrapping_add16(address, -1));
+  bump(cpu, cpu.pc, 8)
+}
+
 let ldd_hl_a = (cpu) => {
   let address = get_register16(cpu, HL);
   get_register(cpu, A) |> store(cpu, address);
@@ -576,6 +583,17 @@ let res_hl = (cpu, bit) => {
   bump(cpu, cpu.pc, 16)
 }
 
+let rla = (cpu) => {
+  let a = get_register(cpu, A)
+  let prev_carry = has_flag(cpu, C) ? 1 : 0
+  let c = (a lsr 7) land 1
+  let a = (a lsl 1) lor prev_carry
+  let c = (c == 0)
+  set_flags(cpu, ~c, ~n=false, ~h=false, ~z=false, ())
+  set_register(cpu, A, a)
+  bump(cpu, cpu.pc, 4)
+}
+
 let rlca = (cpu) => {
   let a = get_register(cpu, A)
   let c = a land 0x80 > 0
@@ -787,6 +805,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ld_hl_r(r) => ld_hl_r(cpu, r)
   | Ld_nn(r) => ld_nn(cpu, r)
   | Ldd_hl_a => ldd_hl_a(cpu)
+  | Ldd_a_hl => ldd_a_hl(cpu)
   | Ldi_a_hl => ldi_a_hl(cpu)
   | Ldi_hl_a => ldi_hl_a(cpu)
   | Ld_a16_a => ld_a16_a(cpu)
@@ -802,6 +821,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ret => ret(cpu)
   | Reti => reti(cpu)
   | RetCond(flag, cond) => ret_cond(cpu, flag, cond)
+  | Rla => rla(cpu)
   | Rlca => rlca(cpu)
   | Rr(s) => rr(cpu, s)
   | Rra => rra(cpu)

@@ -327,6 +327,13 @@ function ldi_a_hl(cpu) {
   return bump(cpu, cpu[/* pc */0], 8);
 }
 
+function ldd_a_hl(cpu) {
+  var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  Cpu$Yobml.set_register(cpu, /* A */0, Memory$Yobml.load(cpu[/* memory */4], address));
+  Cpu$Yobml.set_register16(cpu, /* HL */3, wrapping_add16(address, -1));
+  return bump(cpu, cpu[/* pc */0], 8);
+}
+
 function ldd_hl_a(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
@@ -652,6 +659,18 @@ function res_hl(cpu, bit) {
   return bump(cpu, cpu[/* pc */0], 16);
 }
 
+function rla(cpu) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var match = Cpu$Yobml.has_flag(cpu, /* C */3);
+  var prev_carry = match ? 1 : 0;
+  var c = (a >>> 7) & 1;
+  var a$1 = (a << 1) | prev_carry;
+  var c$1 = c === 0;
+  Cpu$Yobml.set_flags(cpu, false, false, false, c$1, /* () */0);
+  Cpu$Yobml.set_register(cpu, /* A */0, a$1);
+  return bump(cpu, cpu[/* pc */0], 4);
+}
+
 function rlca(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var c = (a & 128) > 0;
@@ -865,50 +884,54 @@ function execute(cpu, instruction) {
       case 26 : 
           return ldd_hl_a(cpu);
       case 27 : 
-          return ldi_a_hl(cpu);
+          return ldd_a_hl(cpu);
       case 28 : 
-          return ldi_hl_a(cpu);
+          return ldi_a_hl(cpu);
       case 29 : 
-          return ld_a16_a(cpu);
+          return ldi_hl_a(cpu);
       case 30 : 
-          return ld_a16_sp(cpu);
+          return ld_a16_a(cpu);
       case 31 : 
-          return ld_sp_hl(cpu);
+          return ld_a16_sp(cpu);
       case 32 : 
-          return ld_a_a16(cpu);
+          return ld_sp_hl(cpu);
       case 33 : 
-          return ld_hl_d8(cpu);
+          return ld_a_a16(cpu);
       case 34 : 
-          return ld_hl_sp_e8(cpu);
+          return ld_hl_d8(cpu);
       case 35 : 
-          return or_d8(cpu);
+          return ld_hl_sp_e8(cpu);
       case 36 : 
-          return or_hl(cpu);
+          return or_d8(cpu);
       case 37 : 
-          return cpu;
+          return or_hl(cpu);
       case 38 : 
-          return pop_af(cpu);
+          return cpu;
       case 39 : 
-          return ret(cpu);
+          return pop_af(cpu);
       case 40 : 
-          return reti(cpu);
+          return ret(cpu);
       case 41 : 
-          return rlca(cpu);
+          return reti(cpu);
       case 42 : 
-          return rra(cpu);
+          return rla(cpu);
       case 43 : 
-          return sbc_d8(cpu);
+          return rlca(cpu);
       case 44 : 
-          return scf(cpu);
+          return rra(cpu);
       case 45 : 
-          return srl_hl(cpu);
+          return sbc_d8(cpu);
       case 46 : 
-          return sub_d8(cpu);
+          return scf(cpu);
       case 47 : 
-          return swap_hl(cpu);
+          return srl_hl(cpu);
       case 48 : 
-          return xor_d8(cpu);
+          return sub_d8(cpu);
       case 49 : 
+          return swap_hl(cpu);
+      case 50 : 
+          return xor_d8(cpu);
+      case 51 : 
           return xor_hl(cpu);
       
     }
@@ -1030,6 +1053,7 @@ exports.ld_a_r16 = ld_a_r16;
 exports.ld_a_a16 = ld_a_a16;
 exports.ldi_hl_a = ldi_hl_a;
 exports.ldi_a_hl = ldi_a_hl;
+exports.ldd_a_hl = ldd_a_hl;
 exports.ldd_hl_a = ldd_hl_a;
 exports.ld_hl_r = ld_hl_r;
 exports.ld_r_hl = ld_r_hl;
@@ -1069,6 +1093,7 @@ exports.pop16 = pop16;
 exports.pop_af = pop_af;
 exports.res = res;
 exports.res_hl = res_hl;
+exports.rla = rla;
 exports.rlca = rlca;
 exports.rr = rr;
 exports.rra = rra;
