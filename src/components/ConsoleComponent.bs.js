@@ -63,6 +63,7 @@ function step(canvas) {
                     ]),
                   "Console crash at $%04X. Reason: %s"
                 ]), $$console[0][/* cpu */0][/* pc */0], exn[1]);
+        console.log(msg);
         throw [
               ConsoleFailure,
               msg
@@ -118,7 +119,7 @@ function ConsoleComponent(Props) {
         }), initial_state);
   var dispatch = match[1];
   React.useEffect((function () {
-          Curry._1(fetch_rom, "http://localhost:8000/roms/tetris.gb").then((function (rom) {
+          Curry._1(fetch_rom, "http://localhost:8000/roms/09-op_r_r.gb").then((function (rom) {
                   Curry._1(dispatch, /* Loaded */1);
                   $$console[0] = Console$Yobml.make(rom);
                   requestAnimationFrame((function (param) {

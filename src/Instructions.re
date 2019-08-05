@@ -83,6 +83,7 @@ type instruction =
   | Rla
   | Rlca
   | Rra
+  | Rrca
   | Rr(storage)
   | Rst(int)
   | Sbc(register)
@@ -132,6 +133,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x0C => Inc(C)
   | 0x0D => Dec(C)
   | 0x0E => Ld_n(C)
+  | 0x0F => Rrca
   | 0x11 => Ld_nn(DE)
   | 0x12 => Ld_r16_a(DE)
   | 0x13 => Inc16(DE)
@@ -464,6 +466,7 @@ let pretty = (instruction) => switch(instruction) {
   | Rla => "RLA"
   | Rlca => "RLCA"
   | Rra => "RRA"
+  | Rrca => "RRCA"
   | Rr(Register(r)) => sprintf("RR %s", to_string(r))
   | Rr(Register16(r)) => sprintf("RR %s", to_string16(r))
   | Rr(Pointer(r)) => sprintf("RR (%s)", to_string16(r))

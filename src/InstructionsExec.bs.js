@@ -174,7 +174,7 @@ function and_(cpu, r) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var b = Cpu$Yobml.get_register(cpu, r);
   var result = a & b;
-  Cpu$Yobml.set_register(cpu, r, result);
+  Cpu$Yobml.set_register(cpu, /* A */0, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, true, false, /* () */0);
   return bump(cpu, cpu[/* pc */0], 4);
 }
@@ -204,9 +204,9 @@ function ccf(cpu) {
 function cp(cpu, r) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var b = Cpu$Yobml.get_register(cpu, r);
-  var h = (a & 15) > (b & 15);
+  var h = (a & 15) < (b & 15);
   Cpu$Yobml.set_flags(cpu, a === b, true, h, a < b, /* () */0);
-  return bump(cpu, cpu[/* pc */0] + 1 | 0, 4);
+  return bump(cpu, cpu[/* pc */0], 4);
 }
 
 function cp_hl(cpu) {
@@ -681,6 +681,15 @@ function rlca(cpu) {
   return bump(cpu, cpu[/* pc */0], 4);
 }
 
+function rrca(cpu) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var c = a & 1;
+  var result = (c << 7) | (a >>> 1);
+  Cpu$Yobml.set_register(cpu, /* A */0, result);
+  Cpu$Yobml.set_flags(cpu, false, false, false, c === 1, /* () */0);
+  return bump(cpu, cpu[/* pc */0], 4);
+}
+
 function rr(cpu, storage) {
   var a = storage_load(cpu, storage);
   var match = Cpu$Yobml.has_flag(cpu, /* C */3);
@@ -942,20 +951,22 @@ function execute(cpu, instruction) {
       case 44 : 
           return rra(cpu);
       case 45 : 
-          return sbc_d8(cpu);
+          return rrca(cpu);
       case 46 : 
-          return sbc_hl(cpu);
+          return sbc_d8(cpu);
       case 47 : 
-          return scf(cpu);
+          return sbc_hl(cpu);
       case 48 : 
-          return srl_hl(cpu);
+          return scf(cpu);
       case 49 : 
-          return sub_d8(cpu);
+          return srl_hl(cpu);
       case 50 : 
-          return swap_hl(cpu);
+          return sub_d8(cpu);
       case 51 : 
-          return xor_d8(cpu);
+          return swap_hl(cpu);
       case 52 : 
+          return xor_d8(cpu);
+      case 53 : 
           return xor_hl(cpu);
       
     }
@@ -1121,6 +1132,7 @@ exports.res = res;
 exports.res_hl = res_hl;
 exports.rla = rla;
 exports.rlca = rlca;
+exports.rrca = rrca;
 exports.rr = rr;
 exports.rra = rra;
 exports.rst = rst;
