@@ -3,17 +3,20 @@
 
 var Cpu$Yobml = require("./Cpu.bs.js");
 var Gpu$Yobml = require("./Gpu.bs.js");
+var Input$Yobml = require("./Input.bs.js");
 var Memory$Yobml = require("./Memory.bs.js");
 var CpuExec$Yobml = require("./CpuExec.bs.js");
 
 function make(rom) {
   var gpu = Gpu$Yobml.make(rom);
-  var memory = Memory$Yobml.make(rom, gpu);
+  var input = Input$Yobml.make(/* () */0);
+  var memory = Memory$Yobml.make(rom, gpu, input);
   var cpu = Cpu$Yobml.make(memory);
   return /* record */[
           /* cpu */cpu,
           /* gpu */gpu,
-          /* memory */memory
+          /* memory */memory,
+          /* input */input
         ];
 }
 
@@ -87,6 +90,7 @@ function run($$console) {
     var memory_003 = /* oam */init[/* oam */3];
     var memory_004 = /* io */init[/* io */4];
     var memory_005 = /* hram */init[/* hram */5];
+    var memory_007 = /* input */init[/* input */7];
     var memory = /* record */[
       memory_000,
       memory_001,
@@ -94,7 +98,8 @@ function run($$console) {
       memory_003,
       memory_004,
       memory_005,
-      /* gpu */gpu
+      /* gpu */gpu,
+      memory_007
     ];
     var cpu$2 = /* record */[
       /* pc */cpu$1[/* pc */0],
@@ -110,13 +115,55 @@ function run($$console) {
       _console = /* record */[
         /* cpu */cpu$2,
         /* gpu */gpu,
-        /* memory */memory
+        /* memory */memory,
+        /* input */$$console$1[/* input */3]
       ];
       continue ;
     } else {
       return CpuExec$Yobml.trace(cpu$2, match[1]);
     }
   };
+}
+
+function key_to_button(key) {
+  switch (key) {
+    case " " : 
+        return /* Select */1;
+    case "ArrowDown" : 
+        return /* Down */6;
+    case "ArrowLeft" : 
+        return /* Left */4;
+    case "ArrowRight" : 
+        return /* Right */5;
+    case "ArrowUp" : 
+        return /* Up */7;
+    case "Enter" : 
+        return /* Start */0;
+    case "x" : 
+        return /* A */2;
+    case "z" : 
+        return /* B */3;
+    default:
+      return undefined;
+  }
+}
+
+function key_down($$console, key) {
+  var match = key_to_button(key);
+  if (match !== undefined) {
+    return Input$Yobml.key_down($$console[/* input */3], match);
+  } else {
+    return /* () */0;
+  }
+}
+
+function key_up($$console, key) {
+  var match = key_to_button(key);
+  if (match !== undefined) {
+    return Input$Yobml.key_up($$console[/* input */3], match);
+  } else {
+    return /* () */0;
+  }
 }
 
 function step($$console) {
@@ -151,6 +198,7 @@ function step($$console) {
   var memory_003 = /* oam */init$1[/* oam */3];
   var memory_004 = /* io */init$1[/* io */4];
   var memory_005 = /* hram */init$1[/* hram */5];
+  var memory_007 = /* input */init$1[/* input */7];
   var memory = /* record */[
     memory_000,
     memory_001,
@@ -158,7 +206,8 @@ function step($$console) {
     memory_003,
     memory_004,
     memory_005,
-    /* gpu */gpu
+    /* gpu */gpu,
+    memory_007
   ];
   var cpu$2 = /* record */[
     /* pc */cpu$1[/* pc */0],
@@ -172,12 +221,16 @@ function step($$console) {
   return /* record */[
           /* cpu */cpu$2,
           /* gpu */gpu,
-          /* memory */memory
+          /* memory */memory,
+          /* input */$$console[/* input */3]
         ];
 }
 
 exports.make = make;
 exports.interrupt = interrupt;
 exports.run = run;
+exports.key_to_button = key_to_button;
+exports.key_down = key_down;
+exports.key_up = key_up;
 exports.step = step;
 /* No side effect */

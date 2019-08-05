@@ -82,22 +82,38 @@ function step(canvas) {
 }
 
 var initial_state = /* record */[
-  /* running */false,
-  /* loading */false
+  /* loading */false,
+  /* running */false
 ];
+
+function handle_key_down(dispatch, ev) {
+  return Curry._1(dispatch, /* KeyDown */Block.__(0, [ev.key]));
+}
+
+function handle_key_up(dispatch, ev) {
+  return Curry._1(dispatch, /* KeyUp */Block.__(1, [ev.key]));
+}
 
 function ConsoleComponent(Props) {
   var match = React.useReducer((function (state, action) {
-          if (action) {
-            return /* record */[
-                    /* running */state[/* running */0],
-                    /* loading */false
-                  ];
+          if (typeof action === "number") {
+            if (action === 0) {
+              return /* record */[
+                      /* loading */true,
+                      /* running */state[/* running */1]
+                    ];
+            } else {
+              return /* record */[
+                      /* loading */false,
+                      /* running */state[/* running */1]
+                    ];
+            }
+          } else if (action.tag) {
+            Console$Yobml.key_up($$console[0], action[0]);
+            return state;
           } else {
-            return /* record */[
-                    /* running */state[/* running */0],
-                    /* loading */true
-                  ];
+            Console$Yobml.key_down($$console[0], action[0]);
+            return state;
           }
         }), initial_state);
   var dispatch = match[1];
@@ -110,9 +126,15 @@ function ConsoleComponent(Props) {
                         }));
                   return Promise.resolve(/* () */0);
                 }));
+          addEventListener("keydown", (function (ev) {
+                  return Curry._1(dispatch, /* KeyDown */Block.__(0, [ev.key]));
+                }));
+          addEventListener("keyup", (function (ev) {
+                  return Curry._1(dispatch, /* KeyUp */Block.__(1, [ev.key]));
+                }));
           return undefined;
         }), ([]));
-  return React.createElement("div", undefined, match[0][/* loading */1] ? React.createElement("div", undefined, "Loading...") : null, React.createElement("canvas", {
+  return React.createElement("div", undefined, match[0][/* loading */0] ? React.createElement("div", undefined, "Loading...") : null, React.createElement("canvas", {
                   id: "display"
                 }), React.createElement(RegistersComponent$Yobml.make, {
                   console: $$console
@@ -128,5 +150,7 @@ exports.ConsoleFailure = ConsoleFailure;
 exports.$$console = $$console;
 exports.step = step;
 exports.initial_state = initial_state;
+exports.handle_key_down = handle_key_down;
+exports.handle_key_up = handle_key_up;
 exports.make = make;
 /* fetch_rom Not a pure module */

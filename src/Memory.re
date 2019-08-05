@@ -8,20 +8,22 @@ type t = {
   oam: array(int),
   io: array(int),
   hram: array(int),
-  gpu: Gpu.t
+  gpu: Gpu.t,
+  input: Input.t
 }
 
-let make = (~rom, ~gpu) => {
+let make = (~rom, ~gpu, ~input) => {
   {
     rom,
     gpu,
+    input,
     wram: Array.make(0x2000, 0),
     // vram: Array.make(0x2000, 0),
     // External ram FIXME: this depends on the mapper
     exram: Array.make(0x2000, 0),
     oam: Array.make(0xA0, 0),
     io: Array.make(0x80, 0),
-    hram: Array.make(0x80, 0)
+    hram: Array.make(0x80, 0),
   }
 }
 
@@ -33,7 +35,7 @@ let load = (mem, address) => {
   if (address == 0xFF44) {
     mem.gpu.ly
   } else if (address == 0xFF00) {
-    0xFF // TODO: Joypad input
+    Input.get(mem.input)
   } else if (address < 0x8000) {
     mem.rom[address]
   } else if (address < 0xA000) {
@@ -61,7 +63,9 @@ let store = (mem, address, value) => {
   if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
   if (address == 0xFFFF) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
 
-  if (address < 0x8000) {
+  if (address == 0xFF00) {
+    Input.set(mem.input, value)
+  } else if (address < 0x8000) {
     mem.rom[address] = value
   } else if (address < 0xA000) {
     mem.gpu.vram[address land 0x1FFF] = value

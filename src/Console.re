@@ -2,17 +2,20 @@ type t = {
   cpu: Cpu.t,
   gpu: Gpu.t,
   memory: Memory.t,
+  input: Input.t
 };
 
 let make = (rom) => {
   let gpu = Gpu.make(~rom);
-  let memory = Memory.make(~rom, ~gpu);
+  let input = Input.make();
+  let memory = Memory.make(~rom, ~gpu, ~input);
   let cpu = Cpu.make(~memory);
 
   {
     cpu,
     gpu,
     memory,
+    input
   }
 };
 
@@ -96,7 +99,7 @@ let run = (console) => {
     let cpu = {...cpu, memory}
 
     if (steps < 4000000) {
-      loop({cpu, gpu, memory}, steps + 1)
+      loop({...console, cpu, gpu, memory}, steps + 1)
     } else {
       CpuExec.trace(cpu, instruction)
     }
@@ -104,6 +107,35 @@ let run = (console) => {
   }
 
   loop(console, 0)
+}
+
+let key_to_button = (key) => {
+  open Input;
+  switch(key) {
+  | "Enter" => Some(Start)
+  | " " => Some(Select)
+  | "z" => Some(B)
+  | "x" => Some(A)
+  | "ArrowLeft" => Some(Left)
+  | "ArrowRight" => Some(Right)
+  | "ArrowDown" => Some(Down)
+  | "ArrowUp" => Some(Up)
+  | _ => None
+  }
+}
+
+let key_down = (console, key) => {
+  switch(key_to_button(key)) {
+  | Some(k) => Input.key_down(console.input, k)
+  | None => ()
+  };
+}
+
+let key_up = (console, key) => {
+  switch(key_to_button(key)) {
+  | Some(k) => Input.key_up(console.input, k)
+  | None => ()
+  };
 }
 
 let step = (console) => {
@@ -128,5 +160,5 @@ let step = (console) => {
 
   let memory = {...cpu.memory, gpu};
   let cpu = {...cpu, memory};
-  {cpu, memory, gpu}
+  {...console, cpu, memory, gpu}
 }

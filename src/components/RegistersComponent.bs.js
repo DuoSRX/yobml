@@ -15,7 +15,9 @@ var initial_state = /* record */[
   /* hl */0,
   /* sp */0,
   /* pc */0,
-  /* flags */"----"
+  /* flags */"----",
+  /* buttons */0,
+  /* dpad */0
 ];
 
 function b2hex($$byte) {
@@ -70,6 +72,8 @@ function RegistersComponent(Props) {
                   var hl = Cpu$Yobml.get_register16(cpu, /* HL */3);
                   var sp = Cpu$Yobml.get_register16(cpu, /* SP */4);
                   var flags = CpuExec$Yobml.pretty_flags(cpu);
+                  var buttons = $$console[0][/* input */3][/* buttons */1];
+                  var dpad = $$console[0][/* input */3][/* dpad */0];
                   return Curry._1(setState, (function (_s) {
                                 return /* record */[
                                         /* af */af,
@@ -78,7 +82,9 @@ function RegistersComponent(Props) {
                                         /* hl */hl,
                                         /* sp */sp,
                                         /* pc */cpu[/* pc */0],
-                                        /* flags */flags
+                                        /* flags */flags,
+                                        /* buttons */buttons,
+                                        /* dpad */dpad
                                       ];
                               }));
                 }), 16);
@@ -98,7 +104,11 @@ function RegistersComponent(Props) {
                   id: "reg-PC"
                 }, "SP = " + w2hex(state[/* sp */4])), React.createElement("div", {
                   id: "flags"
-                }, "Flags = " + state[/* flags */6]));
+                }, "Flags = " + state[/* flags */6]), React.createElement("div", {
+                  id: "buttons"
+                }, "Buttons = " + w2hex(state[/* buttons */7])), React.createElement("div", {
+                  id: "dpad"
+                }, "DPad = " + w2hex(state[/* dpad */8])));
 }
 
 var make = RegistersComponent;

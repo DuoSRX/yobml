@@ -5,9 +5,10 @@ var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var Printf = require("bs-platform/lib/js/printf.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
+var Input$Yobml = require("./Input.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 
-function make(rom, gpu) {
+function make(rom, gpu, input) {
   return /* record */[
           /* rom */rom,
           /* wram */Caml_array.caml_make_vect(8192, 0),
@@ -15,7 +16,8 @@ function make(rom, gpu) {
           /* oam */Caml_array.caml_make_vect(160, 0),
           /* io */Caml_array.caml_make_vect(128, 0),
           /* hram */Caml_array.caml_make_vect(128, 0),
-          /* gpu */gpu
+          /* gpu */gpu,
+          /* input */input
         ];
 }
 
@@ -39,7 +41,7 @@ function load(mem, address) {
   if (address === 65348) {
     return mem[/* gpu */6][/* ly */3];
   } else if (address === 65280) {
-    return 255;
+    return Input$Yobml.get(mem[/* input */7]);
   } else if (address < 32768) {
     return Caml_array.caml_array_get(mem[/* rom */0], address);
   } else if (address < 40960) {
@@ -131,7 +133,9 @@ function store(mem, address, value) {
                   "%04X = %02X"
                 ]), address, value));
   }
-  if (address < 32768) {
+  if (address === 65280) {
+    return Input$Yobml.set(mem[/* input */7], value);
+  } else if (address < 32768) {
     return Caml_array.caml_array_set(mem[/* rom */0], address, value);
   } else if (address < 40960) {
     return Caml_array.caml_array_set(mem[/* gpu */6][/* vram */6], address & 8191, value);
