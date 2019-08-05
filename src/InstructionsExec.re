@@ -159,15 +159,33 @@ let cpl = (cpu) => {
 
 exception NoDAA
 
+// WHAT CIRCLE OF HELL IS THIS WHY OH GOD WHY
 let daa = (cpu) => {
-  // raise(NoDAA)
-  // let a = get_register(cpu, A)
-  // let adj1 = has_flag(cpu, H) ? 0x06 : 0
-  // let adj2 = adj1 lor (has_flag(cpu, C) ? 0x60 : 0)
-  // let adj3 = if (has_flag(cpu, N)) {
-  //   wrapping_add(a, -adj2)
-  // } else {
-  // }
+  let n = has_flag(cpu, N)
+  let h = has_flag(cpu, H)
+  let c = has_flag(cpu, C)
+  let a = get_register(cpu, A)
+
+  let result = ref(a);
+
+  if (n) {
+    if (h) {
+      result := wrapping_add(result^, -6)
+    }
+    if (c) {
+      result := result^ - 0x60
+    }
+  } else {
+    if (result^ land 0xF > 9 || h) {
+      result := result^ + 6
+    } else {
+      result := result^ + 0x60
+    }
+  };
+
+  let c = (result^ land 0x100 > 0) ? true : c
+  set_register(cpu, A, result^ land 0xFF)
+  set_flags(cpu, ~h=false, ~z=(result^ == 0), ~c, ())
 
   bump(cpu, cpu.pc, 4)
 }

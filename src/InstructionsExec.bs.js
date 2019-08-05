@@ -235,6 +235,26 @@ function cpl(cpu) {
 var NoDAA = Caml_exceptions.create("InstructionsExec-Yobml.NoDAA");
 
 function daa(cpu) {
+  var n = Cpu$Yobml.has_flag(cpu, /* N */1);
+  var h = Cpu$Yobml.has_flag(cpu, /* H */2);
+  var c = Cpu$Yobml.has_flag(cpu, /* C */3);
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var result = a;
+  if (n) {
+    if (h) {
+      result = wrapping_add(result, -6);
+    }
+    if (c) {
+      result = result - 96 | 0;
+    }
+    
+  } else {
+    result = (result & 15) > 9 || h ? result + 6 | 0 : result + 96 | 0;
+  }
+  var match = (result & 256) > 0;
+  var c$1 = match ? true : c;
+  Cpu$Yobml.set_register(cpu, /* A */0, result & 255);
+  Cpu$Yobml.set_flags(cpu, result === 0, undefined, false, c$1, /* () */0);
   return bump(cpu, cpu[/* pc */0], 4);
 }
 
