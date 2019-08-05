@@ -10,6 +10,7 @@ type t = {
   cycles: int,
   frame: array(int),
   vram: array(int),
+  oam: array(int),
   rom: array(int),
   mutable interrupts: int,
   mutable new_frame: bool
@@ -23,6 +24,7 @@ let make = (~rom) => {
   cycles: 0,
   frame: Array.make(160 * 144 * 4, 0x7F),
   vram: Array.make(0x2000, 0),
+  oam: Array.make(0xA0, 0),
   rom,
   interrupts: 0,
   new_frame: false
@@ -91,10 +93,64 @@ let render_background = (gpu, io_regs) => {
   }
 }
 
-// let interrupt = (memory, int_dst) => {
-//   let current = Memory.load(memory, 0xFF0F);
-//   Memory.store(memory, 0xFF0F, current lor int_dst)
-// }
+type sprite = { x:int, y:int, index:int, attrs: int }
+
+let render_sprites = (gpu, io_regs) => {
+  let palette = io_regs[0x48]
+  let colors = [|
+    0,
+    (palette lsr 2) land 3,
+    (palette lsr 4) land 3,
+    (palette lsr 6) land 3,
+  |]
+
+  // TODO: handle 16px sprites
+  let sprite_height = 8;
+  let ly = gpu.ly
+  // TODO: use correct palette
+  // let palette = [|0, 0x40, 0x70, 0xFF|]
+
+  // let n = 150 // TODO: loop
+  let rec loop = (n) => {
+    let y = gpu.oam[n]
+    let x = gpu.oam[n + 1]
+    let index = gpu.oam[n + 2]
+    let attrs = gpu.oam[n + 3];
+    let sprite = { x, y, index, attrs }
+
+    let y = sprite.y - 16
+    let on_scanline = (y <= ly) && (y + sprite_height) > ly;
+    let x = sprite.x - 8
+
+    if (on_scanline) {
+      let y_offset = ly - y
+      let ptr = (sprite.index * 16) + (y_offset * 2)
+      let lo = load(gpu, 0x8000 + ptr)
+      let hi = load(gpu, 0x8000 + ptr + 1)
+
+      for (idx_x in 0 to 7) {
+        let pixel_x = x + idx_x;
+        if ((pixel_x >= 0) && (pixel_x <= 160)) {
+          let bit = 7 - idx_x // TODO: handle horizontal flip
+          let pixel = (hi lsr bit land 1 == 1) ? 2 : 0
+          let pixel = (lo lsr bit land 1 == 1) ? pixel lor 1 : pixel
+          let color = colors[pixel]
+          if (pixel != 0) {
+            // TODO: obj priority
+            let offset = (ly * 160 + pixel_x) * 4 // 160 pixel per row, 4 byte per pixel (RGBA)
+            gpu.frame[offset + 0] = color
+            gpu.frame[offset + 1] = color
+            gpu.frame[offset + 2] = color
+            gpu.frame[offset + 3] = 0xFF
+          }
+        }
+      }
+    }
+    if (n < 156) { loop(n + 4) }
+  }
+
+  loop(0)
+}
 
 let set_mode = (gpu, mode) => {
   let cleared = gpu.lcd land 0b1111_1100
@@ -117,7 +173,10 @@ let step = (gpu, cycles, lcd_on, io_regs) => {
     }
   | LcdTransfer when cycles >= 172 => {
       let cycles = cycles - 172;
-      if (lcd_on) { render_background(gpu, io_regs) };
+      if (lcd_on) {
+        render_background(gpu, io_regs)
+        render_sprites(gpu, io_regs)
+      };
       // TODO: render window
       // TODO: render objs
       set_mode({...gpu, cycles, interrupts:2}, HBlank)

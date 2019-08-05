@@ -87,7 +87,9 @@ type instruction =
   | Rst(int)
   | Sbc(register)
   | Sbc_d8
+  | Sbc_hl
   | Scf
+  | Set_hl(int)
   | Sla(register)
   | Srl(register)
   | Srl_hl
@@ -222,7 +224,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x9B => Sbc(E)
   | 0x9C => Sbc(H)
   | 0x9D => Sbc(L)
-  // | 0x9E => Sbc_hl
+  | 0x9E => Sbc_hl
   | 0x9F => Sbc(A)
   | 0xA0 => And(B)
   | 0xA1 => And(C)
@@ -353,6 +355,14 @@ let decode_cb = (opcode) => switch(opcode) {
   | 0xAE => Res_hl(5)
   | 0xB6 => Res_hl(6)
   | 0xBE => Res_hl(7)
+  | 0xC6 => Set_hl(0)
+  | 0xCE => Set_hl(1)
+  | 0xD6 => Set_hl(2)
+  | 0xDE => Set_hl(3)
+  | 0xE6 => Set_hl(4)
+  | 0xEE => Set_hl(5)
+  | 0xF6 => Set_hl(6)
+  | 0xFE => Set_hl(7)
   | _ when opcode >= 0x40 && opcode <= 0x7F => {
       let reg = regs[opcode land 7];
       let bit = opcode lsr 3 land 7;
@@ -459,11 +469,13 @@ let pretty = (instruction) => switch(instruction) {
   | Rr(Pointer(r)) => sprintf("RR (%s)", to_string16(r))
   | Rst(n) => sprintf("RST %02XH", n)
   | Scf => "SCF"
+  | Set_hl(n) => sprintf("SET %d, (HL)", n)
   | Sla(r) => sprintf("SLA %s", to_string(r))
   | Srl(r) => sprintf("SRL %s", to_string(r))
   | Srl_hl => "SRL (HL)"
   | Sub(r) => sprintf("SUB %s", to_string(r))
   | Sbc(r) => sprintf("SBC A,%s", to_string(r))
+  | Sbc_hl => sprintf("SBC A, (HL)")
   | Sbc_d8 => "SBC A, d8"
   | Sub_d8 => "SUB d8"
   | Swap(r) => sprintf("SWAP %s", to_string(r))

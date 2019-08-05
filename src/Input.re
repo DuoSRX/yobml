@@ -40,9 +40,9 @@ let key_up = (input, key) => {
 }
 
 let get = (input) => {
-  if (input.selector land 0x10 > 0) {
+  if (input.selector land 0x20 > 0) {
     input.dpad lor input.selector
-  } else if (input.selector land 0x20 > 0) {
+  } else if (input.selector land 0x10 > 0) {
     input.buttons lor input.selector
   } else {
     input.selector

@@ -34,7 +34,7 @@ var ConsoleFailure = Caml_exceptions.create("ConsoleComponent-Yobml.ConsoleFailu
 var $$console = /* record */[/* contents */Console$Yobml.make(/* array */[])];
 
 function step(canvas) {
-  while(!$$console[0][/* gpu */1][/* new_frame */9]) {
+  while(!$$console[0][/* gpu */1][/* new_frame */10]) {
     var tmp;
     try {
       tmp = Console$Yobml.step($$console[0]);
@@ -74,7 +74,7 @@ function step(canvas) {
     $$console[0] = tmp;
   };
   Curry._2(display, canvas, $$console[0][/* gpu */1][/* frame */5]);
-  $$console[0][/* gpu */1][/* new_frame */9] = false;
+  $$console[0][/* gpu */1][/* new_frame */10] = false;
   requestAnimationFrame((function (param) {
           return step(canvas);
         }));
@@ -118,7 +118,7 @@ function ConsoleComponent(Props) {
         }), initial_state);
   var dispatch = match[1];
   React.useEffect((function () {
-          Curry._1(fetch_rom, "http://localhost:8000/roms/flappyboy.gb").then((function (rom) {
+          Curry._1(fetch_rom, "http://localhost:8000/roms/tetris.gb").then((function (rom) {
                   Curry._1(dispatch, /* Loaded */1);
                   $$console[0] = Console$Yobml.make(rom);
                   requestAnimationFrame((function (param) {
@@ -132,7 +132,15 @@ function ConsoleComponent(Props) {
           addEventListener("keyup", (function (ev) {
                   return Curry._1(dispatch, /* KeyUp */Block.__(1, [ev.key]));
                 }));
-          return undefined;
+          return (function (param) {
+                    removeEventListener("keydown", (function (ev) {
+                            return Curry._1(dispatch, /* KeyDown */Block.__(0, [ev.key]));
+                          }));
+                    removeEventListener("keyup", (function (ev) {
+                            return Curry._1(dispatch, /* KeyUp */Block.__(1, [ev.key]));
+                          }));
+                    return /* () */0;
+                  });
         }), ([]));
   return React.createElement("div", undefined, match[0][/* loading */0] ? React.createElement("div", undefined, "Loading...") : null, React.createElement("canvas", {
                   id: "display"
