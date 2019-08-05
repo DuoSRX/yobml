@@ -33,7 +33,7 @@ function make(memory) {
   return /* record */[
           /* pc */256,
           /* cycle */0,
-          /* ime */false,
+          /* ime */true,
           /* registers */registers,
           /* memory */memory,
           /* halted */false,

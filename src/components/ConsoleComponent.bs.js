@@ -31,8 +31,6 @@ var display = (
 
 var ConsoleFailure = Caml_exceptions.create("ConsoleComponent-Yobml.ConsoleFailure");
 
-var steps = /* record */[/* contents */0];
-
 var $$console = /* record */[/* contents */Console$Yobml.make(/* array */[])];
 
 function step(canvas) {
@@ -77,16 +75,10 @@ function step(canvas) {
   };
   Curry._2(display, canvas, $$console[0][/* gpu */1][/* frame */5]);
   $$console[0][/* gpu */1][/* new_frame */9] = false;
-  steps[0] = steps[0] + 1 | 0;
-  if (steps[0] < 2000) {
-    setTimeout((function (param) {
-            return step(canvas);
-          }), 16);
-    return /* () */0;
-  } else {
-    console.log("Done");
-    return /* () */0;
-  }
+  requestAnimationFrame((function (param) {
+          return step(canvas);
+        }));
+  return /* () */0;
 }
 
 var initial_state = /* record */[
@@ -113,7 +105,9 @@ function ConsoleComponent(Props) {
           Curry._1(fetch_rom, "http://localhost:8000/roms/drmario.gb").then((function (rom) {
                   Curry._1(dispatch, /* Loaded */1);
                   $$console[0] = Console$Yobml.make(rom);
-                  step(Curry._1(get_display, /* () */0));
+                  requestAnimationFrame((function (param) {
+                          return step(Curry._1(get_display, /* () */0));
+                        }));
                   return Promise.resolve(/* () */0);
                 }));
           return undefined;
@@ -131,7 +125,6 @@ exports.fetch_rom = fetch_rom;
 exports.get_display = get_display;
 exports.display = display;
 exports.ConsoleFailure = ConsoleFailure;
-exports.steps = steps;
 exports.$$console = $$console;
 exports.step = step;
 exports.initial_state = initial_state;

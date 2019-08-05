@@ -16,7 +16,7 @@ type cpu_flag = Z | N | H | C
 
 let make = (~memory) => {
   let registers = Registers.make();
-  { pc: 0x100, cycle: 0, ime: false, memory, registers, halted: false, serial: [] };
+  { pc: 0x100, cycle: 0, ime: true, memory, registers, halted: false, serial: [] };
 };
 
 let get_register = (cpu, register) =>

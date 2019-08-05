@@ -26,7 +26,7 @@ let interrupt = (cpu: Cpu.t) => {
     if (isf == 0) {
       cpu
     } else {
-      // Js.log(sprintf("ISE %02X - ISF %02X", ise, isf))
+      // Js.log(Printf.sprintf("ISE %02X - ISF %02X", ise, isf))
       // TODO: Refactor this bullshit
       if (ise land 1 > 0 && isf land 1 > 0) { // VBLANK
         // Js.log("VBLANK")

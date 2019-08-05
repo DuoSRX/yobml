@@ -59,6 +59,7 @@ let load = (mem, address) => {
 
 let store = (mem, address, value) => {
   if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
+  if (address == 0xFFFF) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
 
   if (address < 0x8000) {
     mem.rom[address] = value
