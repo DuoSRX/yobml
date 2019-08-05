@@ -3,16 +3,14 @@
 
 var Jest = require("@glennsl/bs-jest/src/jest.js");
 var Cpu$Yobml = require("../src/Cpu.bs.js");
-var Gpu$Yobml = require("../src/Gpu.bs.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
-var Memory$Yobml = require("../src/Memory.bs.js");
+var Console$Yobml = require("../src/Console.bs.js");
 var InstructionsExec$Yobml = require("../src/InstructionsExec.bs.js");
 
 function reset(pc) {
   var rom = Caml_array.caml_make_vect(8192, 0);
-  var gpu = Gpu$Yobml.make(rom);
-  var memory = Memory$Yobml.make(rom, gpu);
-  var init = Cpu$Yobml.make(memory);
+  var $$console = Console$Yobml.make(rom);
+  var init = $$console[/* cpu */0];
   return /* record */[
           /* pc */pc,
           /* cycle */init[/* cycle */1],

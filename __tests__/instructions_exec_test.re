@@ -4,9 +4,8 @@ open Expect;
 
 let reset (pc) = {
   let rom = Array.make(0x2000, 0);
-  let gpu = Gpu.make(~rom);
-  let memory = Memory.make(~rom, ~gpu);
-  {...Cpu.make(~memory), pc}
+  let console = Console.make(rom);
+  {...console.cpu, pc}
 }
 
 describe("CALL", () => {
