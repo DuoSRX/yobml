@@ -13,10 +13,6 @@ let store = (cpu, address, value) => {
   if (address == 0xFF01) {
     cpu.serial = [String.make(1, Char.chr(value)), ...cpu.serial];
   }
-  // if (address == 0xFFB6) {
-  //   Js.log(Instructions.decode(Memory.load(cpu.memory, cpu.pc - 1)) |> Instructions.pretty)
-  //   Js.log(Printf.sprintf("%04X: %04X = %02X [B:%02X, C:%02X, HL:%04X]", cpu.pc, address, value, cpu.registers.b, cpu.registers.c, get_register16(cpu, HL)));
-  //  };
   Memory.store(cpu.memory, address, value)
 }
 let store16 = (cpu, address, value) => Memory.store16(cpu.memory, address, value)
@@ -157,35 +153,29 @@ let cpl = (cpu) => {
   bump(cpu, cpu.pc, 4)
 }
 
-exception NoDAA
-
 // WHAT CIRCLE OF HELL IS THIS WHY OH GOD WHY
 let daa = (cpu) => {
   let n = has_flag(cpu, N)
   let h = has_flag(cpu, H)
   let c = has_flag(cpu, C)
   let a = get_register(cpu, A)
+  let result = ref(0);
 
-  let result = ref(a);
+  if (h) { result := result^ lor 0x06 };
+  if (c) { result := result^ lor 0x60 }
 
-  if (n) {
-    if (h) {
-      result := wrapping_add(result^, -6)
-    }
-    if (c) {
-      result := result^ - 0x60
-    }
+  let final = if (n) {
+    (a - result^) land 0xFF
   } else {
-    if (result^ land 0xF > 9 || h) {
-      result := result^ + 6
-    } else {
-      result := result^ + 0x60
-    }
-  };
+    if (a land 0xF > 9) { result := result^ lor 0x06 };
+    if (a > 0x99) { result := result^ lor 0x60 };
+    (a + result^) land 0xFF
+  }
 
-  let c = (result^ land 0x100 > 0) ? true : c
-  set_register(cpu, A, result^ land 0xFF)
-  set_flags(cpu, ~h=false, ~z=(result^ == 0), ~c, ())
+  let z = final == 0
+  let c = result^ land 0x60 != 0
+  set_register(cpu, A, final)
+  set_flags(cpu, ~h=false, ~z, ~c, ())
 
   bump(cpu, cpu.pc, 4)
 }
