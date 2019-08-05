@@ -738,9 +738,31 @@ function sbc_d8(cpu) {
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 4);
 }
 
+function sbc_hl(cpu) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  var b = Memory$Yobml.load(cpu[/* memory */4], address);
+  var match = Cpu$Yobml.has_flag(cpu, /* C */3);
+  var carry = match ? 1 : 0;
+  var result = (a - b | 0) - carry | 0;
+  Cpu$Yobml.set_register(cpu, /* A */0, result & 255);
+  var c = result < 0;
+  var h = (((a & 15) - (b & 15) | 0) - carry | 0) < 0;
+  var z = (result & 255) === 0;
+  Cpu$Yobml.set_flags(cpu, z, true, h, c, /* () */0);
+  return bump(cpu, cpu[/* pc */0], 8);
+}
+
 function scf(cpu) {
   Cpu$Yobml.set_flags(cpu, undefined, false, false, true, /* () */0);
   return bump(cpu, cpu[/* pc */0], 4);
+}
+
+function set_hl(cpu, n) {
+  var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  var value = Memory$Yobml.load(cpu[/* memory */4], address);
+  store(cpu, address, value | (1 << n));
+  return bump(cpu, cpu[/* pc */0], 16);
 }
 
 function sla(cpu, r) {
@@ -922,16 +944,18 @@ function execute(cpu, instruction) {
       case 45 : 
           return sbc_d8(cpu);
       case 46 : 
-          return scf(cpu);
+          return sbc_hl(cpu);
       case 47 : 
-          return srl_hl(cpu);
+          return scf(cpu);
       case 48 : 
-          return sub_d8(cpu);
+          return srl_hl(cpu);
       case 49 : 
-          return swap_hl(cpu);
+          return sub_d8(cpu);
       case 50 : 
-          return xor_d8(cpu);
+          return swap_hl(cpu);
       case 51 : 
+          return xor_d8(cpu);
+      case 52 : 
           return xor_hl(cpu);
       
     }
@@ -996,14 +1020,16 @@ function execute(cpu, instruction) {
       case 28 : 
           return sbc(cpu, instruction[0]);
       case 29 : 
-          return sla(cpu, instruction[0]);
+          return set_hl(cpu, instruction[0]);
       case 30 : 
-          return srl(cpu, instruction[0]);
+          return sla(cpu, instruction[0]);
       case 31 : 
-          return sub_r8(cpu, instruction[0]);
+          return srl(cpu, instruction[0]);
       case 32 : 
-          return swap(cpu, instruction[0]);
+          return sub_r8(cpu, instruction[0]);
       case 33 : 
+          return swap(cpu, instruction[0]);
+      case 34 : 
           return xor(cpu, instruction[0]);
       
     }
@@ -1100,7 +1126,9 @@ exports.rra = rra;
 exports.rst = rst;
 exports.sbc = sbc;
 exports.sbc_d8 = sbc_d8;
+exports.sbc_hl = sbc_hl;
 exports.scf = scf;
+exports.set_hl = set_hl;
 exports.sla = sla;
 exports.srl = srl;
 exports.srl_hl = srl_hl;

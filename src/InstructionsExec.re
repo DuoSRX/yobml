@@ -657,9 +657,29 @@ let sbc_d8 = (cpu) => {
   bump(cpu, cpu.pc + 1, 4)
 }
 
+let sbc_hl = (cpu) => {
+  let a = get_register(cpu, A)
+  let b = get_register16(cpu, HL) |> load(cpu)
+  let carry = has_flag(cpu, C) ? 1 : 0
+  let result = a - b - carry
+  set_register(cpu, A, result land 0xFF)
+  let c = result < 0
+  let h = (a land 0xF) - (b land 0xF) - carry < 0
+  let z = result land 0xFF == 0
+  set_flags(cpu, ~c, ~h, ~z, ~n=true, ())
+  bump(cpu, cpu.pc, 8)
+}
+
 let scf = (cpu) => {
   set_flags(cpu, ~c=true, ~h=false, ~n=false, ())
   bump(cpu, cpu.pc, 4)
+}
+
+let set_hl = (cpu, n) => {
+  let address = get_register16(cpu, HL)
+  let value = load(cpu, address)
+  store(cpu, address, (value lor (1 lsl n)))
+  bump(cpu, cpu.pc, 16)
 }
 
 let sla = (cpu, r) => {
@@ -827,12 +847,14 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Rra => rra(cpu)
   | Rst(n) => rst(cpu, n)
   | Scf => scf(cpu)
+  | Set_hl(n) => set_hl(cpu, n)
   | Sla(r) => sla(cpu, r)
   | Srl(r) => srl(cpu, r)
   | Srl_hl => srl_hl(cpu)
   | Sub(r) => sub_r8(cpu, r)
   | Sbc(r) => sbc(cpu, r)
   | Sbc_d8 => sbc_d8(cpu)
+  | Sbc_hl => sbc_hl(cpu)
   | Sub_d8 => sub_d8(cpu)
   | Swap(r) => swap(cpu, r)
   | Swap_hl => swap_hl(cpu)

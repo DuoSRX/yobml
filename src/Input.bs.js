@@ -49,9 +49,9 @@ function key_up(input, key) {
 }
 
 function get(input) {
-  if ((input[/* selector */2] & 16) > 0) {
+  if ((input[/* selector */2] & 32) > 0) {
     return input[/* dpad */0] | input[/* selector */2];
-  } else if ((input[/* selector */2] & 32) > 0) {
+  } else if ((input[/* selector */2] & 16) > 0) {
     return input[/* buttons */1] | input[/* selector */2];
   } else {
     return input[/* selector */2];

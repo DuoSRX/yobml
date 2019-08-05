@@ -3,9 +3,7 @@ open Printf
 type t = {
   rom: array(int),
   wram: array(int),
-  // vram: array(int),
   exram: array(int),
-  oam: array(int),
   io: array(int),
   hram: array(int),
   gpu: Gpu.t,
@@ -18,10 +16,8 @@ let make = (~rom, ~gpu, ~input) => {
     gpu,
     input,
     wram: Array.make(0x2000, 0),
-    // vram: Array.make(0x2000, 0),
     // External ram FIXME: this depends on the mapper
     exram: Array.make(0x2000, 0),
-    oam: Array.make(0xA0, 0),
     io: Array.make(0x80, 0),
     hram: Array.make(0x80, 0),
   }
@@ -30,13 +26,12 @@ let make = (~rom, ~gpu, ~input) => {
 exception InvalidMemoryAccess(string)
 
 let load = (mem, address) => {
-  if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X", address)) };
+  // if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X", address)) };
 
   if (address == 0xFF44) {
     mem.gpu.ly
   } else if (address == 0xFF00) {
-    0x3B
-    // Input.get(mem.input)
+    Input.get(mem.input)
   } else if (address < 0x8000) {
     mem.rom[address]
   } else if (address < 0xA000) {
@@ -48,7 +43,8 @@ let load = (mem, address) => {
   } else if (address >= 0xE000 && address < 0xFE00) { // Mirror of C000-DDFF
     mem.wram[(address - 0x2000) land 0x1FFF]
   } else if (address >= 0xFE00 && address <= 0xFE9F) {
-    mem.oam[address land 0x9F]
+    mem.gpu.oam[address land 0x9F]
+    // mem.oam[address land 0x9F]
   } else if (address >= 0xFEA0 && address <= 0xFEFF) {
     0 // Some games try to read/write here. No-op
   } else if (address >= 0xFF00 && address < 0xFF80) {
@@ -61,11 +57,17 @@ let load = (mem, address) => {
 }
 
 let store = (mem, address, value) => {
-  if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
-  if (address == 0xFFFF) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
+  // if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
+  // if (address == 0xFFFF) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
 
   if (address == 0xFF00) {
     Input.set(mem.input, value)
+  } else if (address == 0xFF46) {
+    // TODO: handle clock cycles for DMA (move into GPU or CPU?)
+    let start = (value lsl 8) land 0xFFFF
+    for (offset in 0 to 0x9F) {
+      mem.gpu.oam[offset] = load(mem, start + offset)
+    }
   } else if (address < 0x8000) {
     mem.rom[address] = value
   } else if (address < 0xA000) {
@@ -77,7 +79,8 @@ let store = (mem, address, value) => {
   } else if (address >= 0xE000 && address < 0xFE00) { // Mirror of C000-DDFF
     mem.wram[(address - 0x2000) land 0x1FFF] = value
   } else if (address >= 0xFE00 && address <= 0xFE9F) {
-    mem.oam[address land 0x9F] = value
+    mem.gpu.oam[address land 0x9F] = value
+    // mem.oam[address land 0x9F] = value
   } else if (address >= 0xFEA0 && address <= 0xFEFF) {
     () // Some games try to read/write here. No-op
   } else if (address >= 0xFF00 && address < 0xFF80) {

@@ -13,7 +13,6 @@ function make(rom, gpu, input) {
           /* rom */rom,
           /* wram */Caml_array.caml_make_vect(8192, 0),
           /* exram */Caml_array.caml_make_vect(8192, 0),
-          /* oam */Caml_array.caml_make_vect(160, 0),
           /* io */Caml_array.caml_make_vect(128, 0),
           /* hram */Caml_array.caml_make_vect(128, 0),
           /* gpu */gpu,
@@ -24,28 +23,14 @@ function make(rom, gpu, input) {
 var InvalidMemoryAccess = Caml_exceptions.create("Memory-Yobml.InvalidMemoryAccess");
 
 function load(mem, address) {
-  if (address >= 65284 && address <= 65287) {
-    console.log(Curry._1(Printf.sprintf(/* Format */[
-                  /* Int */Block.__(4, [
-                      /* Int_X */8,
-                      /* Lit_padding */Block.__(0, [
-                          /* Zeros */2,
-                          4
-                        ]),
-                      /* No_precision */0,
-                      /* End_of_format */0
-                    ]),
-                  "%04X"
-                ]), address));
-  }
   if (address === 65348) {
-    return mem[/* gpu */6][/* ly */3];
+    return mem[/* gpu */5][/* ly */3];
   } else if (address === 65280) {
-    return 59;
+    return Input$Yobml.get(mem[/* input */6]);
   } else if (address < 32768) {
     return Caml_array.caml_array_get(mem[/* rom */0], address);
   } else if (address < 40960) {
-    return Caml_array.caml_array_get(mem[/* gpu */6][/* vram */6], address & 8191);
+    return Caml_array.caml_array_get(mem[/* gpu */5][/* vram */6], address & 8191);
   } else if (address >= 40960 && address < 49152) {
     return Caml_array.caml_array_get(mem[/* exram */2], address & 8191);
   } else if (address >= 49152 && address < 57344) {
@@ -53,13 +38,13 @@ function load(mem, address) {
   } else if (address >= 57344 && address < 65024) {
     return Caml_array.caml_array_get(mem[/* wram */1], address - 8192 & 8191);
   } else if (address >= 65024 && address <= 65183) {
-    return Caml_array.caml_array_get(mem[/* oam */3], address & 159);
+    return Caml_array.caml_array_get(mem[/* gpu */5][/* oam */7], address & 159);
   } else if (address >= 65184 && address <= 65279) {
     return 0;
   } else if (address >= 65280 && address < 65408) {
-    return Caml_array.caml_array_get(mem[/* io */4], address - 65280 | 0);
+    return Caml_array.caml_array_get(mem[/* io */3], address - 65280 | 0);
   } else if (address >= 65408 && address <= 65535) {
-    return Caml_array.caml_array_get(mem[/* hram */5], address - 65408 | 0);
+    return Caml_array.caml_array_get(mem[/* hram */4], address - 65408 | 0);
   } else {
     throw [
           InvalidMemoryAccess,
@@ -83,62 +68,18 @@ function load(mem, address) {
 }
 
 function store(mem, address, value) {
-  if (address >= 65284 && address <= 65287) {
-    console.log(Curry._2(Printf.sprintf(/* Format */[
-                  /* Int */Block.__(4, [
-                      /* Int_X */8,
-                      /* Lit_padding */Block.__(0, [
-                          /* Zeros */2,
-                          4
-                        ]),
-                      /* No_precision */0,
-                      /* String_literal */Block.__(11, [
-                          " = ",
-                          /* Int */Block.__(4, [
-                              /* Int_X */8,
-                              /* Lit_padding */Block.__(0, [
-                                  /* Zeros */2,
-                                  2
-                                ]),
-                              /* No_precision */0,
-                              /* End_of_format */0
-                            ])
-                        ])
-                    ]),
-                  "%04X = %02X"
-                ]), address, value));
-  }
-  if (address === 65535) {
-    console.log(Curry._2(Printf.sprintf(/* Format */[
-                  /* Int */Block.__(4, [
-                      /* Int_X */8,
-                      /* Lit_padding */Block.__(0, [
-                          /* Zeros */2,
-                          4
-                        ]),
-                      /* No_precision */0,
-                      /* String_literal */Block.__(11, [
-                          " = ",
-                          /* Int */Block.__(4, [
-                              /* Int_X */8,
-                              /* Lit_padding */Block.__(0, [
-                                  /* Zeros */2,
-                                  2
-                                ]),
-                              /* No_precision */0,
-                              /* End_of_format */0
-                            ])
-                        ])
-                    ]),
-                  "%04X = %02X"
-                ]), address, value));
-  }
   if (address === 65280) {
-    return Input$Yobml.set(mem[/* input */7], value);
+    return Input$Yobml.set(mem[/* input */6], value);
+  } else if (address === 65350) {
+    var start = (value << 8) & 65535;
+    for(var offset = 0; offset <= 159; ++offset){
+      Caml_array.caml_array_set(mem[/* gpu */5][/* oam */7], offset, load(mem, start + offset | 0));
+    }
+    return /* () */0;
   } else if (address < 32768) {
     return Caml_array.caml_array_set(mem[/* rom */0], address, value);
   } else if (address < 40960) {
-    return Caml_array.caml_array_set(mem[/* gpu */6][/* vram */6], address & 8191, value);
+    return Caml_array.caml_array_set(mem[/* gpu */5][/* vram */6], address & 8191, value);
   } else if (address >= 40960 && address < 49152) {
     return Caml_array.caml_array_set(mem[/* exram */2], address & 8191, value);
   } else if (address >= 49152 && address < 57344) {
@@ -146,13 +87,13 @@ function store(mem, address, value) {
   } else if (address >= 57344 && address < 65024) {
     return Caml_array.caml_array_set(mem[/* wram */1], address - 8192 & 8191, value);
   } else if (address >= 65024 && address <= 65183) {
-    return Caml_array.caml_array_set(mem[/* oam */3], address & 159, value);
+    return Caml_array.caml_array_set(mem[/* gpu */5][/* oam */7], address & 159, value);
   } else if (address >= 65184 && address <= 65279) {
     return /* () */0;
   } else if (address >= 65280 && address < 65408) {
-    return Caml_array.caml_array_set(mem[/* io */4], address - 65280 | 0, value);
+    return Caml_array.caml_array_set(mem[/* io */3], address - 65280 | 0, value);
   } else if (address >= 65408 && address <= 65535) {
-    return Caml_array.caml_array_set(mem[/* hram */5], address - 65408 | 0, value);
+    return Caml_array.caml_array_set(mem[/* hram */4], address - 65408 | 0, value);
   } else {
     throw [
           InvalidMemoryAccess,
