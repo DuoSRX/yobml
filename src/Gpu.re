@@ -104,13 +104,9 @@ let render_sprites = (gpu, io_regs) => {
     (palette lsr 6) land 3,
   |]
 
-  // TODO: handle 16px sprites
-  let sprite_height = 8;
+  let sprite_height = gpu.control land 0x4 > 0 ? 16 : 8
   let ly = gpu.ly
-  // TODO: use correct palette
-  // let palette = [|0, 0x40, 0x70, 0xFF|]
 
-  // let n = 150 // TODO: loop
   let rec loop = (n) => {
     let y = gpu.oam[n]
     let x = gpu.oam[n + 1]
@@ -123,7 +119,7 @@ let render_sprites = (gpu, io_regs) => {
     let x = sprite.x - 8
 
     if (on_scanline) {
-      let y_offset = ly - y
+      let y_offset = (sprite.attrs land 0x40 > 0) ? (sprite_height - 1) - (ly - y) : ly - y // Y Flip
       let ptr = (sprite.index * 16) + (y_offset * 2)
       let lo = load(gpu, 0x8000 + ptr)
       let hi = load(gpu, 0x8000 + ptr + 1)
@@ -131,7 +127,7 @@ let render_sprites = (gpu, io_regs) => {
       for (idx_x in 0 to 7) {
         let pixel_x = x + idx_x;
         if ((pixel_x >= 0) && (pixel_x <= 160)) {
-          let bit = 7 - idx_x // TODO: handle horizontal flip
+          let bit = (sprite.attrs land 0x20 > 0) ? idx_x : 7 - idx_x // X Flip
           let pixel = (hi lsr bit land 1 == 1) ? 2 : 0
           let pixel = (lo lsr bit land 1 == 1) ? pixel lor 1 : pixel
           let color = color_map[colors[pixel]]
