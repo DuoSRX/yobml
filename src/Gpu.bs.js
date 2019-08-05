@@ -103,6 +103,8 @@ function render_sprites(gpu, io_regs) {
     (palette >>> 4) & 3,
     (palette >>> 6) & 3
   ];
+  var match = (gpu[/* control */2] & 4) > 0;
+  var sprite_height = match ? 16 : 8;
   var ly = gpu[/* ly */3];
   var _n = 0;
   while(true) {
@@ -110,22 +112,25 @@ function render_sprites(gpu, io_regs) {
     var y = Caml_array.caml_array_get(gpu[/* oam */7], n);
     var x = Caml_array.caml_array_get(gpu[/* oam */7], n + 1 | 0);
     var index = Caml_array.caml_array_get(gpu[/* oam */7], n + 2 | 0);
+    var attrs = Caml_array.caml_array_get(gpu[/* oam */7], n + 3 | 0);
     var y$1 = y - 16 | 0;
-    var on_scanline = y$1 <= ly && (y$1 + 8 | 0) > ly;
+    var on_scanline = y$1 <= ly && (y$1 + sprite_height | 0) > ly;
     var x$1 = x - 8 | 0;
     if (on_scanline) {
-      var y_offset = ly - y$1 | 0;
+      var match$1 = (attrs & 64) > 0;
+      var y_offset = match$1 ? (sprite_height - 1 | 0) - (ly - y$1 | 0) | 0 : ly - y$1 | 0;
       var ptr = (index << 4) + (y_offset << 1) | 0;
       var lo = load(gpu, 32768 + ptr | 0);
       var hi = load(gpu, (32768 + ptr | 0) + 1 | 0);
       for(var idx_x = 0; idx_x <= 7; ++idx_x){
         var pixel_x = x$1 + idx_x | 0;
         if (pixel_x >= 0 && pixel_x <= 160) {
-          var bit = 7 - idx_x | 0;
-          var match = ((hi >>> bit) & 1) === 1;
-          var pixel = match ? 2 : 0;
-          var match$1 = ((lo >>> bit) & 1) === 1;
-          var pixel$1 = match$1 ? pixel | 1 : pixel;
+          var match$2 = (attrs & 32) > 0;
+          var bit = match$2 ? idx_x : 7 - idx_x | 0;
+          var match$3 = ((hi >>> bit) & 1) === 1;
+          var pixel = match$3 ? 2 : 0;
+          var match$4 = ((lo >>> bit) & 1) === 1;
+          var pixel$1 = match$4 ? pixel | 1 : pixel;
           var color = Caml_array.caml_array_get(color_map, Caml_array.caml_array_get(colors, pixel$1));
           if (pixel$1 !== 0) {
             var offset = ((Caml_int32.imul(ly, 160) + pixel_x | 0) << 2);
