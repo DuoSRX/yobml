@@ -1,5 +1,6 @@
 [@bs.val] external setTimeout : (unit => unit, int) => unit = "setTimeout";
 [@bs.val] external clearTimeout : float => unit = "clearTimeout";
+[@bs.val] external requestAnimationFrame : (int => unit) => int = "requestAnimationFrame"
 
 let fetch_rom: (string) => Js.Promise.t(array(int)) = [%bs.raw
   {|
@@ -28,10 +29,8 @@ let display: (canvas, array(int)) => unit = [%bs.raw
 ];
 
 exception ConsoleFailure(string)
-let steps = ref(0);
 
 let console = ref(Console.make([||]));
-
 let rec step = (canvas) => {
   while (!console^.gpu.new_frame) {
     console := (try (Console.step(console^)) {
@@ -44,16 +43,9 @@ let rec step = (canvas) => {
 
   display(canvas, console^.gpu.frame)
   console^.gpu.new_frame = false
-
-  steps := steps^ + 1
-  if (steps^ < 2000) {
-    setTimeout(() => step(canvas), 16);
-  } else {
-    Js.log("Done")
-  }
+  requestAnimationFrame(_ => step(canvas)) |> ignore
 };
 
-// fetch_rom("http://localhost:8000/roms/drmario.gb")
 // fetch_rom("http://localhost:8000/roms/01-special.gb")
 // fetch_rom("http://localhost:8000/roms/02-interrupts.gb")
 // fetch_rom("http://localhost:8000/roms/03-op_sp_hl.gb")
@@ -77,7 +69,7 @@ let make = () => {
     |> Js.Promise.then_(rom => {
       dispatch(Loaded);
       console := Console.make(rom);
-      step(get_display())
+      requestAnimationFrame(_ => step(get_display())) |> ignore
       Js.Promise.resolve()})
     |> ignore;
     None
