@@ -101,7 +101,7 @@ let and_ = (cpu, r) => {
   let a = get_register(cpu, A)
   let b = get_register(cpu, r)
   let result = a land b
-  set_register(cpu, r, result)
+  set_register(cpu, A, result)
   set_flags(cpu, ~z=(result == 0), ~n=false, ~h=true, ~c=false, ())
   bump(cpu, cpu.pc, 4)
 }
@@ -130,9 +130,9 @@ let ccf = (cpu) => {
 let cp = (cpu, r) => {
   let a = get_register(cpu, A);
   let b = get_register(cpu, r)
-  let h = (a land 0xF) > (b land 0xF);
+  let h = (a land 0xF) < (b land 0xF);
   set_flags(cpu, ~z=(a == b), ~n=true, ~h, ~c=(a < b), ());
-  bump(cpu, cpu.pc + 1, 4)
+  bump(cpu, cpu.pc, 4)
 }
 
 let cp_hl = (cpu) => {
@@ -604,6 +604,15 @@ let rlca = (cpu) => {
   bump(cpu, cpu.pc, 4)
 }
 
+let rrca = (cpu) => {
+  let a = get_register(cpu, A)
+  let c = a land 1
+  let result = (c lsl 7) lor (a lsr 1)
+  set_register(cpu, A, result)
+  set_flags(cpu, ~c=(c == 1), ~n=false, ~h=false, ~z=false, ())
+  bump(cpu, cpu.pc, 4)
+}
+
 let rr = (cpu, storage) => {
   let a = storage_load(cpu, storage)
   let carry = has_flag(cpu, C) ? 1 : 0
@@ -843,6 +852,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | RetCond(flag, cond) => ret_cond(cpu, flag, cond)
   | Rla => rla(cpu)
   | Rlca => rlca(cpu)
+  | Rrca => rrca(cpu)
   | Rr(s) => rr(cpu, s)
   | Rra => rra(cpu)
   | Rst(n) => rst(cpu, n)

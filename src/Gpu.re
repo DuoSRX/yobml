@@ -96,7 +96,7 @@ let render_background = (gpu, io_regs) => {
 type sprite = { x:int, y:int, index:int, attrs: int }
 
 let render_sprites = (gpu, io_regs) => {
-  let palette = io_regs[0x48]
+  let palette = io_regs[0x49]
   let colors = [|
     0,
     (palette lsr 2) land 3,
@@ -134,7 +134,7 @@ let render_sprites = (gpu, io_regs) => {
           let bit = 7 - idx_x // TODO: handle horizontal flip
           let pixel = (hi lsr bit land 1 == 1) ? 2 : 0
           let pixel = (lo lsr bit land 1 == 1) ? pixel lor 1 : pixel
-          let color = colors[pixel]
+          let color = color_map[colors[pixel]]
           if (pixel != 0) {
             // TODO: obj priority
             let offset = (ly * 160 + pixel_x) * 4 // 160 pixel per row, 4 byte per pixel (RGBA)

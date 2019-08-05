@@ -96,7 +96,7 @@ function render_background(gpu, io_regs) {
 }
 
 function render_sprites(gpu, io_regs) {
-  var palette = Caml_array.caml_array_get(io_regs, 72);
+  var palette = Caml_array.caml_array_get(io_regs, 73);
   var colors = /* array */[
     0,
     (palette >>> 2) & 3,
@@ -126,7 +126,7 @@ function render_sprites(gpu, io_regs) {
           var pixel = match ? 2 : 0;
           var match$1 = ((lo >>> bit) & 1) === 1;
           var pixel$1 = match$1 ? pixel | 1 : pixel;
-          var color = Caml_array.caml_array_get(colors, pixel$1);
+          var color = Caml_array.caml_array_get(color_map, Caml_array.caml_array_get(colors, pixel$1));
           if (pixel$1 !== 0) {
             var offset = ((Caml_int32.imul(ly, 160) + pixel_x | 0) << 2);
             Caml_array.caml_array_set(gpu[/* frame */5], offset + 0 | 0, color);
