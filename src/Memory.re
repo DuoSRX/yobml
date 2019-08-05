@@ -35,7 +35,8 @@ let load = (mem, address) => {
   if (address == 0xFF44) {
     mem.gpu.ly
   } else if (address == 0xFF00) {
-    Input.get(mem.input)
+    0x3B
+    // Input.get(mem.input)
   } else if (address < 0x8000) {
     mem.rom[address]
   } else if (address < 0xA000) {

@@ -118,7 +118,7 @@ function ConsoleComponent(Props) {
         }), initial_state);
   var dispatch = match[1];
   React.useEffect((function () {
-          Curry._1(fetch_rom, "http://localhost:8000/roms/drmario.gb").then((function (rom) {
+          Curry._1(fetch_rom, "http://localhost:8000/roms/flappyboy.gb").then((function (rom) {
                   Curry._1(dispatch, /* Loaded */1);
                   $$console[0] = Console$Yobml.make(rom);
                   requestAnimationFrame((function (param) {
