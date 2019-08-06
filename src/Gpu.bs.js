@@ -18,6 +18,8 @@ function make(cartridge) {
           /* vram */Caml_array.caml_make_vect(8192, 0),
           /* oam */Caml_array.caml_make_vect(160, 0),
           /* cartridge */cartridge,
+          /* scroll_x */0,
+          /* scroll_y */0,
           /* interrupts */0,
           /* new_frame */false
         ];
@@ -81,21 +83,23 @@ function render_background(gpu, io_regs) {
     (palette >>> 6) & 3
   ];
   var ly = gpu[/* ly */3];
+  var scroll_x = gpu[/* scroll_x */9];
+  var scroll_y = gpu[/* scroll_y */10];
   var ff40 = Caml_array.caml_array_get(io_regs, 64);
   var match = (ff40 & 16) > 0;
   var tile_data = match ? 32768 : 36864;
   var match$1 = (ff40 & 8) > 0;
   var tile_map = match$1 ? 39936 : 38912;
-  var y = ((0 + ly | 0) / 8 | 0) % 32;
-  var y_offset = (0 + ly | 0) % 8;
+  var y = ((scroll_y + ly | 0) / 8 | 0) % 32;
+  var y_offset = (scroll_y + ly | 0) % 8;
   for(var px = 0; px <= 159; ++px){
-    var x = ((0 + px | 0) / 8 | 0) % 32 & 65535;
+    var x = ((scroll_x + px | 0) / 8 | 0) % 32 & 65535;
     var tile = load(gpu, (tile_map + (y << 5) | 0) + x & 65535);
     var ptr = tile_data !== 36864 ? tile_data + (tile << 4) & 65535 : tile_data + (Utils$Yobml.signed(tile) << 4) & 65535;
     var ptr$1 = ptr + (y_offset << 1) & 65535;
     var p0 = load(gpu, ptr$1);
     var p1 = load(gpu, ptr$1 + 1 | 0);
-    var colb = -((px + 0 | 0) % 8 - 7 | 0) | 0;
+    var colb = -((px + scroll_x | 0) % 8 - 7 | 0) | 0;
     var match$2 = ((p1 >>> colb) & 1) === 1;
     var coln = match$2 ? 1 : 0;
     var match$3 = ((p0 >>> colb) & 1) === 1;
@@ -176,8 +180,10 @@ function set_mode(gpu, mode) {
                 /* vram */gpu[/* vram */6],
                 /* oam */gpu[/* oam */7],
                 /* cartridge */gpu[/* cartridge */8],
-                /* interrupts */gpu[/* interrupts */9],
-                /* new_frame */gpu[/* new_frame */10]
+                /* scroll_x */gpu[/* scroll_x */9],
+                /* scroll_y */gpu[/* scroll_y */10],
+                /* interrupts */gpu[/* interrupts */11],
+                /* new_frame */gpu[/* new_frame */12]
               ];
     case 1 : 
         return /* record */[
@@ -190,8 +196,10 @@ function set_mode(gpu, mode) {
                 /* vram */gpu[/* vram */6],
                 /* oam */gpu[/* oam */7],
                 /* cartridge */gpu[/* cartridge */8],
-                /* interrupts */gpu[/* interrupts */9],
-                /* new_frame */gpu[/* new_frame */10]
+                /* scroll_x */gpu[/* scroll_x */9],
+                /* scroll_y */gpu[/* scroll_y */10],
+                /* interrupts */gpu[/* interrupts */11],
+                /* new_frame */gpu[/* new_frame */12]
               ];
     case 2 : 
         return /* record */[
@@ -204,8 +212,10 @@ function set_mode(gpu, mode) {
                 /* vram */gpu[/* vram */6],
                 /* oam */gpu[/* oam */7],
                 /* cartridge */gpu[/* cartridge */8],
-                /* interrupts */gpu[/* interrupts */9],
-                /* new_frame */gpu[/* new_frame */10]
+                /* scroll_x */gpu[/* scroll_x */9],
+                /* scroll_y */gpu[/* scroll_y */10],
+                /* interrupts */gpu[/* interrupts */11],
+                /* new_frame */gpu[/* new_frame */12]
               ];
     case 3 : 
         return /* record */[
@@ -218,8 +228,10 @@ function set_mode(gpu, mode) {
                 /* vram */gpu[/* vram */6],
                 /* oam */gpu[/* oam */7],
                 /* cartridge */gpu[/* cartridge */8],
-                /* interrupts */gpu[/* interrupts */9],
-                /* new_frame */gpu[/* new_frame */10]
+                /* scroll_x */gpu[/* scroll_x */9],
+                /* scroll_y */gpu[/* scroll_y */10],
+                /* interrupts */gpu[/* interrupts */11],
+                /* new_frame */gpu[/* new_frame */12]
               ];
     
   }
@@ -237,8 +249,10 @@ function step(gpu, cycles, lcd_on, io_regs) {
     /* vram */gpu[/* vram */6],
     /* oam */gpu[/* oam */7],
     /* cartridge */gpu[/* cartridge */8],
+    /* scroll_x */gpu[/* scroll_x */9],
+    /* scroll_y */gpu[/* scroll_y */10],
     /* interrupts */0,
-    /* new_frame */gpu[/* new_frame */10]
+    /* new_frame */gpu[/* new_frame */12]
   ];
   var match = gpu$1[/* mode */0];
   var exit = 0;
@@ -258,8 +272,10 @@ function step(gpu, cycles, lcd_on, io_regs) {
                         /* vram */gpu$1[/* vram */6],
                         /* oam */gpu$1[/* oam */7],
                         /* cartridge */gpu$1[/* cartridge */8],
+                        /* scroll_x */gpu$1[/* scroll_x */9],
+                        /* scroll_y */gpu$1[/* scroll_y */10],
                         /* interrupts */2,
-                        /* new_frame */gpu$1[/* new_frame */10]
+                        /* new_frame */gpu$1[/* new_frame */12]
                       ], /* OamRead */2);
           } else {
             return /* record */[
@@ -272,8 +288,10 @@ function step(gpu, cycles, lcd_on, io_regs) {
                     /* vram */gpu$1[/* vram */6],
                     /* oam */gpu$1[/* oam */7],
                     /* cartridge */gpu$1[/* cartridge */8],
-                    /* interrupts */gpu$1[/* interrupts */9],
-                    /* new_frame */gpu$1[/* new_frame */10]
+                    /* scroll_x */gpu$1[/* scroll_x */9],
+                    /* scroll_y */gpu$1[/* scroll_y */10],
+                    /* interrupts */gpu$1[/* interrupts */11],
+                    /* new_frame */gpu$1[/* new_frame */12]
                   ];
           }
         } else {
@@ -295,6 +313,8 @@ function step(gpu, cycles, lcd_on, io_regs) {
                         /* vram */gpu$1[/* vram */6],
                         /* oam */gpu$1[/* oam */7],
                         /* cartridge */gpu$1[/* cartridge */8],
+                        /* scroll_x */gpu$1[/* scroll_x */9],
+                        /* scroll_y */gpu$1[/* scroll_y */10],
                         /* interrupts */3,
                         /* new_frame */true
                       ], /* VBlank */0);
@@ -309,8 +329,10 @@ function step(gpu, cycles, lcd_on, io_regs) {
                         /* vram */gpu$1[/* vram */6],
                         /* oam */gpu$1[/* oam */7],
                         /* cartridge */gpu$1[/* cartridge */8],
+                        /* scroll_x */gpu$1[/* scroll_x */9],
+                        /* scroll_y */gpu$1[/* scroll_y */10],
                         /* interrupts */2,
-                        /* new_frame */gpu$1[/* new_frame */10]
+                        /* new_frame */gpu$1[/* new_frame */12]
                       ], /* OamRead */2);
           }
         } else {
@@ -330,8 +352,10 @@ function step(gpu, cycles, lcd_on, io_regs) {
                       /* vram */gpu$1[/* vram */6],
                       /* oam */gpu$1[/* oam */7],
                       /* cartridge */gpu$1[/* cartridge */8],
-                      /* interrupts */gpu$1[/* interrupts */9],
-                      /* new_frame */gpu$1[/* new_frame */10]
+                      /* scroll_x */gpu$1[/* scroll_x */9],
+                      /* scroll_y */gpu$1[/* scroll_y */10],
+                      /* interrupts */gpu$1[/* interrupts */11],
+                      /* new_frame */gpu$1[/* new_frame */12]
                     ], /* LcdTransfer */3);
         } else {
           exit = 1;
@@ -354,8 +378,10 @@ function step(gpu, cycles, lcd_on, io_regs) {
                       /* vram */gpu$1[/* vram */6],
                       /* oam */gpu$1[/* oam */7],
                       /* cartridge */gpu$1[/* cartridge */8],
+                      /* scroll_x */gpu$1[/* scroll_x */9],
+                      /* scroll_y */gpu$1[/* scroll_y */10],
                       /* interrupts */2,
-                      /* new_frame */gpu$1[/* new_frame */10]
+                      /* new_frame */gpu$1[/* new_frame */12]
                     ], /* HBlank */1);
         } else {
           exit = 1;
@@ -374,8 +400,10 @@ function step(gpu, cycles, lcd_on, io_regs) {
             /* vram */gpu$1[/* vram */6],
             /* oam */gpu$1[/* oam */7],
             /* cartridge */gpu$1[/* cartridge */8],
-            /* interrupts */gpu$1[/* interrupts */9],
-            /* new_frame */gpu$1[/* new_frame */10]
+            /* scroll_x */gpu$1[/* scroll_x */9],
+            /* scroll_y */gpu$1[/* scroll_y */10],
+            /* interrupts */gpu$1[/* interrupts */11],
+            /* new_frame */gpu$1[/* new_frame */12]
           ];
   }
   
