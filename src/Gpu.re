@@ -48,8 +48,25 @@ let store = (gpu, address, value) => {
   }
 }
 
-let color_map = [|0xFF, 0xA0, 0x50, 0x0|]
+type color = { r: int, g: int, b: int}
+
+let color_map = [|
+  { r: 0x9B, g: 0xBC, b: 0x0F }, // lightest green
+  { r: 0x8B, g: 0xAC, b: 0x0F }, // light green
+  { r: 0x30, g: 0x62, b: 0x30 }, // dark green
+  { r: 0x0F, g: 0x38, b: 0x0F }, // darkest green
+|]
+// let color_map = [|0xFF, 0xA0, 0x50, 0x0|]
+
 let signed = (v) => v > 0x7F ? -((lnot(v) + 1) land 0xFF) : v
+
+let set_pixel = (gpu, ~x, ~y, ~color) => {
+  let offset = (y * 160 + x) * 4 // 160 pixel per row, 4 byte per pixel
+  gpu.frame[offset + 0] = color.r // R
+  gpu.frame[offset + 1] = color.g // G
+  gpu.frame[offset + 2] = color.b // B
+  gpu.frame[offset + 3] = 0xFF    // A
+}
 
 let render_background = (gpu, io_regs) => {
   let palette = io_regs[0x47]
@@ -84,12 +101,7 @@ let render_background = (gpu, io_regs) => {
     let coln = ((p1 lsr colb) land 1 == 1) ? 1 : 0
     let coln = (coln lsl 1) lor ((p0 lsr colb) land 1 == 1 ? 1 : 0)
     let color = color_map[colors[coln]]
-
-    let offset = (ly * 160 + px) * 4 // 160 pixel per row, 4 byte per pixel (RGBA)
-    gpu.frame[offset + 0] = color
-    gpu.frame[offset + 1] = color
-    gpu.frame[offset + 2] = color
-    gpu.frame[offset + 3] = 0xFF
+    set_pixel(gpu, ~x=px, ~y=ly, ~color)
   }
 }
 
@@ -133,11 +145,7 @@ let render_sprites = (gpu, io_regs) => {
           let color = color_map[colors[pixel]]
           if (pixel != 0) {
             // TODO: obj priority
-            let offset = (ly * 160 + pixel_x) * 4 // 160 pixel per row, 4 byte per pixel (RGBA)
-            gpu.frame[offset + 0] = color
-            gpu.frame[offset + 1] = color
-            gpu.frame[offset + 2] = color
-            gpu.frame[offset + 3] = 0xFF
+            set_pixel(gpu, ~x=pixel_x, ~y=ly, ~color)
           }
         }
       }

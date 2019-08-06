@@ -40,10 +40,26 @@ function store(gpu, address, value) {
 }
 
 var color_map = /* array */[
-  255,
-  160,
-  80,
-  0
+  /* record */[
+    /* r */155,
+    /* g */188,
+    /* b */15
+  ],
+  /* record */[
+    /* r */139,
+    /* g */172,
+    /* b */15
+  ],
+  /* record */[
+    /* r */48,
+    /* g */98,
+    /* b */48
+  ],
+  /* record */[
+    /* r */15,
+    /* g */56,
+    /* b */15
+  ]
 ];
 
 function signed(v) {
@@ -53,6 +69,14 @@ function signed(v) {
   } else {
     return v;
   }
+}
+
+function set_pixel(gpu, x, y, color) {
+  var offset = ((Caml_int32.imul(y, 160) + x | 0) << 2);
+  Caml_array.caml_array_set(gpu[/* frame */5], offset + 0 | 0, color[/* r */0]);
+  Caml_array.caml_array_set(gpu[/* frame */5], offset + 1 | 0, color[/* g */1]);
+  Caml_array.caml_array_set(gpu[/* frame */5], offset + 2 | 0, color[/* b */2]);
+  return Caml_array.caml_array_set(gpu[/* frame */5], offset + 3 | 0, 255);
 }
 
 function render_background(gpu, io_regs) {
@@ -86,11 +110,7 @@ function render_background(gpu, io_regs) {
       match$3 ? 1 : 0
     );
     var color = Caml_array.caml_array_get(color_map, Caml_array.caml_array_get(colors, coln$1));
-    var offset = ((Caml_int32.imul(ly, 160) + px | 0) << 2);
-    Caml_array.caml_array_set(gpu[/* frame */5], offset + 0 | 0, color);
-    Caml_array.caml_array_set(gpu[/* frame */5], offset + 1 | 0, color);
-    Caml_array.caml_array_set(gpu[/* frame */5], offset + 2 | 0, color);
-    Caml_array.caml_array_set(gpu[/* frame */5], offset + 3 | 0, 255);
+    set_pixel(gpu, px, ly, color);
   }
   return /* () */0;
 }
@@ -133,11 +153,7 @@ function render_sprites(gpu, io_regs) {
           var pixel$1 = match$4 ? pixel | 1 : pixel;
           var color = Caml_array.caml_array_get(color_map, Caml_array.caml_array_get(colors, pixel$1));
           if (pixel$1 !== 0) {
-            var offset = ((Caml_int32.imul(ly, 160) + pixel_x | 0) << 2);
-            Caml_array.caml_array_set(gpu[/* frame */5], offset + 0 | 0, color);
-            Caml_array.caml_array_set(gpu[/* frame */5], offset + 1 | 0, color);
-            Caml_array.caml_array_set(gpu[/* frame */5], offset + 2 | 0, color);
-            Caml_array.caml_array_set(gpu[/* frame */5], offset + 3 | 0, 255);
+            set_pixel(gpu, pixel_x, ly, color);
           }
           
         }
@@ -377,6 +393,7 @@ exports.load = load;
 exports.store = store;
 exports.color_map = color_map;
 exports.signed = signed;
+exports.set_pixel = set_pixel;
 exports.render_background = render_background;
 exports.render_sprites = render_sprites;
 exports.set_mode = set_mode;

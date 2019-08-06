@@ -26,7 +26,7 @@ let make = (~rom, ~gpu, ~input) => {
 exception InvalidMemoryAccess(string)
 
 let load = (mem, address) => {
-  // if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X", address)) };
+  if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X", address)) };
 
   if (address == 0xFF44) {
     mem.gpu.ly
@@ -56,7 +56,7 @@ let load = (mem, address) => {
 }
 
 let store = (mem, address, value) => {
-  // if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
+  if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
   // if (address == 0xFFFF) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
 
   if (address == 0xFF00) {
@@ -68,7 +68,8 @@ let store = (mem, address, value) => {
       mem.gpu.oam[offset] = load(mem, start + offset)
     }
   } else if (address < 0x8000) {
-    mem.rom[address] = value
+    // mem.rom[address] = value // Can't write to ROM
+    ()
   } else if (address < 0xA000) {
     mem.gpu.vram[address land 0x1FFF] = value
   } else if (address >= 0xA000 && address < 0xC000) { // FIXME: mapper
