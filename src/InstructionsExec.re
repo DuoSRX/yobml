@@ -435,7 +435,7 @@ let add_hl = (cpu) => {
   set_register(cpu, A, result land 0xFF)
   let h = (result land 0xF) < (a land 0xF)
   let c = a > result
-  set_flags(cpu, ~h, ~c, ~n=false, ~z=(result land 0xFF == 0), ())
+  set_flags(cpu, ~h, ~c, ~n=false, ~z=(result == 0), ())
   bump(cpu, cpu.pc, 8)
 }
 
@@ -605,16 +605,13 @@ let res_hl = (cpu, bit) => {
   bump(cpu, cpu.pc, 16)
 }
 
-let rl = (cpu, storage) => {
-  let a = storage_load(cpu, storage)
+let rl = (cpu, s) => {
+  let a = storage_load(cpu, s)
   let prev_carry = has_flag(cpu, C)
-  let result = prev_carry ? (a lsl 1) land 1 : a lsl 1
-  storage_store(cpu, storage, result)
+  let result = prev_carry ? (a lsl 1) lor 1 : a lsl 1
+  storage_store(cpu, s, result)
   set_flags(cpu, ~n=false, ~h=false, ~z=(result == 0), ~c=(a land 0x80 > 0), ())
-  switch(storage) {
-  | Pointer(_) => bump(cpu, cpu.pc, 16)
-  | _          => bump(cpu, cpu.pc, 8)
-  }
+  bump(cpu, cpu.pc, is_pointer(s) ? 16 : 8)
 }
 
 let rla = (cpu) => {
@@ -754,7 +751,7 @@ let sla = (cpu, s) => {
   let a = storage_load(cpu, s)
   let result = a lsl 1
   storage_store(cpu, s, result)
-  set_flags(cpu, ~n=false, ~h=false, ~z=(result == 0), ~c=(result land 0x80 > 0), ())
+  set_flags(cpu, ~n=false, ~h=false, ~z=(result == 0), ~c=(a land 0x80 > 0), ())
   bump(cpu, cpu.pc, is_pointer(s) ? 16 : 8)
 }
 
