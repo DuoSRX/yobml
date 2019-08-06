@@ -15,7 +15,7 @@ function make(cartridge) {
           /* ly */0,
           /* lyc */0,
           /* cycles */0,
-          /* frame */Caml_array.caml_make_vect(92160, 127),
+          /* frame */Caml_array.caml_make_vect(23040, 0),
           /* vram */Caml_array.caml_make_vect(8192, 0),
           /* oam */Caml_array.caml_make_vect(160, 0),
           /* cartridge */cartridge,
@@ -44,35 +44,14 @@ function store(gpu, address, value) {
   }
 }
 
-var color_map = /* array */[
-  /* record */[
-    /* r */155,
-    /* g */188,
-    /* b */15
-  ],
-  /* record */[
-    /* r */139,
-    /* g */172,
-    /* b */15
-  ],
-  /* record */[
-    /* r */48,
-    /* g */98,
-    /* b */48
-  ],
-  /* record */[
-    /* r */15,
-    /* g */56,
-    /* b */15
-  ]
-];
-
 function set_pixel(gpu, x, y, color) {
-  var offset = ((Caml_int32.imul(y, 160) + x | 0) << 2);
-  Caml_array.caml_array_set(gpu[/* frame */6], offset + 0 | 0, color[/* r */0]);
-  Caml_array.caml_array_set(gpu[/* frame */6], offset + 1 | 0, color[/* g */1]);
-  Caml_array.caml_array_set(gpu[/* frame */6], offset + 2 | 0, color[/* b */2]);
-  return Caml_array.caml_array_set(gpu[/* frame */6], offset + 3 | 0, 255);
+  var offset = Caml_int32.imul(y, 160) + x | 0;
+  return Caml_array.caml_array_set(gpu[/* frame */6], offset, color);
+}
+
+function get_pixel(gpu, x, y) {
+  var offset = Caml_int32.imul(y, 160) + x | 0;
+  return Caml_array.caml_array_get(gpu[/* frame */6], offset);
 }
 
 function render_background(gpu, io_regs) {
@@ -107,7 +86,7 @@ function render_background(gpu, io_regs) {
     var coln$1 = (coln << 1) | (
       match$3 ? 1 : 0
     );
-    var color = Caml_array.caml_array_get(color_map, Caml_array.caml_array_get(colors, coln$1));
+    var color = Caml_array.caml_array_get(colors, coln$1);
     set_pixel(gpu, px, ly, color);
   }
   return /* () */0;
@@ -154,8 +133,8 @@ function render_sprites(gpu, io_regs) {
           var match$5 = (attrs & 8) === 0;
           var palette_number = match$5 ? Caml_array.caml_array_get(io_regs, 72) : Caml_array.caml_array_get(io_regs, 73);
           var colors = sprite_palette(palette_number);
-          var color = Caml_array.caml_array_get(color_map, Caml_array.caml_array_get(colors, pixel$1));
-          if (pixel$1 !== 0 && (attrs & 128) === 0) {
+          var color = Caml_array.caml_array_get(colors, pixel$1);
+          if (pixel$1 !== 0 && (attrs & 128) === 0 || get_pixel(gpu, pixel_x, ly) === 0) {
             set_pixel(gpu, pixel_x, ly, color);
           }
           
@@ -457,8 +436,8 @@ function step(gpu, cycles, lcd_on, io_regs) {
 exports.make = make;
 exports.load = load;
 exports.store = store;
-exports.color_map = color_map;
 exports.set_pixel = set_pixel;
+exports.get_pixel = get_pixel;
 exports.render_background = render_background;
 exports.sprite_palette = sprite_palette;
 exports.render_sprites = render_sprites;

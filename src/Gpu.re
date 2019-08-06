@@ -30,7 +30,7 @@ let make = (~cartridge) => {
   scroll_x: 0,
   scroll_y: 0,
   cycles: 0,
-  frame: Array.make(160 * 144 * 4, 0x7F),
+  frame: Array.make(160 * 144, 0),
   vram: Array.make(0x2000, 0),
   oam: Array.make(0xA0, 0),
   cartridge,
@@ -56,22 +56,14 @@ let store = (gpu, address, value) => {
   }
 }
 
-type color = { r: int, g: int, b: int}
-
-let color_map = [|
-  { r: 0x9B, g: 0xBC, b: 0x0F }, // lightest green
-  { r: 0x8B, g: 0xAC, b: 0x0F }, // light green
-  { r: 0x30, g: 0x62, b: 0x30 }, // dark green
-  { r: 0x0F, g: 0x38, b: 0x0F }, // darkest green
-|]
-// let color_map = [|0xFF, 0xA0, 0x50, 0x0|]
-
 let set_pixel = (gpu, ~x, ~y, ~color) => {
-  let offset = (y * 160 + x) * 4 // 160 pixel per row, 4 byte per pixel
-  gpu.frame[offset + 0] = color.r // R
-  gpu.frame[offset + 1] = color.g // G
-  gpu.frame[offset + 2] = color.b // B
-  gpu.frame[offset + 3] = 0xFF    // A
+  let offset = y * 160 + x
+  gpu.frame[offset] = color // R
+}
+
+let get_pixel = (gpu, ~x, ~y) => {
+  let offset = y * 160 + x
+  gpu.frame[offset]
 }
 
 let render_background = (gpu, io_regs) => {
@@ -106,7 +98,7 @@ let render_background = (gpu, io_regs) => {
     let colb = -(((px + scroll_x) mod 8) - 7)
     let coln = ((p1 lsr colb) land 1 == 1) ? 1 : 0
     let coln = (coln lsl 1) lor ((p0 lsr colb) land 1 == 1 ? 1 : 0)
-    let color = color_map[colors[coln]]
+    let color = colors[coln]
     set_pixel(gpu, ~x=px, ~y=ly, ~color)
   }
 }
@@ -159,9 +151,8 @@ let render_sprites = (gpu, io_regs) => {
           let pixel = (lo lsr bit land 1 == 1) ? pixel lor 1 : pixel
           let palette_number = (sprite.attrs land 0x8 == 0) ? io_regs[0x48] : io_regs[0x49]
           let colors = sprite_palette(palette_number)
-          let color = color_map[colors[pixel]]
-          // FIXME: This isn't actually correct. We should check that the background is "white" first.
-          if (pixel != 0 && sprite.attrs land 0x80 == 0) {
+          let color = colors[pixel]
+          if (pixel != 0 && sprite.attrs land 0x80 == 0 || get_pixel(gpu, ~x=pixel_x, ~y=ly) == 0) {
             // TODO: obj priority
             set_pixel(gpu, ~x=pixel_x, ~y=ly, ~color)
           }
