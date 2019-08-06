@@ -83,9 +83,9 @@ let make = () => {
 
   React.useEffect0(() => {
     // fetch_rom("http://localhost:8000/roms/cpu_instrs.gb")
-    fetch_rom("http://localhost:8000/roms/drmario.gb")
+    // fetch_rom("http://localhost:8000/roms/drmario.gb")
     // fetch_rom("http://localhost:8000/roms/tetris.gb")
-    // fetch_rom("http://localhost:8000/roms/supermarioland.gb")
+    fetch_rom("http://localhost:8000/roms/supermarioland.gb")
     // fetch_rom("http://localhost:8000/roms/01-special.gb")
     // fetch_rom("http://localhost:8000/roms/02-interrupts.gb")
     // fetch_rom("http://localhost:8000/roms/03-op_sp_hl.gb")
