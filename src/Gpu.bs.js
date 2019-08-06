@@ -155,7 +155,7 @@ function render_sprites(gpu, io_regs) {
           var palette_number = match$5 ? Caml_array.caml_array_get(io_regs, 72) : Caml_array.caml_array_get(io_regs, 73);
           var colors = sprite_palette(palette_number);
           var color = Caml_array.caml_array_get(color_map, Caml_array.caml_array_get(colors, pixel$1));
-          if (pixel$1 !== 0) {
+          if (pixel$1 !== 0 && (attrs & 128) === 0) {
             set_pixel(gpu, pixel_x, ly, color);
           }
           

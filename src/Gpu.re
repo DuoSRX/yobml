@@ -160,7 +160,8 @@ let render_sprites = (gpu, io_regs) => {
           let palette_number = (sprite.attrs land 0x8 == 0) ? io_regs[0x48] : io_regs[0x49]
           let colors = sprite_palette(palette_number)
           let color = color_map[colors[pixel]]
-          if (pixel != 0) {
+          // FIXME: This isn't actually correct. We should check that the background is "white" first.
+          if (pixel != 0 && sprite.attrs land 0x80 == 0) {
             // TODO: obj priority
             set_pixel(gpu, ~x=pixel_x, ~y=ly, ~color)
           }
