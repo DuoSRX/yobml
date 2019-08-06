@@ -46,8 +46,8 @@ let console = ref(Console.make([||]));
 let rec step = (canvas) => {
   while (!console^.gpu.new_frame) {
     console := (try (Console.step(console^)) {
-    | Memory.InvalidMemoryAccess(msg) => {
-    // | Instructions.OpcodeNotImplemented(msg) => {
+    | Memory.InvalidMemoryAccess(msg)
+    | Instructions.OpcodeNotImplemented(msg) => {
       let msg = Printf.sprintf("Console crash at $%04X. Reason: %s", console^.cpu.pc, msg)
       Js.log(msg)
       raise(ConsoleFailure(msg))
@@ -81,7 +81,7 @@ let make = () => {
 
   React.useEffect0(() => {
     // fetch_rom("http://localhost:8000/roms/flappyboy.gb")
-    fetch_rom("http://localhost:8000/roms/drmario.gb")
+    // fetch_rom("http://localhost:8000/roms/drmario.gb")
     // fetch_rom("http://localhost:8000/roms/tetris.gb")
     // fetch_rom("http://localhost:8000/roms/01-special.gb")
     // fetch_rom("http://localhost:8000/roms/02-interrupts.gb")
@@ -89,7 +89,7 @@ let make = () => {
     // fetch_rom("http://localhost:8000/roms/04-op_r_imm.gb")
     // fetch_rom("http://localhost:8000/roms/09-op_r_r.gb")
     // fetch_rom("http://localhost:8000/roms/10-bit_ops.gb")
-    // fetch_rom("http://localhost:8000/roms/11-op_a_hl.gb")
+    fetch_rom("http://localhost:8000/roms/11-op_a_hl.gb")
     |> Js.Promise.then_(rom => {
       dispatch(Loaded);
       console := Console.make(rom);

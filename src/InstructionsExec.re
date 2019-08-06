@@ -13,7 +13,7 @@ let store = (cpu, address, value) => {
   if (address == 0xFF01) {
     cpu.serial = [String.make(1, Char.chr(value)), ...cpu.serial];
   }
-  Memory.store(cpu.memory, address, value)
+  Memory.store(cpu.memory, address, value land 0xFF)
 }
 let store16 = (cpu, address, value) => Memory.store16(cpu.memory, address, value)
 
@@ -22,15 +22,18 @@ let load_next16 = (cpu) => load16(cpu, cpu.pc)
 
 let storage_load = (cpu, storage) => switch(storage) {
   | Register(r) => get_register(cpu, r)
-  | Register16(r) => get_register16(cpu, r)
   | Pointer(r) => get_register16(cpu, r) |> load(cpu)
 };
 
 let storage_store = (cpu, storage, value) => switch(storage) {
-  | Register(r) => set_register(cpu, r, value)
-  | Register16(r) => set_register16(cpu, r, value)
-  | Pointer(r) => get_register16(cpu, r)->store(cpu, _, value)
+  | Register(r) => set_register(cpu, r, value land 0xFF)
+  | Pointer(r) => get_register16(cpu, r)->store(cpu, _, value land 0xFF)
 };
+
+let is_pointer = (storage) => switch(storage) {
+  | Pointer(_) => true
+  | _ => false
+}
 
 // Call after every instruction to change the PC
 // and increase the cycle count
@@ -111,11 +114,11 @@ let and_hl = (cpu) => {
   bump(cpu, cpu.pc, 8)
 }
 
-let bit = (cpu, bit, r) => {
-  let a = get_register(cpu, r);
+let bit = (cpu, bit, s) => {
+  let a = storage_load(cpu, s)
   let z = (a lsr bit) land 1 != 1;
   set_flags(cpu, ~z, ~h=true, ~n=false, ())
-  bump(cpu, cpu.pc, 8)
+  bump(cpu, cpu.pc, is_pointer(s) ? 16 : 8)
 }
 
 let ccf = (cpu) => {
@@ -430,8 +433,8 @@ let add_hl = (cpu) => {
   let b = get_register16(cpu, HL) |> load(cpu)
   let result = a + b
   set_register(cpu, A, result land 0xFF)
+  let h = (result land 0xF) < (a land 0xF)
   let c = a > result
-  let h = (a land 0xF) > (result land 0xF)
   set_flags(cpu, ~h, ~c, ~n=false, ~z=(result land 0xFF == 0), ())
   bump(cpu, cpu.pc, 8)
 }
@@ -460,6 +463,17 @@ let add_sp_e8 = (cpu) => {
 let sub_d8 = (cpu) => {
   let a = get_register(cpu, A)
   let b = load_next(cpu)
+  let value = wrapping_add(a, -b)
+  set_register(cpu, A, value)
+  let h = (value land 0xF) > (a land 0xF)
+  let c = value > a
+  set_flags(cpu, ~h, ~c, ~n=true, ~z=(a == b), ());
+  bump(cpu, cpu.pc + 1, 8)
+}
+
+let sub_hl = (cpu) => {
+  let a = get_register(cpu, A)
+  let b = get_register16(cpu, HL) |> load(cpu)
   let value = wrapping_add(a, -b)
   set_register(cpu, A, value)
   let h = (value land 0xF) > (a land 0xF)
@@ -591,6 +605,18 @@ let res_hl = (cpu, bit) => {
   bump(cpu, cpu.pc, 16)
 }
 
+let rl = (cpu, storage) => {
+  let a = storage_load(cpu, storage)
+  let prev_carry = has_flag(cpu, C)
+  let result = prev_carry ? (a lsl 1) land 1 : a lsl 1
+  storage_store(cpu, storage, result)
+  set_flags(cpu, ~n=false, ~h=false, ~z=(result == 0), ~c=(a land 0x80 > 0), ())
+  switch(storage) {
+  | Pointer(_) => bump(cpu, cpu.pc, 16)
+  | _          => bump(cpu, cpu.pc, 8)
+  }
+}
+
 let rla = (cpu) => {
   let a = get_register(cpu, A)
   let prev_carry = has_flag(cpu, C) ? 1 : 0
@@ -602,6 +628,19 @@ let rla = (cpu) => {
   bump(cpu, cpu.pc, 4)
 }
 
+let rlc = (cpu, storage) => {
+  let a = storage_load(cpu, storage)
+  let c = a land 0x80 > 0
+  let a = a lsl 1
+  let a = c ? a lor 1 : a
+  set_flags(cpu, ~c, ~n=false, ~h=false, ~z=(a == 0), ())
+  storage_store(cpu, storage, a)
+  switch(storage) {
+  | Pointer(_) => bump(cpu, cpu.pc, 16)
+  | _          => bump(cpu, cpu.pc, 8)
+  }
+}
+
 let rlca = (cpu) => {
   let a = get_register(cpu, A)
   let c = a land 0x80 > 0
@@ -610,6 +649,18 @@ let rlca = (cpu) => {
   set_flags(cpu, ~c, ~n=false, ~h=false, ~z=false, ())
   set_register(cpu, A, a)
   bump(cpu, cpu.pc, 4)
+}
+
+let rrc = (cpu, storage) => {
+  let a = storage_load(cpu, storage)
+  let c = a land 1
+  let result = (c lsl 7) lor (a lsr 1)
+  storage_store(cpu, storage, result)
+  set_flags(cpu, ~c=(c == 1), ~n=false, ~h=false, ~z=(result == 0), ())
+  switch(storage) {
+  | Pointer(_) => bump(cpu, cpu.pc, 16)
+  | _          => bump(cpu, cpu.pc, 8)
+  }
 }
 
 let rrca = (cpu) => {
@@ -699,11 +750,21 @@ let set_hl = (cpu, n) => {
   bump(cpu, cpu.pc, 16)
 }
 
-let sla = (cpu, r) => {
-  let a = get_register(cpu, r)
+let sla = (cpu, s) => {
+  let a = storage_load(cpu, s)
   let result = a lsl 1
+  storage_store(cpu, s, result)
   set_flags(cpu, ~n=false, ~h=false, ~z=(result == 0), ~c=(result land 0x80 > 0), ())
-  bump(cpu, cpu.pc, 8)
+  bump(cpu, cpu.pc, is_pointer(s) ? 16 : 8)
+}
+
+let sra = (cpu, s) => {
+  let a = storage_load(cpu, s)
+  let c = a land 1 == 1
+  let result = signed(a) lsr 1
+  storage_store(cpu, s, result)
+  set_flags(cpu, ~z=(result ==0), ~n=false, ~c, ~h=false, ())
+  bump(cpu, cpu.pc, is_pointer(s) ? 16 : 8)
 }
 
 let srl = (cpu, r) => {
@@ -715,9 +776,10 @@ let srl = (cpu, r) => {
 }
 
 let srl_hl = (cpu) => {
-  let a = get_register16(cpu, HL) |> load(cpu)
+  let hl = get_register16(cpu, HL)
+  let a = load(cpu, hl)
   let result = a lsr 1
-  store(cpu, a, result)
+  store(cpu, hl, result)
   set_flags(cpu, ~h=false, ~n=false, ~z=(result == 0), ~c=(a land 1 == 1), ())
   bump(cpu, cpu.pc, 16)
 }
@@ -802,7 +864,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | And(r) => and_(cpu, r)
   | And_hl => and_hl(cpu)
   | And_d8 => and_d8(cpu)
-  | Bit(n,r) => bit(cpu, n, r)
+  | Bit(n,s) => bit(cpu, n, s)
   | Call => call(cpu)
   | CallCond(flag ,cond) => call_cond(cpu, flag, cond)
   | Ccf => ccf(cpu)
@@ -858,15 +920,19 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Ret => ret(cpu)
   | Reti => reti(cpu)
   | RetCond(flag, cond) => ret_cond(cpu, flag, cond)
+  | Rl(s) => rl(cpu, s)
   | Rla => rla(cpu)
+  | Rlc(s) => rlc(cpu, s)
   | Rlca => rlca(cpu)
   | Rrca => rrca(cpu)
   | Rr(s) => rr(cpu, s)
   | Rra => rra(cpu)
+  | Rrc(s) => rrc(cpu, s)
   | Rst(n) => rst(cpu, n)
   | Scf => scf(cpu)
   | Set_hl(n) => set_hl(cpu, n)
-  | Sla(r) => sla(cpu, r)
+  | Sla(s) => sla(cpu, s)
+  | Sra(s) => sra(cpu, s)
   | Srl(r) => srl(cpu, r)
   | Srl_hl => srl_hl(cpu)
   | Sub(r) => sub_r8(cpu, r)
@@ -874,6 +940,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Sbc_d8 => sbc_d8(cpu)
   | Sbc_hl => sbc_hl(cpu)
   | Sub_d8 => sub_d8(cpu)
+  | Sub_hl => sub_hl(cpu)
   | Swap(r) => swap(cpu, r)
   | Swap_hl => swap_hl(cpu)
   | Xor(r) => xor(cpu, r)

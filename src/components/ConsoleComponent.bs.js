@@ -9,6 +9,7 @@ var Memory$Yobml = require("../Memory.bs.js");
 var Console$Yobml = require("../Console.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 var Caml_js_exceptions = require("bs-platform/lib/js/caml_js_exceptions.js");
+var Instructions$Yobml = require("../Instructions.bs.js");
 var RegistersComponent$Yobml = require("./RegistersComponent.bs.js");
 
 var fetch_rom = (
@@ -41,8 +42,16 @@ function step(canvas) {
     }
     catch (raw_exn){
       var exn = Caml_js_exceptions.internalToOCamlException(raw_exn);
-      if (exn[0] === Memory$Yobml.InvalidMemoryAccess) {
-        var msg = Curry._2(Printf.sprintf(/* Format */[
+      var exit = 0;
+      var msg;
+      if (exn[0] === Memory$Yobml.InvalidMemoryAccess || exn[0] === Instructions$Yobml.OpcodeNotImplemented) {
+        msg = exn[1];
+        exit = 1;
+      } else {
+        throw exn;
+      }
+      if (exit === 1) {
+        var msg$1 = Curry._2(Printf.sprintf(/* Format */[
                   /* String_literal */Block.__(11, [
                       "Console crash at $",
                       /* Int */Block.__(4, [
@@ -62,15 +71,14 @@ function step(canvas) {
                         ])
                     ]),
                   "Console crash at $%04X. Reason: %s"
-                ]), $$console[0][/* cpu */0][/* pc */0], exn[1]);
-        console.log(msg);
+                ]), $$console[0][/* cpu */0][/* pc */0], msg);
+        console.log(msg$1);
         throw [
               ConsoleFailure,
-              msg
+              msg$1
             ];
-      } else {
-        throw exn;
       }
+      
     }
     $$console[0] = tmp;
   };
@@ -119,7 +127,7 @@ function ConsoleComponent(Props) {
         }), initial_state);
   var dispatch = match[1];
   React.useEffect((function () {
-          Curry._1(fetch_rom, "http://localhost:8000/roms/drmario.gb").then((function (rom) {
+          Curry._1(fetch_rom, "http://localhost:8000/roms/11-op_a_hl.gb").then((function (rom) {
                   Curry._1(dispatch, /* Loaded */1);
                   $$console[0] = Console$Yobml.make(rom);
                   requestAnimationFrame((function (param) {

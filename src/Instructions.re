@@ -7,7 +7,6 @@ let regs = [|B, C, D, E, H, L, F, A|];
 
 type storage =
   | Register(register)
-  | Register16(register16)
   | Pointer(register16)
 
 type instruction =
@@ -22,7 +21,7 @@ type instruction =
   | And_d8
   | And(register)
   | And_hl
-  | Bit(int, register)
+  | Bit(int, storage)
   | Call
   | CallCond(Cpu.cpu_flag, bool)
   | Ccf
@@ -80,9 +79,12 @@ type instruction =
   | Ret
   | Reti
   | RetCond(Cpu.cpu_flag, bool)
+  | Rl(storage)
   | Rla
+  | Rlc(storage)
   | Rlca
   | Rra
+  | Rrc(storage)
   | Rrca
   | Rr(storage)
   | Rst(int)
@@ -91,11 +93,13 @@ type instruction =
   | Sbc_hl
   | Scf
   | Set_hl(int)
-  | Sla(register)
+  | Sla(storage)
+  | Sra(storage)
   | Srl(register)
   | Srl_hl
   | Sub(register)
   | Sub_d8
+  | Sub_hl
   | Swap(register)
   | Swap_hl
   | Xor(register)
@@ -218,7 +222,7 @@ let decode = (opcode) => switch(opcode) {
   | 0x93 => Sub(E)
   | 0x94 => Sub(H)
   | 0x95 => Sub(L)
-  // | 0x96 => Sub_hl
+  | 0x96 => Sub_hl
   | 0x97 => Sub(A)
   | 0x98 => Sbc(B)
   | 0x99 => Sbc(C)
@@ -234,7 +238,7 @@ let decode = (opcode) => switch(opcode) {
   | 0xA3 => And(E)
   | 0xA4 => And(H)
   | 0xA5 => And(L)
-  // | 0xA6 => And_hl
+  | 0xA6 => And_hl
   | 0xA7 => And(A)
   | 0xA8 => Xor(B)
   | 0xA9 => Xor(C)
@@ -312,11 +316,34 @@ let decode = (opcode) => switch(opcode) {
   | 0xFB => Ei
   | 0xFE => Cp_n
   | 0xFF => Rst(0x38)
-  // | n => Js.log(sprintf("Opcode not implemented: %02X", n)); Nop
-  | n => raise(OpcodeNotImplemented(sprintf("0x%02X", n)))
+  | n => raise(OpcodeNotImplemented(sprintf("Opcode not implemented: 0x%02X", n)))
 }
 
 let decode_cb = (opcode) => switch(opcode) {
+  | 0x00 => Rlc(Register(B))
+  | 0x01 => Rlc(Register(C))
+  | 0x02 => Rlc(Register(D))
+  | 0x03 => Rlc(Register(E))
+  | 0x04 => Rlc(Register(H))
+  | 0x05 => Rlc(Register(L))
+  | 0x06 => Rlc(Pointer(HL))
+  | 0x07 => Rlc(Register(A))
+  | 0x08 => Rrc(Register(B))
+  | 0x09 => Rrc(Register(C))
+  | 0x0A => Rrc(Register(D))
+  | 0x0B => Rrc(Register(E))
+  | 0x0C => Rrc(Register(H))
+  | 0x0D => Rrc(Register(L))
+  | 0x0E => Rrc(Pointer(HL))
+  | 0x0F => Rrc(Register(A))
+  | 0x10 => Rl(Register(B))
+  | 0x11 => Rl(Register(C))
+  | 0x12 => Rl(Register(D))
+  | 0x13 => Rl(Register(E))
+  | 0x14 => Rl(Register(H))
+  | 0x15 => Rl(Register(L))
+  | 0x16 => Rl(Pointer(HL))
+  | 0x17 => Rl(Register(A))
   | 0x18 => Rr(Register(B))
   | 0x19 => Rr(Register(C))
   | 0x1A => Rr(Register(D))
@@ -325,14 +352,22 @@ let decode_cb = (opcode) => switch(opcode) {
   | 0x1D => Rr(Register(L))
   | 0x1E => Rr(Pointer(HL))
   | 0x1F => Rr(Register(A))
-  | 0x20 => Sla(B)
-  | 0x21 => Sla(C)
-  | 0x22 => Sla(D)
-  | 0x23 => Sla(E)
-  | 0x24 => Sla(H)
-  | 0x25 => Sla(L)
-  // | 0x26 => Sla_hl
-  | 0x27 => Sla(A)
+  | 0x20 => Sla(Register(B))
+  | 0x21 => Sla(Register(C))
+  | 0x22 => Sla(Register(D))
+  | 0x23 => Sla(Register(E))
+  | 0x24 => Sla(Register(H))
+  | 0x25 => Sla(Register(L))
+  | 0x26 => Sla(Pointer(HL))
+  | 0x27 => Sla(Register(A))
+  | 0x28 => Sra(Register(B))
+  | 0x29 => Sra(Register(C))
+  | 0x2A => Sra(Register(D))
+  | 0x2B => Sra(Register(E))
+  | 0x2C => Sra(Register(H))
+  | 0x2D => Sra(Register(L))
+  | 0x2E => Sra(Pointer(HL))
+  | 0x2F => Sra(Register(A))
   | 0x30 => Swap(B)
   | 0x31 => Swap(C)
   | 0x32 => Swap(D)
@@ -365,17 +400,25 @@ let decode_cb = (opcode) => switch(opcode) {
   | 0xEE => Set_hl(5)
   | 0xF6 => Set_hl(6)
   | 0xFE => Set_hl(7)
+  | 0x46 => Bit(0, Pointer(HL))
+  | 0x4E => Bit(1, Pointer(HL))
+  | 0x56 => Bit(2, Pointer(HL))
+  | 0x5E => Bit(3, Pointer(HL))
+  | 0x66 => Bit(4, Pointer(HL))
+  | 0x6E => Bit(5, Pointer(HL))
+  | 0x76 => Bit(6, Pointer(HL))
+  | 0x7E => Bit(7, Pointer(HL))
   | _ when opcode >= 0x40 && opcode <= 0x7F => {
       let reg = regs[opcode land 7];
       let bit = opcode lsr 3 land 7;
-      Bit(bit, reg)
+      Bit(bit, Register(reg))
     }
   | _ when opcode >= 0x80 && opcode <= 0xBF => {
       let reg = regs[opcode land 7];
       let bit = opcode lsr 3 land 7;
       Res(bit, reg)
     }
-  | n => raise(CBOpcodeNotImplemented(sprintf("0x%02X", n)))
+  | n => raise(OpcodeNotImplemented(sprintf("Opcode Not Implemented: 0xCB 0x%02X", n)))
 }
 
 let pretty = (instruction) => switch(instruction) {
@@ -390,7 +433,8 @@ let pretty = (instruction) => switch(instruction) {
   | And_d8 => "AND d8"
   | And(r) => sprintf("AND %s", to_string(r))
   | And_hl => "NAD (HL)"
-  | Bit(n,r) => sprintf("BIT %d, %s", n, to_string(r))
+  | Bit(n,Register(r)) => sprintf("BIT %d, %s", n, to_string(r))
+  | Bit(n,Pointer(r)) => sprintf("BIT %d, (%s)", n, to_string16(r))
   | Call => "CALL d16"
   | CallCond(C, true) => "CALL C, d16"
   | CallCond(C, false) => "CALL NC, d16"
@@ -465,15 +509,23 @@ let pretty = (instruction) => switch(instruction) {
   | RetCond(_,_) => "Unreachable RET"
   | Rla => "RLA"
   | Rlca => "RLCA"
+  | Rl(Register(r)) => sprintf("RL %s", to_string(r))
+  | Rl(Pointer(r)) => sprintf("RL (%s)", to_string16(r))
+  | Rlc(Register(r)) => sprintf("RLC %s", to_string(r))
+  | Rlc(Pointer(r)) => sprintf("RLC (%s)", to_string16(r))
   | Rra => "RRA"
+  | Rrc(Register(r)) => sprintf("RRC %s", to_string(r))
+  | Rrc(Pointer(r)) => sprintf("RRC (%s)", to_string16(r))
   | Rrca => "RRCA"
   | Rr(Register(r)) => sprintf("RR %s", to_string(r))
-  | Rr(Register16(r)) => sprintf("RR %s", to_string16(r))
   | Rr(Pointer(r)) => sprintf("RR (%s)", to_string16(r))
   | Rst(n) => sprintf("RST %02XH", n)
   | Scf => "SCF"
   | Set_hl(n) => sprintf("SET %d, (HL)", n)
-  | Sla(r) => sprintf("SLA %s", to_string(r))
+  | Sla(Register(r)) => sprintf("SLA %s", to_string(r))
+  | Sla(Pointer(r)) => sprintf("SLA (%s)", to_string16(r))
+  | Sra(Register(r)) => sprintf("SRA %s", to_string(r))
+  | Sra(Pointer(r)) => sprintf("SRA (%s)", to_string16(r))
   | Srl(r) => sprintf("SRL %s", to_string(r))
   | Srl_hl => "SRL (HL)"
   | Sub(r) => sprintf("SUB %s", to_string(r))
@@ -481,6 +533,7 @@ let pretty = (instruction) => switch(instruction) {
   | Sbc_hl => sprintf("SBC A, (HL)")
   | Sbc_d8 => "SBC A, d8"
   | Sub_d8 => "SUB d8"
+  | Sub_hl => "SUB (HL)"
   | Swap(r) => sprintf("SWAP %s", to_string(r))
   | Swap_hl => "SWAP (HL)"
   | Xor(r) => sprintf("XOR %s", to_string(r))
