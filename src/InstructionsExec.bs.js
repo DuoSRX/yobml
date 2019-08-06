@@ -201,7 +201,7 @@ function cp_hl(cpu) {
   var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   var h = ($$byte & 15) > (reg & 15);
   Cpu$Yobml.set_flags(cpu, reg === $$byte, true, h, reg < $$byte, /* () */0);
-  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function cp_n(cpu) {
