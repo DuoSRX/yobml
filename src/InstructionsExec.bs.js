@@ -474,9 +474,10 @@ function dec16(cpu, r) {
 function dec_hl(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   var a = Memory$Yobml.load(cpu[/* memory */4], address);
-  var value = wrapping_add16(a, -1);
+  var value = wrapping_add(a, -1);
   store(cpu, address, value);
-  return bump(cpu, cpu[/* pc */0], 8);
+  Cpu$Yobml.set_flags(cpu, value === 0, true, (value & 15) === 15, undefined, /* () */0);
+  return bump(cpu, cpu[/* pc */0], 12);
 }
 
 function adc(cpu, r) {
@@ -534,8 +535,8 @@ function add_hl(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   var b = Memory$Yobml.load(cpu[/* memory */4], address);
-  var result = a + b | 0;
-  Cpu$Yobml.set_register(cpu, /* A */0, result & 255);
+  var result = wrapping_add(a, b);
+  Cpu$Yobml.set_register(cpu, /* A */0, result);
   var h = (result & 15) < (a & 15);
   var c = a > result;
   Cpu$Yobml.set_flags(cpu, result === 0, false, h, c, /* () */0);
@@ -702,8 +703,9 @@ function rl(cpu, s) {
   var a = storage_load(cpu, s);
   var prev_carry = Cpu$Yobml.has_flag(cpu, /* C */3);
   var result = prev_carry ? (a << 1) | 1 : (a << 1);
-  storage_store(cpu, s, result);
-  Cpu$Yobml.set_flags(cpu, result === 0, false, false, (a & 128) > 0, /* () */0);
+  var result$1 = result & 255;
+  storage_store(cpu, s, result$1);
+  Cpu$Yobml.set_flags(cpu, result$1 === 0, false, false, (a & 128) > 0, /* () */0);
   var match = is_pointer(s);
   return bump(cpu, cpu[/* pc */0], match ? 16 : 8);
 }
@@ -852,7 +854,7 @@ function set_hl(cpu, n) {
 
 function sla(cpu, s) {
   var a = storage_load(cpu, s);
-  var result = (a << 1);
+  var result = (a << 1) & 255;
   storage_store(cpu, s, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, (a & 128) > 0, /* () */0);
   var match = is_pointer(s);

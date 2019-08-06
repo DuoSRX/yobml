@@ -374,11 +374,10 @@ let dec16 = (cpu, r) => {
 let dec_hl = (cpu) => {
   let address = get_register16(cpu, HL)
   let a = load(cpu, address)
-  let value = wrapping_add16(a, -1);
+  let value = wrapping_add(a, -1);
   store(cpu, address, value);
-  // let h = (value land 0xF) > (a land 0xF);
-  // set_flags(cpu, ~z=(value == 0), ~n=true, ~h, ());
-  bump(cpu, cpu.pc, 8)
+  set_flags(cpu, ~z=(value == 0), ~n=true, ~h=(value land 0xF == 0xF), ());
+  bump(cpu, cpu.pc, 12)
 }
 
 let adc = (cpu, r) => {
@@ -431,8 +430,8 @@ let add_d8 = (cpu) => {
 let add_hl = (cpu) => {
   let a = get_register(cpu, A)
   let b = get_register16(cpu, HL) |> load(cpu)
-  let result = a + b
-  set_register(cpu, A, result land 0xFF)
+  let result = wrapping_add(a, b)
+  set_register(cpu, A, result)
   let h = (result land 0xF) < (a land 0xF)
   let c = a > result
   set_flags(cpu, ~h, ~c, ~n=false, ~z=(result == 0), ())
@@ -609,6 +608,7 @@ let rl = (cpu, s) => {
   let a = storage_load(cpu, s)
   let prev_carry = has_flag(cpu, C)
   let result = prev_carry ? (a lsl 1) lor 1 : a lsl 1
+  let result = result land 0xFF
   storage_store(cpu, s, result)
   set_flags(cpu, ~n=false, ~h=false, ~z=(result == 0), ~c=(a land 0x80 > 0), ())
   bump(cpu, cpu.pc, is_pointer(s) ? 16 : 8)
@@ -749,7 +749,7 @@ let set_hl = (cpu, n) => {
 
 let sla = (cpu, s) => {
   let a = storage_load(cpu, s)
-  let result = a lsl 1
+  let result = (a lsl 1) land 0xFF
   storage_store(cpu, s, result)
   set_flags(cpu, ~n=false, ~h=false, ~z=(result == 0), ~c=(a land 0x80 > 0), ())
   bump(cpu, cpu.pc, is_pointer(s) ? 16 : 8)
