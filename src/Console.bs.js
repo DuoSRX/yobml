@@ -5,6 +5,7 @@ var Cpu$Yobml = require("./Cpu.bs.js");
 var Gpu$Yobml = require("./Gpu.bs.js");
 var Input$Yobml = require("./Input.bs.js");
 var Timer$Yobml = require("./Timer.bs.js");
+var Utils$Yobml = require("./Utils.bs.js");
 var Memory$Yobml = require("./Memory.bs.js");
 var CpuExec$Yobml = require("./CpuExec.bs.js");
 
@@ -24,58 +25,57 @@ function make(rom) {
         ];
 }
 
+function is_interrupt_enabled(cpu, n) {
+  var __x = Memory$Yobml.load(cpu[/* memory */4], 65535);
+  return Utils$Yobml.is_bit_set(__x, n);
+}
+
+function interrupt_vector(n) {
+  switch (n) {
+    case 0 : 
+        return 64;
+    case 1 : 
+        return 72;
+    case 2 : 
+        return 80;
+    case 3 : 
+        return 88;
+    default:
+      return 96;
+  }
+}
+
 function interrupt(cpu) {
   cpu[/* halted */5] = false;
-  if (cpu[/* ime */2]) {
-    var ise = Memory$Yobml.load(cpu[/* memory */4], 65535);
-    var isf = Memory$Yobml.load(cpu[/* memory */4], 65295);
-    if (isf === 0) {
-      return cpu;
-    } else if ((ise & 1) > 0 && (isf & 1) > 0) {
-      var sp = Cpu$Yobml.get_register16(cpu, /* SP */4) - 2 | 0;
-      Memory$Yobml.store16(cpu[/* memory */4], sp, cpu[/* pc */0]);
-      Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
-      Memory$Yobml.store(cpu[/* memory */4], 65295, isf & 286331152);
-      return /* record */[
-              /* pc */64,
-              /* cycle */cpu[/* cycle */1],
-              /* ime */false,
-              /* registers */cpu[/* registers */3],
-              /* memory */cpu[/* memory */4],
-              /* halted */cpu[/* halted */5],
-              /* serial */cpu[/* serial */6]
-            ];
-    } else if ((ise & 2) > 0 && (isf & 2) > 0) {
-      var sp$1 = Cpu$Yobml.get_register16(cpu, /* SP */4) - 2 | 0;
-      Memory$Yobml.store16(cpu[/* memory */4], sp$1, cpu[/* pc */0]);
-      Cpu$Yobml.set_register16(cpu, /* SP */4, sp$1);
-      Memory$Yobml.store(cpu[/* memory */4], 65295, isf & 286331137);
-      return /* record */[
-              /* pc */72,
-              /* cycle */cpu[/* cycle */1],
-              /* ime */false,
-              /* registers */cpu[/* registers */3],
-              /* memory */cpu[/* memory */4],
-              /* halted */cpu[/* halted */5],
-              /* serial */cpu[/* serial */6]
-            ];
-    } else if ((ise & 4) > 0 && (isf & 4) > 0) {
-      var sp$2 = Cpu$Yobml.get_register16(cpu, /* SP */4) - 2 | 0;
-      Memory$Yobml.store16(cpu[/* memory */4], sp$2, cpu[/* pc */0]);
-      Cpu$Yobml.set_register16(cpu, /* SP */4, sp$2);
-      Memory$Yobml.store(cpu[/* memory */4], 65295, isf & 286330897);
-      return /* record */[
-              /* pc */80,
-              /* cycle */cpu[/* cycle */1],
-              /* ime */false,
-              /* registers */cpu[/* registers */3],
-              /* memory */cpu[/* memory */4],
-              /* halted */cpu[/* halted */5],
-              /* serial */cpu[/* serial */6]
-            ];
-    } else {
-      return cpu;
-    }
+  var match = cpu[/* ime */2];
+  if (match) {
+    var _n = 0;
+    while(true) {
+      var n = _n;
+      var if_val = Memory$Yobml.load(cpu[/* memory */4], 65295);
+      if (Utils$Yobml.is_bit_set(if_val, n) && is_interrupt_enabled(cpu, n)) {
+        var if_val$1 = Utils$Yobml.clear_bit(if_val, n);
+        Memory$Yobml.store(cpu[/* memory */4], 65295, if_val$1);
+        Cpu$Yobml.push16(cpu, cpu[/* pc */0]);
+        return /* record */[
+                /* pc */interrupt_vector(n),
+                /* cycle */cpu[/* cycle */1],
+                /* ime */false,
+                /* registers */cpu[/* registers */3],
+                /* memory */cpu[/* memory */4],
+                /* halted */cpu[/* halted */5],
+                /* serial */cpu[/* serial */6]
+              ];
+      } else {
+        var match$1 = n === 5;
+        if (match$1) {
+          return cpu;
+        } else {
+          _n = n + 1 | 0;
+          continue ;
+        }
+      }
+    };
   } else {
     return cpu;
   }
@@ -255,6 +255,8 @@ function step($$console) {
 }
 
 exports.make = make;
+exports.is_interrupt_enabled = is_interrupt_enabled;
+exports.interrupt_vector = interrupt_vector;
 exports.interrupt = interrupt;
 exports.run = run;
 exports.key_to_button = key_to_button;

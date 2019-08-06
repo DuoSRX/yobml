@@ -2,6 +2,8 @@
 'use strict';
 
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
+var Utils$Yobml = require("./Utils.bs.js");
+var Memory$Yobml = require("./Memory.bs.js");
 var Registers$Yobml = require("./Registers.bs.js");
 
 function tToJs(param) {
@@ -55,6 +57,20 @@ function set_register(cpu, register, value) {
 
 function set_register16(cpu, register, value) {
   return Registers$Yobml.set16(cpu[/* registers */3], register, value & 65535);
+}
+
+function push(cpu, value) {
+  var __x = Registers$Yobml.get16(cpu[/* registers */3], /* SP */4);
+  var sp = Utils$Yobml.wrapping_add16(__x, -1);
+  Memory$Yobml.store(cpu[/* memory */4], sp, value);
+  return set_register16(cpu, /* SP */4, sp);
+}
+
+function push16(cpu, value) {
+  var __x = Registers$Yobml.get16(cpu[/* registers */3], /* SP */4);
+  var sp = Utils$Yobml.wrapping_add16(__x, -2);
+  Memory$Yobml.store16(cpu[/* memory */4], sp, value);
+  return set_register16(cpu, /* SP */4, sp);
 }
 
 function has_flag(cpu, flag) {
@@ -158,6 +174,8 @@ exports.get_register = get_register;
 exports.get_register16 = get_register16;
 exports.set_register = set_register;
 exports.set_register16 = set_register16;
+exports.push = push;
+exports.push16 = push16;
 exports.has_flag = has_flag;
 exports.set_flag = set_flag;
 exports.unset_flag = unset_flag;

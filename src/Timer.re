@@ -1,3 +1,5 @@
+open Utils
+
 // http://gbdev.gg8.se/wiki/articles/Timer_and_Divider_Registers
 type t = {
   mutable cycles: int, // machine cycles
@@ -26,8 +28,6 @@ let make = () => {
   tma: 0,
   tac: 0
 }
-
-let wrapping_add = (a, b) => (a + b) land 0xFF
 
 let clock_select = (timer) => {
   if (timer.tac land 0x4 == 0) {

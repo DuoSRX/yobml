@@ -5,27 +5,11 @@ var Char = require("bs-platform/lib/js/char.js");
 var $$String = require("bs-platform/lib/js/string.js");
 var Cpu$Yobml = require("./Cpu.bs.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
+var Utils$Yobml = require("./Utils.bs.js");
 var Memory$Yobml = require("./Memory.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 
 var FooEx = Caml_exceptions.create("InstructionsExec-Yobml.FooEx");
-
-function wrapping_add(a, b) {
-  return a + b & 255;
-}
-
-function wrapping_add16(a, b) {
-  return a + b & 65535;
-}
-
-function signed(v) {
-  var match = v > 127;
-  if (match) {
-    return -(Pervasives.lnot(v) + 1 & 255) | 0;
-  } else {
-    return v;
-  }
-}
 
 function load(cpu, address) {
   return Memory$Yobml.load(cpu[/* memory */4], address);
@@ -113,7 +97,7 @@ function halt(cpu) {
 
 function call(cpu) {
   var address = Memory$Yobml.load16(cpu[/* memory */4], cpu[/* pc */0]);
-  var sp = wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), -2);
+  var sp = Utils$Yobml.wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), -2);
   store16(cpu, sp, cpu[/* pc */0] + 2 | 0);
   Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
   return bump(cpu, address, 24);
@@ -130,14 +114,14 @@ function call_cond(cpu, flag, condition) {
 function ret(cpu) {
   var sp = Cpu$Yobml.get_register16(cpu, /* SP */4);
   var pc = Memory$Yobml.load16(cpu[/* memory */4], sp);
-  Cpu$Yobml.set_register16(cpu, /* SP */4, wrapping_add16(sp, 2));
+  Cpu$Yobml.set_register16(cpu, /* SP */4, Utils$Yobml.wrapping_add16(sp, 2));
   return bump(cpu, pc, 16);
 }
 
 function reti(cpu) {
   var sp = Cpu$Yobml.get_register16(cpu, /* SP */4);
   var pc = Memory$Yobml.load16(cpu[/* memory */4], sp);
-  Cpu$Yobml.set_register16(cpu, /* SP */4, wrapping_add16(sp, 2));
+  Cpu$Yobml.set_register16(cpu, /* SP */4, Utils$Yobml.wrapping_add16(sp, 2));
   return bump(/* record */[
               /* pc */cpu[/* pc */0],
               /* cycle */cpu[/* cycle */1],
@@ -153,7 +137,7 @@ function ret_cond(cpu, flag, condition) {
   if (Cpu$Yobml.has_flag(cpu, flag) === condition) {
     var sp = Cpu$Yobml.get_register16(cpu, /* SP */4);
     var pc = Memory$Yobml.load16(cpu[/* memory */4], sp);
-    Cpu$Yobml.set_register16(cpu, /* SP */4, wrapping_add16(sp, 2));
+    Cpu$Yobml.set_register16(cpu, /* SP */4, Utils$Yobml.wrapping_add16(sp, 2));
     return bump(cpu, pc, 20);
   } else {
     return bump(cpu, cpu[/* pc */0], 8);
@@ -312,8 +296,8 @@ function ld_hl_d8(cpu) {
 
 function ld_hl_sp_e8(cpu) {
   var a = Cpu$Yobml.get_register16(cpu, /* SP */4);
-  var b = signed(Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]));
-  var value = wrapping_add16(a, b);
+  var b = Utils$Yobml.signed(Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]));
+  var value = Utils$Yobml.wrapping_add16(a, b);
   var h = ((a & 15) + (b & 15) | 0) > 15;
   var c = ((a & 255) + (b & 255) | 0) > 255;
   Cpu$Yobml.set_flags(cpu, false, false, h, c, /* () */0);
@@ -343,28 +327,28 @@ function ld_a_a16(cpu) {
 function ldi_hl_a(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
-  Cpu$Yobml.set_register16(cpu, /* HL */3, wrapping_add16(address, 1));
+  Cpu$Yobml.set_register16(cpu, /* HL */3, Utils$Yobml.wrapping_add16(address, 1));
   return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function ldi_a_hl(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   Cpu$Yobml.set_register(cpu, /* A */0, Memory$Yobml.load(cpu[/* memory */4], address));
-  Cpu$Yobml.set_register16(cpu, /* HL */3, wrapping_add16(address, 1));
+  Cpu$Yobml.set_register16(cpu, /* HL */3, Utils$Yobml.wrapping_add16(address, 1));
   return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function ldd_a_hl(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   Cpu$Yobml.set_register(cpu, /* A */0, Memory$Yobml.load(cpu[/* memory */4], address));
-  Cpu$Yobml.set_register16(cpu, /* HL */3, wrapping_add16(address, -1));
+  Cpu$Yobml.set_register16(cpu, /* HL */3, Utils$Yobml.wrapping_add16(address, -1));
   return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function ldd_hl_a(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
-  Cpu$Yobml.set_register16(cpu, /* HL */3, wrapping_add16(address, -1));
+  Cpu$Yobml.set_register16(cpu, /* HL */3, Utils$Yobml.wrapping_add16(address, -1));
   return bump(cpu, cpu[/* pc */0], 8);
 }
 
@@ -387,7 +371,7 @@ function ld_sp_hl(cpu) {
 
 function ld_read_io_n(cpu) {
   var n = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-  var address = wrapping_add16(65280, n);
+  var address = Utils$Yobml.wrapping_add16(65280, n);
   var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   Cpu$Yobml.set_register(cpu, /* A */0, $$byte);
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
@@ -395,14 +379,14 @@ function ld_read_io_n(cpu) {
 
 function ld_write_io_n(cpu) {
   var n = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-  var address = wrapping_add16(65280, n);
+  var address = Utils$Yobml.wrapping_add16(65280, n);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 12);
 }
 
 function ld_read_io_c(cpu) {
   var n = Cpu$Yobml.get_register(cpu, /* C */2);
-  var address = wrapping_add16(65280, n);
+  var address = Utils$Yobml.wrapping_add16(65280, n);
   var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   Cpu$Yobml.set_register(cpu, /* A */0, $$byte);
   return bump(cpu, cpu[/* pc */0], 12);
@@ -410,7 +394,7 @@ function ld_read_io_c(cpu) {
 
 function ld_write_io_c(cpu) {
   var n = Cpu$Yobml.get_register(cpu, /* C */2);
-  var address = wrapping_add16(65280, n);
+  var address = Utils$Yobml.wrapping_add16(65280, n);
   store(cpu, address, Cpu$Yobml.get_register(cpu, /* A */0));
   return bump(cpu, cpu[/* pc */0], 12);
 }
@@ -434,7 +418,7 @@ function ld_a16_sp(cpu) {
 
 function inc(cpu, r) {
   var reg = Cpu$Yobml.get_register(cpu, r);
-  var value = wrapping_add(reg, 1);
+  var value = Utils$Yobml.wrapping_add(reg, 1);
   Cpu$Yobml.set_register(cpu, r, value);
   var h = (value & 15) < (reg & 15);
   Cpu$Yobml.set_flags(cpu, value === 0, false, h, undefined, /* () */0);
@@ -443,13 +427,13 @@ function inc(cpu, r) {
 
 function inc16(cpu, r) {
   var value = Cpu$Yobml.get_register16(cpu, r);
-  Cpu$Yobml.set_register16(cpu, r, wrapping_add16(value, 1));
+  Cpu$Yobml.set_register16(cpu, r, Utils$Yobml.wrapping_add16(value, 1));
   return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function inc_hl(cpu) {
   var hl = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  var value = wrapping_add(Memory$Yobml.load(cpu[/* memory */4], hl), 1);
+  var value = Utils$Yobml.wrapping_add(Memory$Yobml.load(cpu[/* memory */4], hl), 1);
   Cpu$Yobml.set_flags(cpu, value === 0, false, (value & 15) === 0, undefined, /* () */0);
   store(cpu, hl, value);
   return bump(cpu, cpu[/* pc */0], 12);
@@ -457,7 +441,7 @@ function inc_hl(cpu) {
 
 function dec(cpu, r) {
   var reg = Cpu$Yobml.get_register(cpu, r);
-  var value = wrapping_add(reg, -1);
+  var value = Utils$Yobml.wrapping_add(reg, -1);
   Cpu$Yobml.set_register(cpu, r, value);
   var h = (value & 15) > (reg & 15);
   Cpu$Yobml.set_flags(cpu, value === 0, true, h, undefined, /* () */0);
@@ -466,7 +450,7 @@ function dec(cpu, r) {
 
 function dec16(cpu, r) {
   var reg = Cpu$Yobml.get_register16(cpu, r);
-  var value = wrapping_add16(reg, -1);
+  var value = Utils$Yobml.wrapping_add16(reg, -1);
   Cpu$Yobml.set_register16(cpu, r, value);
   return bump(cpu, cpu[/* pc */0], 8);
 }
@@ -474,7 +458,7 @@ function dec16(cpu, r) {
 function dec_hl(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   var a = Memory$Yobml.load(cpu[/* memory */4], address);
-  var value = wrapping_add(a, -1);
+  var value = Utils$Yobml.wrapping_add(a, -1);
   store(cpu, address, value);
   Cpu$Yobml.set_flags(cpu, value === 0, true, (value & 15) === 15, undefined, /* () */0);
   return bump(cpu, cpu[/* pc */0], 12);
@@ -523,7 +507,7 @@ function adc_hl(cpu) {
 function add_d8(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-  var value = wrapping_add(a, b);
+  var value = Utils$Yobml.wrapping_add(a, b);
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   var h = (value & 15) < (b & 15);
   var c = value < b;
@@ -535,7 +519,7 @@ function add_hl(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   var b = Memory$Yobml.load(cpu[/* memory */4], address);
-  var result = wrapping_add(a, b);
+  var result = Utils$Yobml.wrapping_add(a, b);
   Cpu$Yobml.set_register(cpu, /* A */0, result);
   var h = (result & 15) < (a & 15);
   var c = a > result;
@@ -555,11 +539,11 @@ function add_hl_r16(cpu, r) {
 
 function add_sp_e8(cpu) {
   var a = Cpu$Yobml.get_register16(cpu, /* SP */4);
-  var b = signed(Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]));
+  var b = Utils$Yobml.signed(Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]));
   var h = ((a & 15) + (b & 15) | 0) > 15;
   var c = ((a & 255) + (b & 255) | 0) > 255;
   Cpu$Yobml.set_flags(cpu, false, false, h, c, /* () */0);
-  var sp = wrapping_add16(a, b);
+  var sp = Utils$Yobml.wrapping_add16(a, b);
   Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
   return bump(cpu, cpu[/* pc */0] + 1 | 0, 16);
 }
@@ -567,7 +551,7 @@ function add_sp_e8(cpu) {
 function sub_d8(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-  var value = wrapping_add(a, -b | 0);
+  var value = Utils$Yobml.wrapping_add(a, -b | 0);
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   var h = (value & 15) > (a & 15);
   var c = value > a;
@@ -579,7 +563,7 @@ function sub_hl(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   var b = Memory$Yobml.load(cpu[/* memory */4], address);
-  var value = wrapping_add(a, -b | 0);
+  var value = Utils$Yobml.wrapping_add(a, -b | 0);
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   var h = (value & 15) > (a & 15);
   var c = value > a;
@@ -608,7 +592,7 @@ function jp_hl(cpu) {
 
 function jr_e8(cpu) {
   var $$byte = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-  var offset = signed($$byte);
+  var offset = Utils$Yobml.signed($$byte);
   return bump(cpu, (cpu[/* pc */0] + offset | 0) + 1 | 0, 12);
 }
 
@@ -616,7 +600,7 @@ function jr(cpu, flag, condition) {
   var do_jump = Cpu$Yobml.has_flag(cpu, flag) === condition;
   if (do_jump) {
     var $$byte = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-    var offset = signed($$byte);
+    var offset = Utils$Yobml.signed($$byte);
     return bump(cpu, (cpu[/* pc */0] + offset | 0) + 1 | 0, 12);
   } else {
     return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
@@ -661,7 +645,8 @@ function or_hl(cpu) {
 }
 
 function push16(cpu, r16) {
-  var sp = wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), -2);
+  var __x = Cpu$Yobml.get_register16(cpu, /* SP */4);
+  var sp = Utils$Yobml.wrapping_add16(__x, -2);
   store16(cpu, sp, Cpu$Yobml.get_register16(cpu, r16));
   Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
   return bump(cpu, cpu[/* pc */0], 16);
@@ -670,7 +655,8 @@ function push16(cpu, r16) {
 function pop16(cpu, r16) {
   var address = Cpu$Yobml.get_register16(cpu, /* SP */4);
   var value = Memory$Yobml.load16(cpu[/* memory */4], address);
-  var sp = wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), 2);
+  var __x = Cpu$Yobml.get_register16(cpu, /* SP */4);
+  var sp = Utils$Yobml.wrapping_add16(__x, 2);
   Cpu$Yobml.set_register16(cpu, r16, value);
   Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
   return bump(cpu, cpu[/* pc */0], 12);
@@ -679,7 +665,8 @@ function pop16(cpu, r16) {
 function pop_af(cpu) {
   var address = Cpu$Yobml.get_register16(cpu, /* SP */4);
   var af = Memory$Yobml.load16(cpu[/* memory */4], address) & 65520;
-  var sp = wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), 2);
+  var __x = Cpu$Yobml.get_register16(cpu, /* SP */4);
+  var sp = Utils$Yobml.wrapping_add16(__x, 2);
   Cpu$Yobml.set_register16(cpu, /* AF */0, af);
   Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
   Cpu$Yobml.set_flags(cpu, (af & 128) > 0, (af & 64) > 0, (af & 32) > 0, (af & 16) > 0, /* () */0);
@@ -791,7 +778,7 @@ function rra(cpu) {
 }
 
 function rst(cpu, n) {
-  var sp = wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), -2);
+  var sp = Utils$Yobml.wrapping_add16(Cpu$Yobml.get_register16(cpu, /* SP */4), -2);
   store16(cpu, sp, cpu[/* pc */0]);
   Cpu$Yobml.set_register16(cpu, /* SP */4, sp);
   return bump(cpu, n, 16);
@@ -870,7 +857,7 @@ function sla(cpu, s) {
 function sra(cpu, s) {
   var a = storage_load(cpu, s);
   var c = (a & 1) === 1;
-  var result = (signed(a) >>> 1);
+  var result = (Utils$Yobml.signed(a) >>> 1);
   storage_store(cpu, s, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, c, /* () */0);
   var match = is_pointer(s);
@@ -897,7 +884,7 @@ function srl_hl(cpu) {
 function sub_r8(cpu, r) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var b = Cpu$Yobml.get_register(cpu, r);
-  var result = wrapping_add(a, -b | 0);
+  var result = Utils$Yobml.wrapping_add(a, -b | 0);
   Cpu$Yobml.set_register(cpu, /* A */0, result);
   var h = (result & 15) > (a & 15);
   Cpu$Yobml.set_flags(cpu, a === b, true, h, result > a, /* () */0);
@@ -1156,9 +1143,6 @@ function execute(cpu, instruction) {
 }
 
 exports.FooEx = FooEx;
-exports.wrapping_add = wrapping_add;
-exports.wrapping_add16 = wrapping_add16;
-exports.signed = signed;
 exports.load = load;
 exports.load16 = load16;
 exports.store = store;

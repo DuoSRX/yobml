@@ -4,6 +4,7 @@
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Caml_int32 = require("bs-platform/lib/js/caml_int32.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
+var Utils$Yobml = require("./Utils.bs.js");
 
 function make(rom) {
   return /* record */[
@@ -62,15 +63,6 @@ var color_map = /* array */[
   ]
 ];
 
-function signed(v) {
-  var match = v > 127;
-  if (match) {
-    return -(Pervasives.lnot(v) + 1 & 255) | 0;
-  } else {
-    return v;
-  }
-}
-
 function set_pixel(gpu, x, y, color) {
   var offset = ((Caml_int32.imul(y, 160) + x | 0) << 2);
   Caml_array.caml_array_set(gpu[/* frame */5], offset + 0 | 0, color[/* r */0]);
@@ -98,7 +90,7 @@ function render_background(gpu, io_regs) {
   for(var px = 0; px <= 159; ++px){
     var x = ((0 + px | 0) / 8 | 0) % 32 & 65535;
     var tile = load(gpu, (tile_map + (y << 5) | 0) + x & 65535);
-    var ptr = tile_data !== 36864 ? tile_data + (tile << 4) & 65535 : tile_data + (signed(tile) << 4) & 65535;
+    var ptr = tile_data !== 36864 ? tile_data + (tile << 4) & 65535 : tile_data + (Utils$Yobml.signed(tile) << 4) & 65535;
     var ptr$1 = ptr + (y_offset << 1) & 65535;
     var p0 = load(gpu, ptr$1);
     var p1 = load(gpu, ptr$1 + 1 | 0);
@@ -392,7 +384,6 @@ exports.make = make;
 exports.load = load;
 exports.store = store;
 exports.color_map = color_map;
-exports.signed = signed;
 exports.set_pixel = set_pixel;
 exports.render_background = render_background;
 exports.render_sprites = render_sprites;

@@ -1,3 +1,5 @@
+open Utils
+
 [@bs.deriving jsConverter]
 type t = {
   pc : int, // program counter
@@ -30,6 +32,18 @@ let set_register = (cpu, register, value) =>
 
 let set_register16 = (cpu, register, value) =>
   Registers.set16(cpu.registers, register, value land 0xFFFF);
+
+let push = (cpu, value) => {
+  let sp = get_register16(cpu, SP)->wrapping_add16(_, -1)
+  Memory.store(cpu.memory, sp, value);
+  set_register16(cpu, SP, sp);
+}
+
+let push16 = (cpu, value) => {
+  let sp = get_register16(cpu, SP)->wrapping_add16(_, -2)
+  Memory.store16(cpu.memory, sp, value);
+  set_register16(cpu, SP, sp);
+}
 
 let has_flag = (cpu, flag) => {
   switch(flag) {
