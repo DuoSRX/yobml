@@ -740,6 +740,12 @@ let scf = (cpu) => {
   bump(cpu, cpu.pc, 4)
 }
 
+let set = (cpu, r, n) => {
+  let value = get_register(cpu, r)
+  set_register(cpu, r, (value lor (1 lsl n)))
+  bump(cpu, cpu.pc, 8)
+}
+
 let set_hl = (cpu, n) => {
   let address = get_register16(cpu, HL)
   let value = load(cpu, address)
@@ -927,6 +933,7 @@ let execute = (cpu, instruction) => switch(instruction) {
   | Rrc(s) => rrc(cpu, s)
   | Rst(n) => rst(cpu, n)
   | Scf => scf(cpu)
+  | Set(n, r) => set(cpu, r, n)
   | Set_hl(n) => set_hl(cpu, n)
   | Sla(s) => sla(cpu, s)
   | Sra(s) => sra(cpu, s)
