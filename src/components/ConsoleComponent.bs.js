@@ -5,6 +5,7 @@ var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
 var Printf = require("bs-platform/lib/js/printf.js");
+var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Memory$Yobml = require("../Memory.bs.js");
 var Console$Yobml = require("../Console.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
@@ -32,7 +33,7 @@ var display = (
 
 var ConsoleFailure = Caml_exceptions.create("ConsoleComponent-Yobml.ConsoleFailure");
 
-var $$console = /* record */[/* contents */Console$Yobml.make(/* array */[])];
+var $$console = /* record */[/* contents */Console$Yobml.make(Caml_array.caml_make_vect(512, 0))];
 
 function step(canvas) {
   while(!$$console[0][/* gpu */1][/* new_frame */10]) {

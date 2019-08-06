@@ -8,12 +8,14 @@ var Timer$Yobml = require("./Timer.bs.js");
 var Utils$Yobml = require("./Utils.bs.js");
 var Memory$Yobml = require("./Memory.bs.js");
 var CpuExec$Yobml = require("./CpuExec.bs.js");
+var Cartridge$Yobml = require("./Cartridge.bs.js");
 
 function make(rom) {
-  var gpu = Gpu$Yobml.make(rom);
+  var cartridge = Cartridge$Yobml.make(rom);
+  var gpu = Gpu$Yobml.make(cartridge);
   var input = Input$Yobml.make(/* () */0);
   var timer = Timer$Yobml.make(/* () */0);
-  var memory = Memory$Yobml.make(rom, gpu, input, timer);
+  var memory = Memory$Yobml.make(cartridge, gpu, input, timer);
   var cpu = Cpu$Yobml.make(memory);
   return /* record */[
           /* cpu */cpu,
@@ -107,7 +109,7 @@ function run($$console) {
       gpu[/* new_frame */10] = false;
     }
     var init = cpu$1[/* memory */4];
-    var memory_000 = /* rom */init[/* rom */0];
+    var memory_000 = /* cartridge */init[/* cartridge */0];
     var memory_001 = /* wram */init[/* wram */1];
     var memory_002 = /* exram */init[/* exram */2];
     var memory_003 = /* io */init[/* io */3];
@@ -221,7 +223,7 @@ function step($$console) {
   }
   var cpu$1 = interrupt(cpu);
   var init$1 = cpu$1[/* memory */4];
-  var memory_000 = /* rom */init$1[/* rom */0];
+  var memory_000 = /* cartridge */init$1[/* cartridge */0];
   var memory_001 = /* wram */init$1[/* wram */1];
   var memory_002 = /* exram */init$1[/* exram */2];
   var memory_003 = /* io */init$1[/* io */3];
