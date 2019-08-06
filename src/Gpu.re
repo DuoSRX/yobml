@@ -8,7 +8,8 @@ type t = {
   mode: mode,
   lcd: int,
   control: int,
-  ly: int,
+  mutable ly: int,
+  mutable lyc: int,
   cycles: int,
   frame: array(int),
   vram: array(int),
@@ -25,6 +26,7 @@ let make = (~cartridge) => {
   lcd: 0x80,
   control: 0,
   ly: 0,
+  lyc: 0,
   scroll_x: 0,
   scroll_y: 0,
   cycles: 0,
@@ -174,7 +176,7 @@ let step = (gpu, cycles, lcd_on, io_regs) => {
   let cycles = gpu.cycles + cycles
   let gpu = {...gpu, interrupts: 0} // reset interrupts... bleh
 
-  let gpu' = switch (gpu.mode) {
+  let gpu = switch (gpu.mode) {
   | OamRead when cycles >= 80 => {
       let cycles = cycles - 80;
       set_mode({...gpu, cycles}, LcdTransfer)
@@ -211,5 +213,9 @@ let step = (gpu, cycles, lcd_on, io_regs) => {
   }
 
   // TODO: Ly and Lyc compare + interrupt
-  gpu'
+  if (gpu.ly == gpu.lyc) {
+    {...gpu, lcd: set_bit(gpu.lcd, 6), interrupts: gpu.interrupts lor 2}
+  } else {
+    {...gpu, lcd: set_bit(gpu.lcd, 6)}
+  };
 }

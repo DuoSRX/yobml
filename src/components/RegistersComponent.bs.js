@@ -5,8 +5,6 @@ var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
 var Printf = require("bs-platform/lib/js/printf.js");
-var Cpu$Yobml = require("../Cpu.bs.js");
-var CpuExec$Yobml = require("../CpuExec.bs.js");
 
 var initial_state = /* record */[
   /* af */0,
@@ -57,39 +55,11 @@ function w2hex(word) {
 }
 
 function RegistersComponent(Props) {
-  var $$console = Props.console;
+  Props.console;
   var match = React.useState((function () {
           return initial_state;
         }));
-  var setState = match[1];
   var state = match[0];
-  React.useEffect((function () {
-          setInterval((function (param) {
-                  var cpu = $$console[0][/* cpu */0];
-                  var af = Cpu$Yobml.get_register16(cpu, /* AF */0);
-                  var bc = Cpu$Yobml.get_register16(cpu, /* BC */1);
-                  var de = Cpu$Yobml.get_register16(cpu, /* DE */2);
-                  var hl = Cpu$Yobml.get_register16(cpu, /* HL */3);
-                  var sp = Cpu$Yobml.get_register16(cpu, /* SP */4);
-                  var flags = CpuExec$Yobml.pretty_flags(cpu);
-                  var buttons = $$console[0][/* input */3][/* buttons */1];
-                  var dpad = $$console[0][/* input */3][/* dpad */0];
-                  return Curry._1(setState, (function (_s) {
-                                return /* record */[
-                                        /* af */af,
-                                        /* bc */bc,
-                                        /* de */de,
-                                        /* hl */hl,
-                                        /* sp */sp,
-                                        /* pc */cpu[/* pc */0],
-                                        /* flags */flags,
-                                        /* buttons */buttons,
-                                        /* dpad */dpad
-                                      ];
-                              }));
-                }), 16);
-          return undefined;
-        }), ([]));
   return React.createElement("code", undefined, React.createElement("div", {
                   id: "reg-PC"
                 }, "PC = " + w2hex(state[/* pc */5])), React.createElement("div", {

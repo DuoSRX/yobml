@@ -36,7 +36,7 @@ var ConsoleFailure = Caml_exceptions.create("ConsoleComponent-Yobml.ConsoleFailu
 var $$console = /* record */[/* contents */Console$Yobml.make(Caml_array.caml_make_vect(512, 0))];
 
 function step(canvas) {
-  while(!$$console[0][/* gpu */1][/* new_frame */12]) {
+  while(!$$console[0][/* gpu */1][/* new_frame */13]) {
     var tmp;
     try {
       tmp = Console$Yobml.step($$console[0]);
@@ -83,8 +83,8 @@ function step(canvas) {
     }
     $$console[0] = tmp;
   };
-  Curry._2(display, canvas, $$console[0][/* gpu */1][/* frame */5]);
-  $$console[0][/* gpu */1][/* new_frame */12] = false;
+  Curry._2(display, canvas, $$console[0][/* gpu */1][/* frame */6]);
+  $$console[0][/* gpu */1][/* new_frame */13] = false;
   requestAnimationFrame((function (param) {
           return step(canvas);
         }));
@@ -136,9 +136,7 @@ function ConsoleComponent(Props) {
           Curry._1(fetch_rom, "http://localhost:8000/roms/supermarioland.gb").then((function (rom) {
                   Curry._1(dispatch, /* Loaded */1);
                   $$console[0] = Console$Yobml.make(rom);
-                  requestAnimationFrame((function (param) {
-                          return step(Curry._1(get_display, /* () */0));
-                        }));
+                  step(Curry._1(get_display, /* () */0));
                   return Promise.resolve(/* () */0);
                 }));
           addEventListener("keydown", (function (ev) {
