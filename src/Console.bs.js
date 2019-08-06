@@ -4,19 +4,22 @@
 var Cpu$Yobml = require("./Cpu.bs.js");
 var Gpu$Yobml = require("./Gpu.bs.js");
 var Input$Yobml = require("./Input.bs.js");
+var Timer$Yobml = require("./Timer.bs.js");
 var Memory$Yobml = require("./Memory.bs.js");
 var CpuExec$Yobml = require("./CpuExec.bs.js");
 
 function make(rom) {
   var gpu = Gpu$Yobml.make(rom);
   var input = Input$Yobml.make(/* () */0);
-  var memory = Memory$Yobml.make(rom, gpu, input);
+  var timer = Timer$Yobml.make(/* () */0);
+  var memory = Memory$Yobml.make(rom, gpu, input, timer);
   var cpu = Cpu$Yobml.make(memory);
   return /* record */[
           /* cpu */cpu,
           /* gpu */gpu,
           /* memory */memory,
           /* input */input,
+          /* timer */timer,
           /* tracing */false
         ];
 }
@@ -49,6 +52,20 @@ function interrupt(cpu) {
       Memory$Yobml.store(cpu[/* memory */4], 65295, isf & 286331137);
       return /* record */[
               /* pc */72,
+              /* cycle */cpu[/* cycle */1],
+              /* ime */false,
+              /* registers */cpu[/* registers */3],
+              /* memory */cpu[/* memory */4],
+              /* halted */cpu[/* halted */5],
+              /* serial */cpu[/* serial */6]
+            ];
+    } else if ((ise & 4) > 0 && (isf & 4) > 0) {
+      var sp$2 = Cpu$Yobml.get_register16(cpu, /* SP */4) - 2 | 0;
+      Memory$Yobml.store16(cpu[/* memory */4], sp$2, cpu[/* pc */0]);
+      Cpu$Yobml.set_register16(cpu, /* SP */4, sp$2);
+      Memory$Yobml.store(cpu[/* memory */4], 65295, isf & 286330897);
+      return /* record */[
+              /* pc */80,
               /* cycle */cpu[/* cycle */1],
               /* ime */false,
               /* registers */cpu[/* registers */3],
@@ -91,6 +108,7 @@ function run($$console) {
     var memory_003 = /* io */init[/* io */3];
     var memory_004 = /* hram */init[/* hram */4];
     var memory_006 = /* input */init[/* input */6];
+    var memory_007 = /* timer */init[/* timer */7];
     var memory = /* record */[
       memory_000,
       memory_001,
@@ -98,7 +116,8 @@ function run($$console) {
       memory_003,
       memory_004,
       /* gpu */gpu,
-      memory_006
+      memory_006,
+      memory_007
     ];
     var cpu$2 = /* record */[
       /* pc */cpu$1[/* pc */0],
@@ -116,7 +135,8 @@ function run($$console) {
         /* gpu */gpu,
         /* memory */memory,
         /* input */$$console$1[/* input */3],
-        /* tracing */$$console$1[/* tracing */4]
+        /* timer */$$console$1[/* timer */4],
+        /* tracing */$$console$1[/* tracing */5]
       ];
       continue ;
     } else {
@@ -181,13 +201,19 @@ function step($$console) {
       /* serial */init[/* serial */6]
     ];
   } else {
-    cpu = CpuExec$Yobml.step($$console[/* cpu */0], $$console[/* tracing */4])[0];
+    cpu = CpuExec$Yobml.step($$console[/* cpu */0], $$console[/* tracing */5])[0];
+  }
+  var elapsed = cpu[/* cycle */1] - prev_cy | 0;
+  var timer_int = Timer$Yobml.tick($$console[/* timer */4], elapsed / 4 | 0);
+  if (timer_int) {
+    var isf = Memory$Yobml.load($$console[/* memory */2], 65295);
+    Memory$Yobml.store($$console[/* memory */2], 65295, isf | 4);
   }
   var lcd_on = (Memory$Yobml.load(cpu[/* memory */4], 65344) & 128) > 0;
-  var gpu = Gpu$Yobml.step($$console[/* gpu */1], cpu[/* cycle */1] - prev_cy | 0, lcd_on, cpu[/* memory */4][/* io */3]);
+  var gpu = Gpu$Yobml.step($$console[/* gpu */1], elapsed, lcd_on, cpu[/* memory */4][/* io */3]);
   if (gpu[/* interrupts */9] > 0) {
-    var isf = Memory$Yobml.load(cpu[/* memory */4], 65295);
-    Memory$Yobml.store(cpu[/* memory */4], 65295, isf | gpu[/* interrupts */9]);
+    var isf$1 = Memory$Yobml.load(cpu[/* memory */4], 65295);
+    Memory$Yobml.store(cpu[/* memory */4], 65295, isf$1 | gpu[/* interrupts */9]);
     gpu[/* interrupts */9] = 0;
   }
   var cpu$1 = interrupt(cpu);
@@ -198,6 +224,7 @@ function step($$console) {
   var memory_003 = /* io */init$1[/* io */3];
   var memory_004 = /* hram */init$1[/* hram */4];
   var memory_006 = /* input */init$1[/* input */6];
+  var memory_007 = /* timer */init$1[/* timer */7];
   var memory = /* record */[
     memory_000,
     memory_001,
@@ -205,7 +232,8 @@ function step($$console) {
     memory_003,
     memory_004,
     /* gpu */gpu,
-    memory_006
+    memory_006,
+    memory_007
   ];
   var cpu$2 = /* record */[
     /* pc */cpu$1[/* pc */0],
@@ -221,7 +249,8 @@ function step($$console) {
           /* gpu */gpu,
           /* memory */memory,
           /* input */$$console[/* input */3],
-          /* tracing */$$console[/* tracing */4]
+          /* timer */$$console[/* timer */4],
+          /* tracing */$$console[/* tracing */5]
         ];
 }
 

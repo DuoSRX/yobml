@@ -3,13 +3,15 @@ type t = {
   gpu: Gpu.t,
   memory: Memory.t,
   input: Input.t,
+  timer: Timer.t,
   mutable tracing: bool
 };
 
 let make = (rom) => {
   let gpu = Gpu.make(~rom);
   let input = Input.make();
-  let memory = Memory.make(~rom, ~gpu, ~input);
+  let timer = Timer.make();
+  let memory = Memory.make(~rom, ~gpu, ~input, ~timer);
   let cpu = Cpu.make(~memory);
 
   {
@@ -17,6 +19,7 @@ let make = (rom) => {
     gpu,
     memory,
     input,
+    timer,
     tracing: false
   }
 };
@@ -34,20 +37,24 @@ let interrupt = (cpu: Cpu.t) => {
       // Js.log(Printf.sprintf("ISE %02X - ISF %02X", ise, isf))
       // TODO: Refactor this bullshit
       if (ise land 1 > 0 && isf land 1 > 0) { // VBLANK
-        // Js.log("VBLANK")
         let sp = Cpu.get_register16(cpu, SP) - 2
         Memory.store16(cpu.memory, sp, cpu.pc)
         Cpu.set_register16(cpu, SP, sp);
         Memory.store(cpu.memory, 0xFF0F, isf land 0x1111_1110);
         {...cpu, pc:0x40, ime:false }
       } else if (ise land 2 > 0 && isf land 2 > 0) { //LCDSTATS
-        // Js.log("LCDSTATS")
         let sp = Cpu.get_register16(cpu, SP) - 2
         Memory.store16(cpu.memory, sp, cpu.pc)
         Cpu.set_register16(cpu, SP, sp);
         Memory.store(cpu.memory, 0xFF0F, isf land 0x1111_1101);
         {...cpu, pc:0x48, ime:false }
-      } else { // TODO: Timer, Serial, Joypad ints
+      } else if (ise land 4 > 0 && isf land 4 > 0) {
+        let sp = Cpu.get_register16(cpu, SP) - 2
+        Memory.store16(cpu.memory, sp, cpu.pc)
+        Cpu.set_register16(cpu, SP, sp);
+        Memory.store(cpu.memory, 0xFF0F, isf land 0x1111_1011);
+        {...cpu, pc:0x50, ime:false }
+      } else { // TODO: Serial, Joypad ints
         cpu
       }
     }
@@ -147,10 +154,17 @@ let step = (console) => {
   } else {
     let (cpu, _instruction) = CpuExec.step(~cpu=console.cpu, ~tracing=console.tracing);
     cpu
+  };
+  let elapsed = cpu.cycle - prev_cy;
+
+  let timer_int = Timer.tick(console.timer, elapsed / 4)
+  if (timer_int) {
+    let isf = Memory.load(console.memory, 0xFF0F)
+    Memory.store(console.memory, 0xFF0F, (isf lor 0x4))
   }
 
   let lcd_on = Memory.load(cpu.memory, 0xFF40) land 0x80 > 0;
-  let gpu = Gpu.step(console.gpu, cpu.cycle - prev_cy, lcd_on, cpu.memory.io);
+  let gpu = Gpu.step(console.gpu, elapsed, lcd_on, cpu.memory.io);
 
   if (gpu.interrupts > 0) {
     let isf = Memory.load(cpu.memory, 0xFF0F);
