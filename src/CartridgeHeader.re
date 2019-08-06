@@ -22,7 +22,6 @@ let get_ram_size = (n) => switch(n) {
 | 1 => 0x800
 | 2 => 0x2000
 | 3 => 0x8000
-| 4 => 0x20000
 | _ => failwith("Unhandled ram size")
 }
 

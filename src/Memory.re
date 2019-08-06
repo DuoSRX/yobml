@@ -3,7 +3,6 @@ open Printf
 type t = {
   cartridge: Cartridge.t,
   wram: array(int),
-  exram: array(int),
   io: array(int),
   hram: array(int),
   gpu: Gpu.t,
@@ -18,8 +17,6 @@ let make = (~cartridge, ~gpu, ~input, ~timer) => {
     input,
     timer,
     wram: Array.make(0x2000, 0),
-    // External ram FIXME: this depends on the mapper
-    exram: Array.make(0x2000, 0),
     io: Array.make(0x80, 0),
     hram: Array.make(0x80, 0),
   }
@@ -28,8 +25,6 @@ let make = (~cartridge, ~gpu, ~input, ~timer) => {
 exception InvalidMemoryAccess(string)
 
 let load = (mem, address) => {
-  if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X", address)) };
-
   if (address == 0xFF04) {
     mem.timer.div
   } else if (address == 0xFF05) {
@@ -38,6 +33,10 @@ let load = (mem, address) => {
     mem.timer.tma
   } else if (address == 0xFF07) {
     mem.timer.tac
+  } else if (address == 0xFF42) {
+    mem.gpu.scroll_y
+  } else if (address == 0xFF43) {
+    mem.gpu.scroll_x
   } else if (address == 0xFF44) {
     mem.gpu.ly
   } else if (address == 0xFF00) {
@@ -46,8 +45,8 @@ let load = (mem, address) => {
     mem.cartridge.load(address)
   } else if (address < 0xA000) {
     mem.gpu.vram[address land 0x1FFF]
-  } else if (address >= 0xA000 && address < 0xC000) { // FIXME: mapper
-    mem.exram[address land 0x1FFF]
+  } else if (address >= 0xA000 && address <= 0xBFFF) {
+    mem.cartridge.load(address)
   } else if (address >= 0xC000 && address < 0xE000) {
     mem.wram[address land 0x1FFF]
   } else if (address >= 0xE000 && address < 0xFE00) { // Mirror of C000-DDFF
@@ -66,8 +65,6 @@ let load = (mem, address) => {
 }
 
 let store = (mem, address, value) => {
-  if (address >= 0xFF04 && address <= 0xFF07) { Js.log(Printf.sprintf("%04X = %02X", address, value)) };
-
   if (address == 0xFF00) {
     Input.set(mem.input, value)
   } else if (address == 0xFF04) {
@@ -78,6 +75,10 @@ let store = (mem, address, value) => {
     mem.timer.tma = value
   } else if (address == 0xFF07) {
     mem.timer.tac = value
+  } else if (address == 0xFF42) {
+    mem.gpu.scroll_y = value
+  } else if (address == 0xFF43) {
+    mem.gpu.scroll_x = value
   } else if (address == 0xFF46) {
     // TODO: handle clock cycles for DMA (move into GPU or CPU?)
     let start = (value lsl 8) land 0xFFFF
@@ -88,8 +89,8 @@ let store = (mem, address, value) => {
     mem.cartridge.store(address, value)
   } else if (address < 0xA000) {
     mem.gpu.vram[address land 0x1FFF] = value
-  } else if (address >= 0xA000 && address < 0xC000) { // FIXME: mapper
-    mem.exram[address land 0x1FFF] = value
+  } else if (address >= 0xA000 && address <= 0xBFFF) {
+    mem.cartridge.store(address, value)
   } else if (address >= 0xC000 && address < 0xE000) {
     mem.wram[address land 0x1FFF] = value
   } else if (address >= 0xE000 && address < 0xFE00) { // Mirror of C000-DDFF

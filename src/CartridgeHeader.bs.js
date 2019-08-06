@@ -39,8 +39,6 @@ function get_ram_size(n) {
         return 8192;
     case 3 : 
         return 32768;
-    case 4 : 
-        return 131072;
     default:
       return Pervasives.failwith("Unhandled ram size");
   }

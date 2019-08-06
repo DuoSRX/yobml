@@ -98,33 +98,31 @@ function run($$console) {
     var match = CpuExec$Yobml.step($$console$1[/* cpu */0], false);
     var cpu = match[0];
     var lcd_on = (Memory$Yobml.load(cpu[/* memory */4], 65344) & 128) > 0;
-    var gpu = Gpu$Yobml.step($$console$1[/* gpu */1], cpu[/* cycle */1] - prev_cy | 0, lcd_on, cpu[/* memory */4][/* io */3]);
-    if (gpu[/* interrupts */9] > 0) {
+    var gpu = Gpu$Yobml.step($$console$1[/* gpu */1], cpu[/* cycle */1] - prev_cy | 0, lcd_on, cpu[/* memory */4][/* io */2]);
+    if (gpu[/* interrupts */11] > 0) {
       var isf = Memory$Yobml.load(cpu[/* memory */4], 65295);
-      Memory$Yobml.store(cpu[/* memory */4], 65295, isf | gpu[/* interrupts */9]);
-      gpu[/* interrupts */9] = 0;
+      Memory$Yobml.store(cpu[/* memory */4], 65295, isf | gpu[/* interrupts */11]);
+      gpu[/* interrupts */11] = 0;
     }
     var cpu$1 = interrupt(cpu);
-    if (gpu[/* new_frame */10] && lcd_on) {
-      gpu[/* new_frame */10] = false;
+    if (gpu[/* new_frame */12] && lcd_on) {
+      gpu[/* new_frame */12] = false;
     }
     var init = cpu$1[/* memory */4];
     var memory_000 = /* cartridge */init[/* cartridge */0];
     var memory_001 = /* wram */init[/* wram */1];
-    var memory_002 = /* exram */init[/* exram */2];
-    var memory_003 = /* io */init[/* io */3];
-    var memory_004 = /* hram */init[/* hram */4];
-    var memory_006 = /* input */init[/* input */6];
-    var memory_007 = /* timer */init[/* timer */7];
+    var memory_002 = /* io */init[/* io */2];
+    var memory_003 = /* hram */init[/* hram */3];
+    var memory_005 = /* input */init[/* input */5];
+    var memory_006 = /* timer */init[/* timer */6];
     var memory = /* record */[
       memory_000,
       memory_001,
       memory_002,
       memory_003,
-      memory_004,
       /* gpu */gpu,
-      memory_006,
-      memory_007
+      memory_005,
+      memory_006
     ];
     var cpu$2 = /* record */[
       /* pc */cpu$1[/* pc */0],
@@ -216,29 +214,27 @@ function step($$console) {
     request_interrupt(cpu, 4);
   }
   var lcd_on = (Memory$Yobml.load(cpu[/* memory */4], 65344) & 128) > 0;
-  var gpu = Gpu$Yobml.step($$console[/* gpu */1], elapsed, lcd_on, cpu[/* memory */4][/* io */3]);
-  if (gpu[/* interrupts */9] > 0) {
-    request_interrupt(cpu, gpu[/* interrupts */9]);
-    gpu[/* interrupts */9] = 0;
+  var gpu = Gpu$Yobml.step($$console[/* gpu */1], elapsed, lcd_on, cpu[/* memory */4][/* io */2]);
+  if (gpu[/* interrupts */11] > 0) {
+    request_interrupt(cpu, gpu[/* interrupts */11]);
+    gpu[/* interrupts */11] = 0;
   }
   var cpu$1 = interrupt(cpu);
   var init$1 = cpu$1[/* memory */4];
   var memory_000 = /* cartridge */init$1[/* cartridge */0];
   var memory_001 = /* wram */init$1[/* wram */1];
-  var memory_002 = /* exram */init$1[/* exram */2];
-  var memory_003 = /* io */init$1[/* io */3];
-  var memory_004 = /* hram */init$1[/* hram */4];
-  var memory_006 = /* input */init$1[/* input */6];
-  var memory_007 = /* timer */init$1[/* timer */7];
+  var memory_002 = /* io */init$1[/* io */2];
+  var memory_003 = /* hram */init$1[/* hram */3];
+  var memory_005 = /* input */init$1[/* input */5];
+  var memory_006 = /* timer */init$1[/* timer */6];
   var memory = /* record */[
     memory_000,
     memory_001,
     memory_002,
     memory_003,
-    memory_004,
     /* gpu */gpu,
-    memory_006,
-    memory_007
+    memory_005,
+    memory_006
   ];
   var cpu$2 = /* record */[
     /* pc */cpu$1[/* pc */0],
