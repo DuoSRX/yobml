@@ -13,12 +13,12 @@ type t = {
   frame: array(int),
   vram: array(int),
   oam: array(int),
-  rom: array(int),
+  cartridge: Cartridge.t,
   mutable interrupts: int,
   mutable new_frame: bool
 }
 
-let make = (~rom) => {
+let make = (~cartridge) => {
   mode: HBlank,
   lcd: 0x80,
   control: 0,
@@ -27,14 +27,14 @@ let make = (~rom) => {
   frame: Array.make(160 * 144 * 4, 0x7F),
   vram: Array.make(0x2000, 0),
   oam: Array.make(0xA0, 0),
-  rom,
+  cartridge,
   interrupts: 0,
   new_frame: false
 }
 
 let load = (gpu, address) => {
   if (address < 0x8000) {
-    gpu.rom[address]
+    gpu.cartridge.load(address)
   } else if (address >= 0x8000 && address <= 0x9FFF) {
     gpu.vram[address land 0x1FFF]
   } else {

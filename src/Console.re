@@ -10,10 +10,11 @@ type t = {
 };
 
 let make = (rom) => {
-  let gpu = Gpu.make(~rom);
+  let cartridge = Cartridge.make(~rom)
+  let gpu = Gpu.make(~cartridge);
   let input = Input.make();
   let timer = Timer.make();
-  let memory = Memory.make(~rom, ~gpu, ~input, ~timer);
+  let memory = Memory.make(~cartridge, ~gpu, ~input, ~timer);
   let cpu = Cpu.make(~memory);
 
   {

@@ -1,7 +1,7 @@
 open Printf
 
 type t = {
-  rom: array(int),
+  cartridge: Cartridge.t,
   wram: array(int),
   exram: array(int),
   io: array(int),
@@ -11,9 +11,9 @@ type t = {
   timer: Timer.t
 }
 
-let make = (~rom, ~gpu, ~input, ~timer) => {
+let make = (~cartridge, ~gpu, ~input, ~timer) => {
   {
-    rom,
+    cartridge,
     gpu,
     input,
     timer,
@@ -43,7 +43,7 @@ let load = (mem, address) => {
   } else if (address == 0xFF00) {
     Input.get(mem.input)
   } else if (address < 0x8000) {
-    mem.rom[address]
+    mem.cartridge.load(address)
   } else if (address < 0xA000) {
     mem.gpu.vram[address land 0x1FFF]
   } else if (address >= 0xA000 && address < 0xC000) { // FIXME: mapper
@@ -85,8 +85,7 @@ let store = (mem, address, value) => {
       mem.gpu.oam[offset] = load(mem, start + offset)
     }
   } else if (address < 0x8000) {
-    // mem.rom[address] = value // Can't write to ROM
-    ()
+    mem.cartridge.store(address, value)
   } else if (address < 0xA000) {
     mem.gpu.vram[address land 0x1FFF] = value
   } else if (address >= 0xA000 && address < 0xC000) { // FIXME: mapper

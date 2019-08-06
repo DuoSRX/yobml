@@ -42,7 +42,8 @@ let display: (canvas, array(int)) => unit = [%bs.raw
 
 exception ConsoleFailure(string)
 
-let console = ref(Console.make([||]));
+let console = ref(Console.make(Array.make(0x200, 0)));
+
 let rec step = (canvas) => {
   while (!console^.gpu.new_frame) {
     console := (try (Console.step(console^)) {
