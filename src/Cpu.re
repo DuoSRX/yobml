@@ -26,10 +26,10 @@ let get_register16 = (cpu, register) =>
   Registers.get16(cpu.registers, register)
 
 let set_register = (cpu, register, value) =>
-  Registers.set(cpu.registers, register, value);
+  Registers.set(cpu.registers, register, value land 0xFF);
 
 let set_register16 = (cpu, register, value) =>
-  Registers.set16(cpu.registers, register, value);
+  Registers.set16(cpu.registers, register, value land 0xFFFF);
 
 let has_flag = (cpu, flag) => {
   switch(flag) {

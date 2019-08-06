@@ -217,7 +217,7 @@ function cp_hl(cpu) {
   var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   var h = ($$byte & 15) > (reg & 15);
   Cpu$Yobml.set_flags(cpu, reg === $$byte, true, h, reg < $$byte, /* () */0);
-  return bump(cpu, cpu[/* pc */0], 8);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
 }
 
 function cp_n(cpu) {
@@ -716,7 +716,7 @@ function rla(cpu) {
   var prev_carry = match ? 1 : 0;
   var c = (a >>> 7) & 1;
   var a$1 = (a << 1) | prev_carry;
-  var c$1 = c === 0;
+  var c$1 = c === 1;
   Cpu$Yobml.set_flags(cpu, false, false, false, c$1, /* () */0);
   Cpu$Yobml.set_register(cpu, /* A */0, a$1);
   return bump(cpu, cpu[/* pc */0], 4);
@@ -739,7 +739,7 @@ function rlc(cpu, storage) {
 function rlca(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var c = (a & 128) > 0;
-  var a$1 = (a << 1);
+  var a$1 = (a << 1) & 255;
   var a$2 = c ? a$1 | 1 : a$1;
   Cpu$Yobml.set_flags(cpu, false, false, false, c, /* () */0);
   Cpu$Yobml.set_register(cpu, /* A */0, a$2);

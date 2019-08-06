@@ -50,11 +50,11 @@ function get_register16(cpu, register) {
 }
 
 function set_register(cpu, register, value) {
-  return Registers$Yobml.set(cpu[/* registers */3], register, value);
+  return Registers$Yobml.set(cpu[/* registers */3], register, value & 255);
 }
 
 function set_register16(cpu, register, value) {
-  return Registers$Yobml.set16(cpu[/* registers */3], register, value);
+  return Registers$Yobml.set16(cpu[/* registers */3], register, value & 65535);
 }
 
 function has_flag(cpu, flag) {
