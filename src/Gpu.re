@@ -188,23 +188,22 @@ let step = (gpu, cycles, lcd_on, io_regs) => {
         render_sprites(gpu, io_regs)
       };
       // TODO: render window
-      // TODO: render objs
-      set_mode({...gpu, cycles, interrupts:2}, HBlank)
+      set_mode({...gpu, cycles}, HBlank)
     }
   | HBlank when cycles >= 204 => {
       let cycles = cycles - 204;
       let ly = gpu.ly + 1
       if (ly == 144) {
-        set_mode({...gpu, cycles, ly, interrupts: 3, new_frame: true}, VBlank)
+        set_mode({...gpu, cycles, ly, interrupts: 1, new_frame: true}, VBlank)
       } else {
-        set_mode({...gpu, cycles, ly, interrupts: 2}, OamRead)
+        set_mode({...gpu, cycles, ly}, OamRead)
       }
     }
   | VBlank when cycles >= 456 => {
       let cycles = cycles - 456
       let ly = gpu.ly + 1
       if (ly >= 154) {
-        set_mode({...gpu, cycles, ly:0, interrupts: 2}, OamRead)
+        set_mode({...gpu, cycles, ly:0}, OamRead)
       } else {
         {...gpu, cycles, ly}
       }

@@ -281,7 +281,7 @@ function step(gpu, cycles, lcd_on, io_regs) {
                   /* cartridge */gpu$1[/* cartridge */9],
                   /* scroll_x */gpu$1[/* scroll_x */10],
                   /* scroll_y */gpu$1[/* scroll_y */11],
-                  /* interrupts */2,
+                  /* interrupts */gpu$1[/* interrupts */12],
                   /* new_frame */gpu$1[/* new_frame */13]
                 ], /* OamRead */2) : /* record */[
               /* mode */gpu$1[/* mode */0],
@@ -320,7 +320,7 @@ function step(gpu, cycles, lcd_on, io_regs) {
                   /* cartridge */gpu$1[/* cartridge */9],
                   /* scroll_x */gpu$1[/* scroll_x */10],
                   /* scroll_y */gpu$1[/* scroll_y */11],
-                  /* interrupts */3,
+                  /* interrupts */1,
                   /* new_frame */true
                 ], /* VBlank */0) : set_mode(/* record */[
                   /* mode */gpu$1[/* mode */0],
@@ -335,7 +335,7 @@ function step(gpu, cycles, lcd_on, io_regs) {
                   /* cartridge */gpu$1[/* cartridge */9],
                   /* scroll_x */gpu$1[/* scroll_x */10],
                   /* scroll_y */gpu$1[/* scroll_y */11],
-                  /* interrupts */2,
+                  /* interrupts */gpu$1[/* interrupts */12],
                   /* new_frame */gpu$1[/* new_frame */13]
                 ], /* OamRead */2);
         } else {
@@ -385,7 +385,7 @@ function step(gpu, cycles, lcd_on, io_regs) {
                 /* cartridge */gpu$1[/* cartridge */9],
                 /* scroll_x */gpu$1[/* scroll_x */10],
                 /* scroll_y */gpu$1[/* scroll_y */11],
-                /* interrupts */2,
+                /* interrupts */gpu$1[/* interrupts */12],
                 /* new_frame */gpu$1[/* new_frame */13]
               ], /* HBlank */1);
         } else {
