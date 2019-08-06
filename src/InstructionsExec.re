@@ -139,7 +139,8 @@ let cp_hl = (cpu) => {
   let byte = get_register16(cpu, HL) |> load(cpu)
   let h = (byte land 0xF) > (reg land 0xF);
   set_flags(cpu, ~z=(reg == byte), ~n=true, ~h, ~c=(reg < byte), ());
-  bump(cpu, cpu.pc, 8)
+  // FIXME: This shouldn't increment PC but somehow doesn't work otherwise?!
+  bump(cpu, cpu.pc + 1, 8)
 }
 
 let cp_n = (cpu) => {
@@ -147,6 +148,7 @@ let cp_n = (cpu) => {
   let byte = load_next(cpu);
   let h = (byte land 0xF) > (reg land 0xF);
   set_flags(cpu, ~z=(reg == byte), ~n=true, ~h, ~c=(reg < byte), ());
+  // FIXME: This shouldn't increment PC but somehow doesn't work otherwise?!
   bump(cpu, cpu.pc + 1, 8)
 }
 
@@ -608,7 +610,7 @@ let rla = (cpu) => {
   let prev_carry = has_flag(cpu, C) ? 1 : 0
   let c = (a lsr 7) land 1
   let a = (a lsl 1) lor prev_carry
-  let c = (c == 0)
+  let c = (c == 1)
   set_flags(cpu, ~c, ~n=false, ~h=false, ~z=false, ())
   set_register(cpu, A, a)
   bump(cpu, cpu.pc, 4)
@@ -630,7 +632,7 @@ let rlc = (cpu, storage) => {
 let rlca = (cpu) => {
   let a = get_register(cpu, A)
   let c = a land 0x80 > 0
-  let a = a lsl 1
+  let a = (a lsl 1) land 0xFF
   let a = c ? a lor 1 : a
   set_flags(cpu, ~c, ~n=false, ~h=false, ~z=false, ())
   set_register(cpu, A, a)
