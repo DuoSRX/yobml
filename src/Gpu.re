@@ -1,3 +1,5 @@
+open Utils
+
 // http://bgb.bircd.org/pandocs.htm#videodisplay
 
 type mode = VBlank | HBlank | OamRead | LcdTransfer
@@ -57,8 +59,6 @@ let color_map = [|
   { r: 0x0F, g: 0x38, b: 0x0F }, // darkest green
 |]
 // let color_map = [|0xFF, 0xA0, 0x50, 0x0|]
-
-let signed = (v) => v > 0x7F ? -((lnot(v) + 1) land 0xFF) : v
 
 let set_pixel = (gpu, ~x, ~y, ~color) => {
   let offset = (y * 160 + x) * 4 // 160 pixel per row, 4 byte per pixel

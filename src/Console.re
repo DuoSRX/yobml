@@ -1,3 +1,5 @@
+open Utils
+
 type t = {
   cpu: Cpu.t,
   gpu: Gpu.t,
@@ -24,45 +26,38 @@ let make = (rom) => {
   }
 };
 
+let is_interrupt_enabled = (cpu:Cpu.t, n) => {
+  Memory.load(cpu.memory, 0xFFFF)->is_bit_set(_, n)
+}
+
+let interrupt_vector = (n) => switch(n) {
+| 0 => 0x40
+| 1 => 0x48
+| 2 => 0x50
+| 3 => 0x58
+| _ => 0x60
+}
+
 let interrupt = (cpu: Cpu.t) => {
   cpu.halted = false
 
-  if (cpu.ime) {
-    let ise = Memory.load(cpu.memory, 0xFFFF)
-    let isf = Memory.load(cpu.memory, 0xFF0F)
-
-    if (isf == 0) {
-      cpu
+  let rec check_interrupts = (n) => {
+    let if_val = Memory.load(cpu.memory, 0xFF0F);
+    if (is_bit_set(if_val, n) && is_interrupt_enabled(cpu, n)) {
+      let if_val = clear_bit(if_val, n)
+      Memory.store(cpu.memory, 0xFF0F, if_val)
+      Cpu.push16(cpu, cpu.pc);
+      {...cpu, pc: interrupt_vector(n), ime: false }
     } else {
-      // Js.log(Printf.sprintf("ISE %02X - ISF %02X", ise, isf))
-      // TODO: Refactor this bullshit
-      if (ise land 1 > 0 && isf land 1 > 0) { // VBLANK
-        let sp = Cpu.get_register16(cpu, SP) - 2
-        Memory.store16(cpu.memory, sp, cpu.pc)
-        Cpu.set_register16(cpu, SP, sp);
-        Memory.store(cpu.memory, 0xFF0F, isf land 0x1111_1110);
-        {...cpu, pc:0x40, ime:false }
-      } else if (ise land 2 > 0 && isf land 2 > 0) { //LCDSTATS
-        let sp = Cpu.get_register16(cpu, SP) - 2
-        Memory.store16(cpu.memory, sp, cpu.pc)
-        Cpu.set_register16(cpu, SP, sp);
-        Memory.store(cpu.memory, 0xFF0F, isf land 0x1111_1101);
-        {...cpu, pc:0x48, ime:false }
-      } else if (ise land 4 > 0 && isf land 4 > 0) {
-        let sp = Cpu.get_register16(cpu, SP) - 2
-        Memory.store16(cpu.memory, sp, cpu.pc)
-        Cpu.set_register16(cpu, SP, sp);
-        Memory.store(cpu.memory, 0xFF0F, isf land 0x1111_1011);
-        {...cpu, pc:0x50, ime:false }
-      } else { // TODO: Serial, Joypad ints
-        cpu
-      }
+      // TODO: got up to 5, missing joypad and serial
+      n == 5 ? cpu : check_interrupts(n + 1)
     }
-  } else {
-    cpu
   }
+
+  cpu.ime ? check_interrupts(0) : cpu
 }
 
+// TODO: Delete this? It was originally used in console mode
 let run = (console) => {
   let rec loop = (console, steps) => {
     let prev_cy = console.cpu.cycle
@@ -79,31 +74,9 @@ let run = (console) => {
 
     let cpu = interrupt(cpu)
 
-    // if (gpu.new_frame && lcd_on && steps mod 10000 == 0) {
     if (gpu.new_frame && lcd_on) {
-      // on_frame(gpu.frame);
-      // Js.log("new frame");
       gpu.new_frame = false
     }
-    // if (gpu.new_frame && lcd_on && steps mod 10000 == 0) {
-      // printf("%s", "\033c")
-    //   Array.iter((row) => {
-    //     Array.iter((px) => {
-    //       //  .:-=+*#%@
-    //       let sigil = switch(px) {
-    //       | 0 => " " //"."
-    //       | 1 => "."//"-"
-    //       | 2 => "=" //"o"
-    //       | 3 => "@" //"X"
-    //       | _ => "?"
-    //       }
-    //       Printf.printf("%s", sigil)
-    //     }, row);
-    //     Printf.printf("\n")
-    //   }, console.gpu.frame);
-    //   gpu.new_frame = false
-    // }
-
     let memory = {...cpu.memory, gpu}
     let cpu = {...cpu, memory}
 
@@ -112,7 +85,6 @@ let run = (console) => {
     } else {
       CpuExec.trace(cpu, instruction)
     }
-    // onStep(cpu);
   }
 
   loop(console, 0)

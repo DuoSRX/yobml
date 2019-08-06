@@ -1,11 +1,8 @@
 open Cpu
 open Instructions
+open Utils
 
 exception FooEx
-
-let wrapping_add = (a, b) => (a + b) land 0xFF
-let wrapping_add16 = (a, b) => (a + b) land 0xFFFF
-let signed = (v) => v > 0x7F ? -((lnot(v) + 1) land 0xFF) : v
 
 let load = (cpu, address) => Memory.load(cpu.memory, address)
 let load16 = (cpu, address) => Memory.load16(cpu.memory, address)
