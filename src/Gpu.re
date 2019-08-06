@@ -14,6 +14,8 @@ type t = {
   vram: array(int),
   oam: array(int),
   cartridge: Cartridge.t,
+  mutable scroll_x: int,
+  mutable scroll_y: int,
   mutable interrupts: int,
   mutable new_frame: bool
 }
@@ -23,6 +25,8 @@ let make = (~cartridge) => {
   lcd: 0x80,
   control: 0,
   ly: 0,
+  scroll_x: 0,
+  scroll_y: 0,
   cycles: 0,
   frame: Array.make(160 * 144 * 4, 0x7F),
   vram: Array.make(0x2000, 0),
@@ -79,8 +83,8 @@ let render_background = (gpu, io_regs) => {
 
   let ly = gpu.ly
   // http://bgb.bircd.org/pandocs.htm#lcdpositionandscrolling
-  let scroll_x = 0 // TODO: use actual x in FF41
-  let scroll_y = 0 // TODO: use actual y in FF42
+  let scroll_x = gpu.scroll_x
+  let scroll_y = gpu.scroll_y
   let ff40 = io_regs[0x40]
   let tile_data = ff40 land 0x10 > 0 ? 0x8000 : 0x9000 // 8800 or 9000?
   let tile_map = ff40 land 0x8 > 0 ? 0x9C00 : 0x9800
