@@ -22,17 +22,17 @@ let trace = (cpu, instruction) => {
   );
 }
 
-let step = (~cpu) => {
+let step = (~cpu, ~tracing) => {
   let (cpu, instruction) = switch(Memory.load(cpu.memory, cpu.pc)) {
   | 0xCB => {
       let byte = Memory.load(cpu.memory, cpu.pc + 1);
       let instruction = Instructions.decode_cb(byte);
-      // trace(cpu, instruction);
+      if (tracing) { trace(cpu, instruction) };
       ({...cpu, pc: cpu.pc + 2}, instruction)
     }
   | opcode => {
       let instruction = Instructions.decode(opcode);
-      // trace(cpu, instruction);
+      if (tracing) { trace(cpu, instruction) };
       ({...cpu, pc: cpu.pc + 1}, instruction)
     }
   };

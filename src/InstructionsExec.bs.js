@@ -217,7 +217,7 @@ function cp_hl(cpu) {
   var $$byte = Memory$Yobml.load(cpu[/* memory */4], address);
   var h = ($$byte & 15) > (reg & 15);
   Cpu$Yobml.set_flags(cpu, reg === $$byte, true, h, reg < $$byte, /* () */0);
-  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function cp_n(cpu) {
@@ -490,7 +490,7 @@ function adc(cpu, r) {
   var c = result > 255;
   var h = (((a & 15) + (b & 15) | 0) + carry | 0) > 15;
   Cpu$Yobml.set_flags(cpu, (result & 255) === 0, false, h, c, /* () */0);
-  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function adc_d8(cpu) {
@@ -517,7 +517,7 @@ function adc_hl(cpu) {
   var c = result > 255;
   var h = (((a & 15) + (b & 15) | 0) + carry | 0) > 15;
   Cpu$Yobml.set_flags(cpu, (result & 255) === 0, false, h, c, /* () */0);
-  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function add_d8(cpu) {
@@ -584,7 +584,7 @@ function sub_hl(cpu) {
   var h = (value & 15) > (a & 15);
   var c = value > a;
   Cpu$Yobml.set_flags(cpu, a === b, true, h, c, /* () */0);
-  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
+  return bump(cpu, cpu[/* pc */0], 8);
 }
 
 function jp(cpu) {
@@ -608,7 +608,7 @@ function jp_hl(cpu) {
 
 function jr_e8(cpu) {
   var $$byte = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-  var offset = $$byte > 127 ? -(Pervasives.lnot($$byte) + 1 & 255) | 0 : $$byte;
+  var offset = signed($$byte);
   return bump(cpu, (cpu[/* pc */0] + offset | 0) + 1 | 0, 12);
 }
 
@@ -616,7 +616,7 @@ function jr(cpu, flag, condition) {
   var do_jump = Cpu$Yobml.has_flag(cpu, flag) === condition;
   if (do_jump) {
     var $$byte = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
-    var offset = $$byte > 127 ? -(Pervasives.lnot($$byte) + 1 & 255) | 0 : $$byte;
+    var offset = signed($$byte);
     return bump(cpu, (cpu[/* pc */0] + offset | 0) + 1 | 0, 12);
   } else {
     return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);

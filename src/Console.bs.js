@@ -16,7 +16,8 @@ function make(rom) {
           /* cpu */cpu,
           /* gpu */gpu,
           /* memory */memory,
-          /* input */input
+          /* input */input,
+          /* tracing */false
         ];
 }
 
@@ -70,7 +71,7 @@ function run($$console) {
     var steps = _steps;
     var $$console$1 = _console;
     var prev_cy = $$console$1[/* cpu */0][/* cycle */1];
-    var match = CpuExec$Yobml.step($$console$1[/* cpu */0]);
+    var match = CpuExec$Yobml.step($$console$1[/* cpu */0], false);
     var cpu = match[0];
     var lcd_on = (Memory$Yobml.load(cpu[/* memory */4], 65344) & 128) > 0;
     var gpu = Gpu$Yobml.step($$console$1[/* gpu */1], cpu[/* cycle */1] - prev_cy | 0, lcd_on, cpu[/* memory */4][/* io */3]);
@@ -114,7 +115,8 @@ function run($$console) {
         /* cpu */cpu$2,
         /* gpu */gpu,
         /* memory */memory,
-        /* input */$$console$1[/* input */3]
+        /* input */$$console$1[/* input */3],
+        /* tracing */$$console$1[/* tracing */4]
       ];
       continue ;
     } else {
@@ -179,7 +181,7 @@ function step($$console) {
       /* serial */init[/* serial */6]
     ];
   } else {
-    cpu = CpuExec$Yobml.step($$console[/* cpu */0])[0];
+    cpu = CpuExec$Yobml.step($$console[/* cpu */0], $$console[/* tracing */4])[0];
   }
   var lcd_on = (Memory$Yobml.load(cpu[/* memory */4], 65344) & 128) > 0;
   var gpu = Gpu$Yobml.step($$console[/* gpu */1], cpu[/* cycle */1] - prev_cy | 0, lcd_on, cpu[/* memory */4][/* io */3]);
@@ -218,7 +220,8 @@ function step($$console) {
           /* cpu */cpu$2,
           /* gpu */gpu,
           /* memory */memory,
-          /* input */$$console[/* input */3]
+          /* input */$$console[/* input */3],
+          /* tracing */$$console[/* tracing */4]
         ];
 }
 

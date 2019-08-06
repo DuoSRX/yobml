@@ -106,16 +106,21 @@ function handle_key_up(dispatch, ev) {
 function ConsoleComponent(Props) {
   var match = React.useReducer((function (state, action) {
           if (typeof action === "number") {
-            if (action === 0) {
-              return /* record */[
-                      /* loading */true,
-                      /* running */state[/* running */1]
-                    ];
-            } else {
-              return /* record */[
-                      /* loading */false,
-                      /* running */state[/* running */1]
-                    ];
+            switch (action) {
+              case 0 : 
+                  return /* record */[
+                          /* loading */true,
+                          /* running */state[/* running */1]
+                        ];
+              case 1 : 
+                  return /* record */[
+                          /* loading */false,
+                          /* running */state[/* running */1]
+                        ];
+              case 2 : 
+                  $$console[0][/* tracing */4] = !$$console[0][/* tracing */4];
+                  return state;
+              
             }
           } else if (action.tag) {
             Console$Yobml.key_up($$console[0], action[0]);
@@ -127,7 +132,7 @@ function ConsoleComponent(Props) {
         }), initial_state);
   var dispatch = match[1];
   React.useEffect((function () {
-          Curry._1(fetch_rom, "http://localhost:8000/roms/10-bit_ops.gb").then((function (rom) {
+          Curry._1(fetch_rom, "http://localhost:8000/roms/drmario.gb").then((function (rom) {
                   Curry._1(dispatch, /* Loaded */1);
                   $$console[0] = Console$Yobml.make(rom);
                   requestAnimationFrame((function (param) {
@@ -153,7 +158,12 @@ function ConsoleComponent(Props) {
         }), ([]));
   return React.createElement("div", undefined, match[0][/* loading */0] ? React.createElement("div", undefined, "Loading...") : null, React.createElement("canvas", {
                   id: "display"
-                }), React.createElement(RegistersComponent$Yobml.make, {
+                }), React.createElement("button", {
+                  id: "tracing",
+                  onClick: (function (param) {
+                      return Curry._1(dispatch, /* ToggleTracing */2);
+                    })
+                }, "Toggle tracing"), React.createElement(RegistersComponent$Yobml.make, {
                   console: $$console
                 }));
 }
