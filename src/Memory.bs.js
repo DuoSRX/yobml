@@ -104,7 +104,6 @@ function store(mem, address, value) {
     mem[/* gpu */4][/* ly */3] = 0;
     return /* () */0;
   } else if (address === 65349) {
-    console.log(value);
     mem[/* gpu */4][/* lyc */4] = value;
     return /* () */0;
   } else if (address === 65350) {

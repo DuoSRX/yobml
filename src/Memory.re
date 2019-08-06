@@ -84,7 +84,6 @@ let store = (mem, address, value) => {
   } else if (address == 0xFF44) {
     mem.gpu.ly = 0
   } else if (address == 0xFF45) {
-    Js.log(value)
     mem.gpu.lyc = value
   } else if (address == 0xFF46) {
     // TODO: handle clock cycles for DMA (move into GPU or CPU?)

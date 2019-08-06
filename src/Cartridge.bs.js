@@ -87,14 +87,17 @@ function make_mbc1(rom, header) {
     if (in_range(0, 8191, address)) {
       return /* () */0;
     } else if (in_range(8192, 16383, address)) {
-      rom_bank[0] = rom_bank[0] & 224 | value & 31;
+      var value$1 = value & 31;
+      var match = value$1 === 0;
+      var value$2 = match ? 1 : value$1;
+      rom_bank[0] = rom_bank[0] & 96 | value$2;
       return /* () */0;
     } else if (in_range(16384, 24575, address)) {
-      var match = mode[0];
-      if (match >= 4102640) {
-        var match$1 = value === 0;
+      var match$1 = mode[0];
+      if (match$1 >= 4102640) {
+        var match$2 = value === 0;
         rom_bank[0] = rom_bank[0] & 31 | ((
-            match$1 ? 1 : value
+            match$2 ? 1 : value
           ) << 5);
         return /* () */0;
       } else {
@@ -102,8 +105,8 @@ function make_mbc1(rom, header) {
         return /* () */0;
       }
     } else if (in_range(24576, 32767, address)) {
-      var match$2 = (value & 1) === 0;
-      mode[0] = match$2 ? /* Rom */4102640 : /* Ram */4099518;
+      var match$3 = (value & 1) === 0;
+      mode[0] = match$3 ? /* Rom */4102640 : /* Ram */4099518;
       return /* () */0;
     } else if (in_range(40960, 49151, address)) {
       return /* () */0;
@@ -145,7 +148,6 @@ function make_mbc1(rom, header) {
 
 function make(rom) {
   var header = CartridgeHeader$Yobml.make(rom);
-  console.log(header);
   var match = header[/* cartridge_type */0];
   switch (match) {
     case 0 : 

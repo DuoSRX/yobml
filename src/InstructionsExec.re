@@ -137,7 +137,7 @@ let cp_hl = (cpu) => {
   let h = (byte land 0xF) > (reg land 0xF);
   set_flags(cpu, ~z=(reg == byte), ~n=true, ~h, ~c=(reg < byte), ());
   // FIXME: This shouldn't increment PC but somehow doesn't work otherwise?!
-  bump(cpu, cpu.pc + 1, 8)
+  bump(cpu, cpu.pc, 8)
 }
 
 let cp_n = (cpu) => {
