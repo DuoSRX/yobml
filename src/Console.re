@@ -26,6 +26,11 @@ let make = (rom) => {
   }
 };
 
+let request_interrupt = (cpu:Cpu.t, n) => {
+  let isf = Memory.load(cpu.memory, 0xFF0F);
+  Memory.store(cpu.memory, 0xFF0F, isf lor n)
+}
+
 let is_interrupt_enabled = (cpu:Cpu.t, n) => {
   Memory.load(cpu.memory, 0xFFFF)->is_bit_set(_, n)
 }
@@ -50,7 +55,7 @@ let interrupt = (cpu: Cpu.t) => {
       {...cpu, pc: interrupt_vector(n), ime: false }
     } else {
       // TODO: got up to 5, missing joypad and serial
-      n == 5 ? cpu : check_interrupts(n + 1)
+      n == 4 ? cpu : check_interrupts(n + 1)
     }
   }
 
@@ -131,18 +136,16 @@ let step = (console) => {
 
   let timer_int = Timer.tick(console.timer, elapsed / 4)
   if (timer_int) {
-    let isf = Memory.load(console.memory, 0xFF0F)
-    Memory.store(console.memory, 0xFF0F, (isf lor 0x4))
+    request_interrupt(cpu, 4)
   }
 
   let lcd_on = Memory.load(cpu.memory, 0xFF40) land 0x80 > 0;
   let gpu = Gpu.step(console.gpu, elapsed, lcd_on, cpu.memory.io);
 
   if (gpu.interrupts > 0) {
-    let isf = Memory.load(cpu.memory, 0xFF0F);
-    Memory.store(cpu.memory, 0xFF0F, isf lor gpu.interrupts);
+    request_interrupt(cpu,gpu.interrupts)
     gpu.interrupts = 0
-  }
+  };
 
   let cpu = interrupt(cpu)
 
