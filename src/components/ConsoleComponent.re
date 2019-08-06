@@ -43,6 +43,15 @@ let display: (canvas, array(int)) => unit = [%bs.raw
 exception ConsoleFailure(string)
 
 let console = ref(Console.make(Array.make(0x200, 0)));
+type color = { r: int, g: int, b: int}
+let color_map = [|
+  { r: 0x9B, g: 0xBC, b: 0x0F }, // lightest green
+  { r: 0x8B, g: 0xAC, b: 0x0F }, // light green
+  { r: 0x30, g: 0x62, b: 0x30 }, // dark green
+  { r: 0x0F, g: 0x38, b: 0x0F }, // darkest green
+|]
+// let color_map = [|0xFF, 0xA0, 0x50, 0x0|]
+let pixels = Array.make(160 * 144 * 4, 0); // 160 lines * 144 columns * 4 bytes
 
 let rec step = (canvas) => {
   while (!console^.gpu.new_frame) {
@@ -54,9 +63,17 @@ let rec step = (canvas) => {
       raise(ConsoleFailure(msg))
     }
     })
-  }
+  };
 
-  display(canvas, console^.gpu.frame)
+  Array.iteri((i, px) => {
+    let color = color_map[px]
+    pixels[i * 4 + 0] = color.r // R
+    pixels[i * 4 + 1] = color.g // G
+    pixels[i * 4 + 2] = color.b // B
+    pixels[i * 4 + 3] = 0xFF    // A
+  }, console^.gpu.frame);
+
+  display(canvas, pixels);
   console^.gpu.new_frame = false
   requestAnimationFrame(_ => step(canvas)) |> ignore
 };
