@@ -39,6 +39,8 @@ let load = (mem, address) => {
     mem.gpu.scroll_x
   } else if (address == 0xFF44) {
     mem.gpu.ly
+  } else if (address == 0xFF45) {
+    mem.gpu.ly
   } else if (address == 0xFF00) {
     Input.get(mem.input)
   } else if (address < 0x8000) {
@@ -79,6 +81,11 @@ let store = (mem, address, value) => {
     mem.gpu.scroll_y = value
   } else if (address == 0xFF43) {
     mem.gpu.scroll_x = value
+  } else if (address == 0xFF44) {
+    mem.gpu.ly = 0
+  } else if (address == 0xFF45) {
+    Js.log(value)
+    mem.gpu.lyc = value
   } else if (address == 0xFF46) {
     // TODO: handle clock cycles for DMA (move into GPU or CPU?)
     let start = (value lsl 8) land 0xFFFF

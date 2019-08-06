@@ -100,7 +100,8 @@ let make = () => {
     |> Js.Promise.then_(rom => {
       dispatch(Loaded);
       console := Console.make(rom);
-      requestAnimationFrame(_ => step(get_display())) |> ignore
+      // requestAnimationFrame(_ => step(get_display())) |> ignore
+      step(get_display()) |> ignore
       Js.Promise.resolve()})
     |> ignore;
 

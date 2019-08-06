@@ -30,24 +30,24 @@ let w2hex = (word) => Printf.sprintf("$%04X", word);
 
 [@react.component]
 let make = (~console:ref(Console.t)) => {
-  let (state, setState) = React.useState(_ => initial_state)
+  let (state, setState) = React.useState(_ => initial_state);
 
-  React.useEffect0(() => {
-    setInterval(() => {
-      let cpu = console^.cpu
-      let af = Cpu.get_register16(cpu, AF)
-      let bc = Cpu.get_register16(cpu, BC)
-      let de = Cpu.get_register16(cpu, DE)
-      let hl = Cpu.get_register16(cpu, HL)
-      let sp = Cpu.get_register16(cpu, SP)
-      let flags = CpuExec.pretty_flags(cpu)
-      let buttons = console^.input.buttons
-      let dpad = console^.input.dpad
+  // React.useEffect0(() => {
+  //   setInterval(() => {
+  //     let cpu = console^.cpu
+  //     let af = Cpu.get_register16(cpu, AF)
+  //     let bc = Cpu.get_register16(cpu, BC)
+  //     let de = Cpu.get_register16(cpu, DE)
+  //     let hl = Cpu.get_register16(cpu, HL)
+  //     let sp = Cpu.get_register16(cpu, SP)
+  //     let flags = CpuExec.pretty_flags(cpu)
+  //     let buttons = console^.input.buttons
+  //     let dpad = console^.input.dpad
 
-      setState(_s => {pc:cpu.pc, af, bc, de, hl, sp, flags, buttons, dpad})
-    }, 16);
-    None
-  });
+  //     setState(_s => {pc:cpu.pc, af, bc, de, hl, sp, flags, buttons, dpad})
+  //   }, 16);
+  //   None
+  // });
 
   <code>
     <div id="reg-PC">{ReasonReact.string("PC = " ++ w2hex(state.pc))}</div>
