@@ -42,7 +42,7 @@ function store(cpu, address, value) {
       cpu[/* serial */6]
     ];
   }
-  return Memory$Yobml.store(cpu[/* memory */4], address, value);
+  return Memory$Yobml.store(cpu[/* memory */4], address, value & 255);
 }
 
 function store16(cpu, address, value) {
@@ -58,27 +58,28 @@ function load_next16(cpu) {
 }
 
 function storage_load(cpu, storage) {
-  switch (storage.tag | 0) {
-    case 0 : 
-        return Cpu$Yobml.get_register(cpu, storage[0]);
-    case 1 : 
-        return Cpu$Yobml.get_register16(cpu, storage[0]);
-    case 2 : 
-        var address = Cpu$Yobml.get_register16(cpu, storage[0]);
-        return Memory$Yobml.load(cpu[/* memory */4], address);
-    
+  if (storage.tag) {
+    var address = Cpu$Yobml.get_register16(cpu, storage[0]);
+    return Memory$Yobml.load(cpu[/* memory */4], address);
+  } else {
+    return Cpu$Yobml.get_register(cpu, storage[0]);
   }
 }
 
 function storage_store(cpu, storage, value) {
-  switch (storage.tag | 0) {
-    case 0 : 
-        return Cpu$Yobml.set_register(cpu, storage[0], value);
-    case 1 : 
-        return Cpu$Yobml.set_register16(cpu, storage[0], value);
-    case 2 : 
-        return store(cpu, Cpu$Yobml.get_register16(cpu, storage[0]), value);
-    
+  if (storage.tag) {
+    var __x = Cpu$Yobml.get_register16(cpu, storage[0]);
+    return store(cpu, __x, value & 255);
+  } else {
+    return Cpu$Yobml.set_register(cpu, storage[0], value & 255);
+  }
+}
+
+function is_pointer(storage) {
+  if (storage.tag) {
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -189,11 +190,12 @@ function and_hl(cpu) {
   return bump(cpu, cpu[/* pc */0], 8);
 }
 
-function bit(cpu, bit$1, r) {
-  var a = Cpu$Yobml.get_register(cpu, r);
+function bit(cpu, bit$1, s) {
+  var a = storage_load(cpu, s);
   var z = ((a >>> bit$1) & 1) !== 1;
   Cpu$Yobml.set_flags(cpu, z, false, true, undefined, /* () */0);
-  return bump(cpu, cpu[/* pc */0], 8);
+  var match = is_pointer(s);
+  return bump(cpu, cpu[/* pc */0], match ? 16 : 8);
 }
 
 function ccf(cpu) {
@@ -534,8 +536,8 @@ function add_hl(cpu) {
   var b = Memory$Yobml.load(cpu[/* memory */4], address);
   var result = a + b | 0;
   Cpu$Yobml.set_register(cpu, /* A */0, result & 255);
+  var h = (result & 15) < (a & 15);
   var c = a > result;
-  var h = (a & 15) > (result & 15);
   Cpu$Yobml.set_flags(cpu, (result & 255) === 0, false, h, c, /* () */0);
   return bump(cpu, cpu[/* pc */0], 8);
 }
@@ -564,6 +566,18 @@ function add_sp_e8(cpu) {
 function sub_d8(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var b = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
+  var value = wrapping_add(a, -b | 0);
+  Cpu$Yobml.set_register(cpu, /* A */0, value);
+  var h = (value & 15) > (a & 15);
+  var c = value > a;
+  Cpu$Yobml.set_flags(cpu, a === b, true, h, c, /* () */0);
+  return bump(cpu, cpu[/* pc */0] + 1 | 0, 8);
+}
+
+function sub_hl(cpu) {
+  var a = Cpu$Yobml.get_register(cpu, /* A */0);
+  var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  var b = Memory$Yobml.load(cpu[/* memory */4], address);
   var value = wrapping_add(a, -b | 0);
   Cpu$Yobml.set_register(cpu, /* A */0, value);
   var h = (value & 15) > (a & 15);
@@ -684,6 +698,19 @@ function res_hl(cpu, bit) {
   return bump(cpu, cpu[/* pc */0], 16);
 }
 
+function rl(cpu, storage) {
+  var a = storage_load(cpu, storage);
+  var prev_carry = Cpu$Yobml.has_flag(cpu, /* C */3);
+  var result = prev_carry ? (a << 1) & 1 : (a << 1);
+  storage_store(cpu, storage, result);
+  Cpu$Yobml.set_flags(cpu, result === 0, false, false, (a & 128) > 0, /* () */0);
+  if (storage.tag) {
+    return bump(cpu, cpu[/* pc */0], 16);
+  } else {
+    return bump(cpu, cpu[/* pc */0], 8);
+  }
+}
+
 function rla(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var match = Cpu$Yobml.has_flag(cpu, /* C */3);
@@ -696,6 +723,20 @@ function rla(cpu) {
   return bump(cpu, cpu[/* pc */0], 4);
 }
 
+function rlc(cpu, storage) {
+  var a = storage_load(cpu, storage);
+  var c = (a & 128) > 0;
+  var a$1 = (a << 1);
+  var a$2 = c ? a$1 | 1 : a$1;
+  Cpu$Yobml.set_flags(cpu, a$2 === 0, false, false, c, /* () */0);
+  storage_store(cpu, storage, a$2);
+  if (storage.tag) {
+    return bump(cpu, cpu[/* pc */0], 16);
+  } else {
+    return bump(cpu, cpu[/* pc */0], 8);
+  }
+}
+
 function rlca(cpu) {
   var a = Cpu$Yobml.get_register(cpu, /* A */0);
   var c = (a & 128) > 0;
@@ -704,6 +745,19 @@ function rlca(cpu) {
   Cpu$Yobml.set_flags(cpu, false, false, false, c, /* () */0);
   Cpu$Yobml.set_register(cpu, /* A */0, a$2);
   return bump(cpu, cpu[/* pc */0], 4);
+}
+
+function rrc(cpu, storage) {
+  var a = storage_load(cpu, storage);
+  var c = a & 1;
+  var result = (c << 7) | (a >>> 1);
+  storage_store(cpu, storage, result);
+  Cpu$Yobml.set_flags(cpu, result === 0, false, false, c === 1, /* () */0);
+  if (storage.tag) {
+    return bump(cpu, cpu[/* pc */0], 16);
+  } else {
+    return bump(cpu, cpu[/* pc */0], 8);
+  }
 }
 
 function rrca(cpu) {
@@ -799,11 +853,23 @@ function set_hl(cpu, n) {
   return bump(cpu, cpu[/* pc */0], 16);
 }
 
-function sla(cpu, r) {
-  var a = Cpu$Yobml.get_register(cpu, r);
+function sla(cpu, s) {
+  var a = storage_load(cpu, s);
   var result = (a << 1);
+  storage_store(cpu, s, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, (result & 128) > 0, /* () */0);
-  return bump(cpu, cpu[/* pc */0], 8);
+  var match = is_pointer(s);
+  return bump(cpu, cpu[/* pc */0], match ? 16 : 8);
+}
+
+function sra(cpu, s) {
+  var a = storage_load(cpu, s);
+  var c = (a & 1) === 1;
+  var result = (signed(a) >>> 1);
+  storage_store(cpu, s, result);
+  Cpu$Yobml.set_flags(cpu, result === 0, false, false, c, /* () */0);
+  var match = is_pointer(s);
+  return bump(cpu, cpu[/* pc */0], match ? 16 : 8);
 }
 
 function srl(cpu, r) {
@@ -815,10 +881,10 @@ function srl(cpu, r) {
 }
 
 function srl_hl(cpu) {
-  var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
-  var a = Memory$Yobml.load(cpu[/* memory */4], address);
+  var hl = Cpu$Yobml.get_register16(cpu, /* HL */3);
+  var a = Memory$Yobml.load(cpu[/* memory */4], hl);
   var result = (a >>> 1);
-  store(cpu, a, result);
+  store(cpu, hl, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, (a & 1) === 1, /* () */0);
   return bump(cpu, cpu[/* pc */0], 16);
 }
@@ -988,10 +1054,12 @@ function execute(cpu, instruction) {
       case 50 : 
           return sub_d8(cpu);
       case 51 : 
-          return swap_hl(cpu);
+          return sub_hl(cpu);
       case 52 : 
-          return xor_d8(cpu);
+          return swap_hl(cpu);
       case 53 : 
+          return xor_d8(cpu);
+      case 54 : 
           return xor_hl(cpu);
       
     }
@@ -1050,22 +1118,30 @@ function execute(cpu, instruction) {
       case 25 : 
           return ret_cond(cpu, instruction[0], instruction[1]);
       case 26 : 
-          return rr(cpu, instruction[0]);
+          return rl(cpu, instruction[0]);
       case 27 : 
-          return rst(cpu, instruction[0]);
+          return rlc(cpu, instruction[0]);
       case 28 : 
-          return sbc(cpu, instruction[0]);
+          return rrc(cpu, instruction[0]);
       case 29 : 
-          return set_hl(cpu, instruction[0]);
+          return rr(cpu, instruction[0]);
       case 30 : 
-          return sla(cpu, instruction[0]);
+          return rst(cpu, instruction[0]);
       case 31 : 
-          return srl(cpu, instruction[0]);
+          return sbc(cpu, instruction[0]);
       case 32 : 
-          return sub_r8(cpu, instruction[0]);
+          return set_hl(cpu, instruction[0]);
       case 33 : 
-          return swap(cpu, instruction[0]);
+          return sla(cpu, instruction[0]);
       case 34 : 
+          return sra(cpu, instruction[0]);
+      case 35 : 
+          return srl(cpu, instruction[0]);
+      case 36 : 
+          return sub_r8(cpu, instruction[0]);
+      case 37 : 
+          return swap(cpu, instruction[0]);
+      case 38 : 
           return xor(cpu, instruction[0]);
       
     }
@@ -1084,6 +1160,7 @@ exports.load_next = load_next;
 exports.load_next16 = load_next16;
 exports.storage_load = storage_load;
 exports.storage_store = storage_store;
+exports.is_pointer = is_pointer;
 exports.bump = bump;
 exports.nop = nop;
 exports.halt = halt;
@@ -1140,6 +1217,7 @@ exports.add_hl = add_hl;
 exports.add_hl_r16 = add_hl_r16;
 exports.add_sp_e8 = add_sp_e8;
 exports.sub_d8 = sub_d8;
+exports.sub_hl = sub_hl;
 exports.jp = jp;
 exports.jp_cond = jp_cond;
 exports.jp_hl = jp_hl;
@@ -1154,8 +1232,11 @@ exports.pop16 = pop16;
 exports.pop_af = pop_af;
 exports.res = res;
 exports.res_hl = res_hl;
+exports.rl = rl;
 exports.rla = rla;
+exports.rlc = rlc;
 exports.rlca = rlca;
+exports.rrc = rrc;
 exports.rrca = rrca;
 exports.rr = rr;
 exports.rra = rra;
@@ -1166,6 +1247,7 @@ exports.sbc_hl = sbc_hl;
 exports.scf = scf;
 exports.set_hl = set_hl;
 exports.sla = sla;
+exports.sra = sra;
 exports.srl = srl;
 exports.srl_hl = srl_hl;
 exports.sub_r8 = sub_r8;
