@@ -24,3 +24,7 @@ node src/Main.bs.js
 Failing instructions:
 
 * EI
+* ADD (HL)
+* DEC (HL)
+* RL (HL)
+* SLA (HL)

@@ -538,7 +538,7 @@ function add_hl(cpu) {
   Cpu$Yobml.set_register(cpu, /* A */0, result & 255);
   var h = (result & 15) < (a & 15);
   var c = a > result;
-  Cpu$Yobml.set_flags(cpu, (result & 255) === 0, false, h, c, /* () */0);
+  Cpu$Yobml.set_flags(cpu, result === 0, false, h, c, /* () */0);
   return bump(cpu, cpu[/* pc */0], 8);
 }
 
@@ -698,17 +698,14 @@ function res_hl(cpu, bit) {
   return bump(cpu, cpu[/* pc */0], 16);
 }
 
-function rl(cpu, storage) {
-  var a = storage_load(cpu, storage);
+function rl(cpu, s) {
+  var a = storage_load(cpu, s);
   var prev_carry = Cpu$Yobml.has_flag(cpu, /* C */3);
-  var result = prev_carry ? (a << 1) & 1 : (a << 1);
-  storage_store(cpu, storage, result);
+  var result = prev_carry ? (a << 1) | 1 : (a << 1);
+  storage_store(cpu, s, result);
   Cpu$Yobml.set_flags(cpu, result === 0, false, false, (a & 128) > 0, /* () */0);
-  if (storage.tag) {
-    return bump(cpu, cpu[/* pc */0], 16);
-  } else {
-    return bump(cpu, cpu[/* pc */0], 8);
-  }
+  var match = is_pointer(s);
+  return bump(cpu, cpu[/* pc */0], match ? 16 : 8);
 }
 
 function rla(cpu) {
@@ -857,7 +854,7 @@ function sla(cpu, s) {
   var a = storage_load(cpu, s);
   var result = (a << 1);
   storage_store(cpu, s, result);
-  Cpu$Yobml.set_flags(cpu, result === 0, false, false, (result & 128) > 0, /* () */0);
+  Cpu$Yobml.set_flags(cpu, result === 0, false, false, (a & 128) > 0, /* () */0);
   var match = is_pointer(s);
   return bump(cpu, cpu[/* pc */0], match ? 16 : 8);
 }
