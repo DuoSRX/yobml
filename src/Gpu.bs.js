@@ -113,14 +113,16 @@ function render_background(gpu, io_regs) {
   return /* () */0;
 }
 
+function sprite_palette(palette) {
+  return /* array */[
+          0,
+          (palette >>> 2) & 3,
+          (palette >>> 4) & 3,
+          (palette >>> 6) & 3
+        ];
+}
+
 function render_sprites(gpu, io_regs) {
-  var palette = Caml_array.caml_array_get(io_regs, 73);
-  var colors = /* array */[
-    0,
-    (palette >>> 2) & 3,
-    (palette >>> 4) & 3,
-    (palette >>> 6) & 3
-  ];
   var match = (gpu[/* control */2] & 4) > 0;
   var sprite_height = match ? 16 : 8;
   var ly = gpu[/* ly */3];
@@ -149,6 +151,9 @@ function render_sprites(gpu, io_regs) {
           var pixel = match$3 ? 2 : 0;
           var match$4 = ((lo >>> bit) & 1) === 1;
           var pixel$1 = match$4 ? pixel | 1 : pixel;
+          var match$5 = (attrs & 8) === 0;
+          var palette_number = match$5 ? Caml_array.caml_array_get(io_regs, 72) : Caml_array.caml_array_get(io_regs, 73);
+          var colors = sprite_palette(palette_number);
           var color = Caml_array.caml_array_get(color_map, Caml_array.caml_array_get(colors, pixel$1));
           if (pixel$1 !== 0) {
             set_pixel(gpu, pixel_x, ly, color);
@@ -455,6 +460,7 @@ exports.store = store;
 exports.color_map = color_map;
 exports.set_pixel = set_pixel;
 exports.render_background = render_background;
+exports.sprite_palette = sprite_palette;
 exports.render_sprites = render_sprites;
 exports.set_mode = set_mode;
 exports.step = step;

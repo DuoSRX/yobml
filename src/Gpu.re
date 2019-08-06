@@ -113,8 +113,17 @@ let render_background = (gpu, io_regs) => {
 
 type sprite = { x:int, y:int, index:int, attrs: int }
 
+let sprite_palette = (palette) => {
+  [|
+    0,
+    (palette lsr 2) land 3,
+    (palette lsr 4) land 3,
+    (palette lsr 6) land 3,
+  |]
+}
+
 let render_sprites = (gpu, io_regs) => {
-  let palette = io_regs[0x49]
+  let palette = io_regs[0x48]
   let colors = [|
     0,
     (palette lsr 2) land 3,
@@ -148,6 +157,8 @@ let render_sprites = (gpu, io_regs) => {
           let bit = (sprite.attrs land 0x20 > 0) ? idx_x : 7 - idx_x // X Flip
           let pixel = (hi lsr bit land 1 == 1) ? 2 : 0
           let pixel = (lo lsr bit land 1 == 1) ? pixel lor 1 : pixel
+          let palette_number = (sprite.attrs land 0x8 == 0) ? io_regs[0x48] : io_regs[0x49]
+          let colors = sprite_palette(palette_number)
           let color = color_map[colors[pixel]]
           if (pixel != 0) {
             // TODO: obj priority
