@@ -8,7 +8,7 @@ var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Input$Yobml = require("./Input.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 
-function make(rom, gpu, input) {
+function make(rom, gpu, input, timer) {
   return /* record */[
           /* rom */rom,
           /* wram */Caml_array.caml_make_vect(8192, 0),
@@ -16,7 +16,8 @@ function make(rom, gpu, input) {
           /* io */Caml_array.caml_make_vect(128, 0),
           /* hram */Caml_array.caml_make_vect(128, 0),
           /* gpu */gpu,
-          /* input */input
+          /* input */input,
+          /* timer */timer
         ];
 }
 
@@ -37,7 +38,15 @@ function load(mem, address) {
                   "%04X"
                 ]), address));
   }
-  if (address === 65348) {
+  if (address === 65284) {
+    return mem[/* timer */7][/* div */3];
+  } else if (address === 65285) {
+    return mem[/* timer */7][/* tima */4];
+  } else if (address === 65286) {
+    return mem[/* timer */7][/* tma */5];
+  } else if (address === 65287) {
+    return mem[/* timer */7][/* tac */6];
+  } else if (address === 65348) {
     return mem[/* gpu */5][/* ly */3];
   } else if (address === 65280) {
     return Input$Yobml.get(mem[/* input */6]);
@@ -109,6 +118,18 @@ function store(mem, address, value) {
   }
   if (address === 65280) {
     return Input$Yobml.set(mem[/* input */6], value);
+  } else if (address === 65284) {
+    mem[/* timer */7][/* div */3] = value;
+    return /* () */0;
+  } else if (address === 65285) {
+    mem[/* timer */7][/* tima */4] = value;
+    return /* () */0;
+  } else if (address === 65286) {
+    mem[/* timer */7][/* tma */5] = value;
+    return /* () */0;
+  } else if (address === 65287) {
+    mem[/* timer */7][/* tac */6] = value;
+    return /* () */0;
   } else if (address === 65350) {
     var start = (value << 8) & 65535;
     for(var offset = 0; offset <= 159; ++offset){
