@@ -25,6 +25,11 @@ function make(rom) {
         ];
 }
 
+function request_interrupt(cpu, n) {
+  var isf = Memory$Yobml.load(cpu[/* memory */4], 65295);
+  return Memory$Yobml.store(cpu[/* memory */4], 65295, isf | n);
+}
+
 function is_interrupt_enabled(cpu, n) {
   var __x = Memory$Yobml.load(cpu[/* memory */4], 65535);
   return Utils$Yobml.is_bit_set(__x, n);
@@ -67,7 +72,7 @@ function interrupt(cpu) {
                 /* serial */cpu[/* serial */6]
               ];
       } else {
-        var match$1 = n === 5;
+        var match$1 = n === 4;
         if (match$1) {
           return cpu;
         } else {
@@ -206,14 +211,12 @@ function step($$console) {
   var elapsed = cpu[/* cycle */1] - prev_cy | 0;
   var timer_int = Timer$Yobml.tick($$console[/* timer */4], elapsed / 4 | 0);
   if (timer_int) {
-    var isf = Memory$Yobml.load($$console[/* memory */2], 65295);
-    Memory$Yobml.store($$console[/* memory */2], 65295, isf | 4);
+    request_interrupt(cpu, 4);
   }
   var lcd_on = (Memory$Yobml.load(cpu[/* memory */4], 65344) & 128) > 0;
   var gpu = Gpu$Yobml.step($$console[/* gpu */1], elapsed, lcd_on, cpu[/* memory */4][/* io */3]);
   if (gpu[/* interrupts */9] > 0) {
-    var isf$1 = Memory$Yobml.load(cpu[/* memory */4], 65295);
-    Memory$Yobml.store(cpu[/* memory */4], 65295, isf$1 | gpu[/* interrupts */9]);
+    request_interrupt(cpu, gpu[/* interrupts */9]);
     gpu[/* interrupts */9] = 0;
   }
   var cpu$1 = interrupt(cpu);
@@ -255,6 +258,7 @@ function step($$console) {
 }
 
 exports.make = make;
+exports.request_interrupt = request_interrupt;
 exports.is_interrupt_enabled = is_interrupt_enabled;
 exports.interrupt_vector = interrupt_vector;
 exports.interrupt = interrupt;
