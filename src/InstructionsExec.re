@@ -139,7 +139,7 @@ let cp_hl = (cpu) => {
   let byte = get_register16(cpu, HL) |> load(cpu)
   let h = (byte land 0xF) > (reg land 0xF);
   set_flags(cpu, ~z=(reg == byte), ~n=true, ~h, ~c=(reg < byte), ());
-  bump(cpu, cpu.pc + 1, 8)
+  bump(cpu, cpu.pc, 8)
 }
 
 let cp_n = (cpu) => {
@@ -389,7 +389,7 @@ let adc = (cpu, r) => {
   let c = result > 0xFF
   let h = (a land 0xF) + (b land 0xF) + carry > 0xF
   set_flags(cpu, ~z=(result land 0xFF == 0), ~n=false, ~c, ~h, ())
-  bump(cpu, cpu.pc + 1, 8)
+  bump(cpu, cpu.pc, 8)
 }
 
 let adc_d8 = (cpu) => {
@@ -413,7 +413,7 @@ let adc_hl = (cpu) => {
   let c = result > 0xFF
   let h = (a land 0xF) + (b land 0xF) + carry > 0xF
   set_flags(cpu, ~z=(result land 0xFF == 0), ~n=false, ~c, ~h, ())
-  bump(cpu, cpu.pc + 1, 8)
+  bump(cpu, cpu.pc, 8)
 }
 
 let add_d8 = (cpu) => {
@@ -478,7 +478,7 @@ let sub_hl = (cpu) => {
   let h = (value land 0xF) > (a land 0xF)
   let c = value > a
   set_flags(cpu, ~h, ~c, ~n=true, ~z=(a == b), ());
-  bump(cpu, cpu.pc + 1, 8)
+  bump(cpu, cpu.pc, 8)
 }
 
 let jp = (cpu) => {
@@ -502,12 +502,7 @@ let jp_hl = (cpu) => {
 
 let jr_e8 = (cpu) => {
   let byte = load_next(cpu);
-  // Treat the byte as a signed integer
-  let offset = if (byte > 0x7F) {
-    -((lnot(byte) + 1) land 0xFF)
-  } else {
-    byte
-  }
+  let offset = signed(byte)
   bump(cpu, cpu.pc + offset + 1, 12)
 }
 
@@ -516,13 +511,7 @@ let jr = (cpu, flag, condition) => {
 
   if (do_jump) {
     let byte = load_next(cpu);
-    // Treat the byte as a signed integer
-    let offset = if (byte > 0x7F) {
-      -((lnot(byte) + 1) land 0xFF)
-    } else {
-      byte
-    }
-
+    let offset = signed(byte)
     bump(cpu, cpu.pc + offset + 1, 12)
   } else {
     bump(cpu, cpu.pc + 1, 8)

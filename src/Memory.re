@@ -44,7 +44,6 @@ let load = (mem, address) => {
     mem.wram[(address - 0x2000) land 0x1FFF]
   } else if (address >= 0xFE00 && address <= 0xFE9F) {
     mem.gpu.oam[address land 0x9F]
-    // mem.oam[address land 0x9F]
   } else if (address >= 0xFEA0 && address <= 0xFEFF) {
     0 // Some games try to read/write here. No-op
   } else if (address >= 0xFF00 && address < 0xFF80) {
@@ -80,7 +79,6 @@ let store = (mem, address, value) => {
     mem.wram[(address - 0x2000) land 0x1FFF] = value
   } else if (address >= 0xFE00 && address <= 0xFE9F) {
     mem.gpu.oam[address land 0x9F] = value
-    // mem.oam[address land 0x9F] = value
   } else if (address >= 0xFEA0 && address <= 0xFEFF) {
     () // Some games try to read/write here. No-op
   } else if (address >= 0xFF00 && address < 0xFF80) {

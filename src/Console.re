@@ -2,7 +2,8 @@ type t = {
   cpu: Cpu.t,
   gpu: Gpu.t,
   memory: Memory.t,
-  input: Input.t
+  input: Input.t,
+  mutable tracing: bool
 };
 
 let make = (rom) => {
@@ -15,7 +16,8 @@ let make = (rom) => {
     cpu,
     gpu,
     memory,
-    input
+    input,
+    tracing: false
   }
 };
 
@@ -57,7 +59,7 @@ let interrupt = (cpu: Cpu.t) => {
 let run = (console) => {
   let rec loop = (console, steps) => {
     let prev_cy = console.cpu.cycle
-    let (cpu, instruction) = CpuExec.step(~cpu=console.cpu);
+    let (cpu, instruction) = CpuExec.step(~cpu=console.cpu, ~tracing=false);
 
     let lcd_on = Memory.load(cpu.memory, 0xFF40) land 0x80 > 0;
     let gpu = Gpu.step(console.gpu, cpu.cycle - prev_cy, lcd_on, cpu.memory.io);
@@ -143,7 +145,7 @@ let step = (console) => {
   let cpu = if (console.cpu.halted) {
     {...console.cpu, cycle: console.cpu.cycle + 4}
   } else {
-    let (cpu, _instruction) = CpuExec.step(~cpu=console.cpu);
+    let (cpu, _instruction) = CpuExec.step(~cpu=console.cpu, ~tracing=console.tracing);
     cpu
   }
 

@@ -157,11 +157,14 @@ function trace(cpu, instruction) {
   return /* () */0;
 }
 
-function step(cpu) {
+function step(cpu, tracing) {
   var opcode = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0]);
   var match;
   if (opcode !== 203) {
     var instruction = Instructions$Yobml.decode(opcode);
+    if (tracing) {
+      trace(cpu, instruction);
+    }
     match = /* tuple */[
       /* record */[
         /* pc */cpu[/* pc */0] + 1 | 0,
@@ -177,6 +180,9 @@ function step(cpu) {
   } else {
     var $$byte = Memory$Yobml.load(cpu[/* memory */4], cpu[/* pc */0] + 1 | 0);
     var instruction$1 = Instructions$Yobml.decode_cb($$byte);
+    if (tracing) {
+      trace(cpu, instruction$1);
+    }
     match = /* tuple */[
       /* record */[
         /* pc */cpu[/* pc */0] + 2 | 0,
