@@ -92,6 +92,7 @@ type instruction =
   | Sbc_d8
   | Sbc_hl
   | Scf
+  | Set(int, register)
   | Set_hl(int)
   | Sla(storage)
   | Sra(storage)
@@ -418,6 +419,11 @@ let decode_cb = (opcode) => switch(opcode) {
       let bit = opcode lsr 3 land 7;
       Res(bit, reg)
     }
+  | _ when opcode >= 0xC0 && opcode <= 0xFF => {
+      let reg = regs[opcode land 7];
+      let bit = opcode lsr 3 land 7;
+      Set(bit, reg)
+    }
   | n => raise(OpcodeNotImplemented(sprintf("Opcode Not Implemented: 0xCB 0x%02X", n)))
 }
 
@@ -521,6 +527,7 @@ let pretty = (instruction) => switch(instruction) {
   | Rr(Pointer(r)) => sprintf("RR (%s)", to_string16(r))
   | Rst(n) => sprintf("RST %02XH", n)
   | Scf => "SCF"
+  | Set(n, r) => sprintf("SET %d, %s", n, to_string(r))
   | Set_hl(n) => sprintf("SET %d, (HL)", n)
   | Sla(Register(r)) => sprintf("SLA %s", to_string(r))
   | Sla(Pointer(r)) => sprintf("SLA (%s)", to_string16(r))

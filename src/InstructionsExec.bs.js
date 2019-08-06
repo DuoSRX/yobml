@@ -845,6 +845,12 @@ function scf(cpu) {
   return bump(cpu, cpu[/* pc */0], 4);
 }
 
+function set(cpu, r, n) {
+  var value = Cpu$Yobml.get_register(cpu, r);
+  Cpu$Yobml.set_register(cpu, r, value | (1 << n));
+  return bump(cpu, cpu[/* pc */0], 8);
+}
+
 function set_hl(cpu, n) {
   var address = Cpu$Yobml.get_register16(cpu, /* HL */3);
   var value = Memory$Yobml.load(cpu[/* memory */4], address);
@@ -1129,18 +1135,20 @@ function execute(cpu, instruction) {
       case 31 : 
           return sbc(cpu, instruction[0]);
       case 32 : 
-          return set_hl(cpu, instruction[0]);
+          return set(cpu, instruction[1], instruction[0]);
       case 33 : 
-          return sla(cpu, instruction[0]);
+          return set_hl(cpu, instruction[0]);
       case 34 : 
-          return sra(cpu, instruction[0]);
+          return sla(cpu, instruction[0]);
       case 35 : 
-          return srl(cpu, instruction[0]);
+          return sra(cpu, instruction[0]);
       case 36 : 
-          return sub_r8(cpu, instruction[0]);
+          return srl(cpu, instruction[0]);
       case 37 : 
-          return swap(cpu, instruction[0]);
+          return sub_r8(cpu, instruction[0]);
       case 38 : 
+          return swap(cpu, instruction[0]);
+      case 39 : 
           return xor(cpu, instruction[0]);
       
     }
@@ -1244,6 +1252,7 @@ exports.sbc = sbc;
 exports.sbc_d8 = sbc_d8;
 exports.sbc_hl = sbc_hl;
 exports.scf = scf;
+exports.set = set;
 exports.set_hl = set_hl;
 exports.sla = sla;
 exports.sra = sra;
