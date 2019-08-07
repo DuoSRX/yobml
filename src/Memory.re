@@ -33,6 +33,8 @@ let load = (mem, address) => {
     mem.timer.tma
   } else if (address == 0xFF07) {
     mem.timer.tac
+  } else if (address == 0xFF40) {
+    mem.gpu.control
   } else if (address == 0xFF42) {
     mem.gpu.scroll_y
   } else if (address == 0xFF43) {
@@ -40,7 +42,11 @@ let load = (mem, address) => {
   } else if (address == 0xFF44) {
     mem.gpu.ly
   } else if (address == 0xFF45) {
-    mem.gpu.ly
+    mem.gpu.lyc
+  } else if (address == 0xFF4A) {
+    mem.gpu.window_y
+  } else if (address == 0xFF4B) {
+    mem.gpu.window_x
   } else if (address == 0xFF00) {
     Input.get(mem.input)
   } else if (address < 0x8000) {
@@ -77,6 +83,9 @@ let store = (mem, address, value) => {
     mem.timer.tma = value
   } else if (address == 0xFF07) {
     mem.timer.tac = value
+  } else if (address == 0xFF40) {
+    Js.log(sprintf("%04X = %02X", address, value))
+    mem.gpu.control = value
   } else if (address == 0xFF42) {
     mem.gpu.scroll_y = value
   } else if (address == 0xFF43) {
@@ -91,6 +100,10 @@ let store = (mem, address, value) => {
     for (offset in 0 to 0x9F) {
       mem.gpu.oam[offset] = load(mem, start + offset)
     }
+  } else if (address == 0xFF4A) {
+    mem.gpu.window_y = value
+  } else if (address == 0xFF4B) {
+    mem.gpu.window_x = value
   } else if (address < 0x8000) {
     mem.cartridge.store(address, value)
   } else if (address < 0xA000) {

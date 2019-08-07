@@ -64,7 +64,7 @@ var color_map = /* array */[
 var pixels = Caml_array.caml_make_vect(92160, 0);
 
 function step(context) {
-  while(!$$console[0][/* gpu */1][/* new_frame */13]) {
+  while(!$$console[0][/* gpu */1][/* new_frame */15]) {
     var tmp;
     try {
       tmp = Console$Yobml.step($$console[0]);
@@ -119,7 +119,7 @@ function step(context) {
           return Caml_array.caml_array_set(pixels, (i << 2) + 3 | 0, 255);
         }), $$console[0][/* gpu */1][/* frame */6]);
   Curry._2(display, context, pixels);
-  $$console[0][/* gpu */1][/* new_frame */13] = false;
+  $$console[0][/* gpu */1][/* new_frame */15] = false;
   requestAnimationFrame((function (param) {
           return step(context);
         }));
