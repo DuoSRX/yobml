@@ -120,6 +120,7 @@ let make = (~romURL) => {
       ReasonReact.null
     }}
     <canvas id="display" ></canvas>
+    // <CartridgeInfoComponent cartridge=console^.memory.cartridge />
     // <button id="tracing" onClick={_ => dispatch(ToggleTracing)}>
     //   {ReasonReact.string("Toggle tracing")}
     // </button>
