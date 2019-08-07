@@ -31,12 +31,20 @@ function load(mem, address) {
     return mem[/* timer */6][/* tma */5];
   } else if (address === 65287) {
     return mem[/* timer */6][/* tac */6];
+  } else if (address === 65344) {
+    return mem[/* gpu */4][/* control */2];
   } else if (address === 65346) {
     return mem[/* gpu */4][/* scroll_y */11];
   } else if (address === 65347) {
     return mem[/* gpu */4][/* scroll_x */10];
-  } else if (address === 65348 || address === 65349) {
+  } else if (address === 65348) {
     return mem[/* gpu */4][/* ly */3];
+  } else if (address === 65349) {
+    return mem[/* gpu */4][/* lyc */4];
+  } else if (address === 65354) {
+    return mem[/* gpu */4][/* window_y */13];
+  } else if (address === 65355) {
+    return mem[/* gpu */4][/* window_x */12];
   } else if (address === 65280) {
     return Input$Yobml.get(mem[/* input */5]);
   } else if (address < 32768) {
@@ -94,6 +102,32 @@ function store(mem, address, value) {
   } else if (address === 65287) {
     mem[/* timer */6][/* tac */6] = value;
     return /* () */0;
+  } else if (address === 65344) {
+    console.log(Curry._2(Printf.sprintf(/* Format */[
+                  /* Int */Block.__(4, [
+                      /* Int_X */8,
+                      /* Lit_padding */Block.__(0, [
+                          /* Zeros */2,
+                          4
+                        ]),
+                      /* No_precision */0,
+                      /* String_literal */Block.__(11, [
+                          " = ",
+                          /* Int */Block.__(4, [
+                              /* Int_X */8,
+                              /* Lit_padding */Block.__(0, [
+                                  /* Zeros */2,
+                                  2
+                                ]),
+                              /* No_precision */0,
+                              /* End_of_format */0
+                            ])
+                        ])
+                    ]),
+                  "%04X = %02X"
+                ]), address, value));
+    mem[/* gpu */4][/* control */2] = value;
+    return /* () */0;
   } else if (address === 65346) {
     mem[/* gpu */4][/* scroll_y */11] = value;
     return /* () */0;
@@ -111,6 +145,12 @@ function store(mem, address, value) {
     for(var offset = 0; offset <= 159; ++offset){
       Caml_array.caml_array_set(mem[/* gpu */4][/* oam */8], offset, load(mem, start + offset | 0));
     }
+    return /* () */0;
+  } else if (address === 65354) {
+    mem[/* gpu */4][/* window_y */13] = value;
+    return /* () */0;
+  } else if (address === 65355) {
+    mem[/* gpu */4][/* window_x */12] = value;
     return /* () */0;
   } else if (address < 32768) {
     return Curry._2(mem[/* cartridge */0][/* store */2], address, value);

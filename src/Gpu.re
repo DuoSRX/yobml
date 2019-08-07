@@ -7,7 +7,7 @@ type mode = VBlank | HBlank | OamRead | LcdTransfer
 type t = {
   mode: mode,
   lcd: int,
-  control: int,
+  mutable control: int,
   mutable ly: int,
   mutable lyc: int,
   cycles: int,
@@ -17,6 +17,8 @@ type t = {
   cartridge: Cartridge.t,
   mutable scroll_x: int,
   mutable scroll_y: int,
+  mutable window_x: int,
+  mutable window_y: int,
   mutable interrupts: int,
   mutable new_frame: bool
 }
@@ -29,6 +31,8 @@ let make = (~cartridge) => {
   lyc: 0,
   scroll_x: 0,
   scroll_y: 0,
+  window_x: 0,
+  window_y: 0,
   cycles: 0,
   frame: Array.make(160 * 144, 0),
   vram: Array.make(0x2000, 0),
@@ -79,9 +83,8 @@ let render_background = (gpu, io_regs) => {
   // http://bgb.bircd.org/pandocs.htm#lcdpositionandscrolling
   let scroll_x = gpu.scroll_x
   let scroll_y = gpu.scroll_y
-  let ff40 = io_regs[0x40]
-  let tile_data = ff40 land 0x10 > 0 ? 0x8000 : 0x9000 // 8800 or 9000?
-  let tile_map = ff40 land 0x8 > 0 ? 0x9C00 : 0x9800
+  let tile_data = gpu.control land 0x10 > 0 ? 0x8000 : 0x9000
+  let tile_map = gpu.control land 0x8 > 0 ? 0x9C00 : 0x9800
   let y = ((scroll_y + ly) / 8) mod 32
   let y_offset = (scroll_y + ly) mod 8
 
@@ -103,6 +106,47 @@ let render_background = (gpu, io_regs) => {
   }
 }
 
+// Holy copy-pasta batman. Refactor with render_background somehow?
+let render_window = (gpu, io_regs) => {
+  let palette = io_regs[0x47]
+  let colors = [|
+    palette land 3,
+    (palette lsr 2) land 3,
+    (palette lsr 4) land 3,
+    (palette lsr 6) land 3,
+  |]
+
+  let ly = gpu.ly
+  let tile_data = gpu.control land 0x10 > 0 ? 0x8000 : 0x9000
+  let tile_map = gpu.control land 0x40 > 0 ? 0x9C00 : 0x9800
+  let window_y = ly - gpu.window_y
+  let y = window_y / 8
+  let y_offset = window_y mod 8
+  let window_x = gpu.window_x - 7
+
+  for (px in 0 to 159) {
+    if (px < window_x) {
+      ()
+    } else {
+      let x = (px - window_x) / 8
+      let tile = load(gpu, (tile_map + (y * 32) + x land 0xFFFF))
+      let ptr = switch(tile_data) {
+      | 0x9000 => (tile_data + signed(tile) * 0x10) land 0xFFFF
+      | _ => (tile_data + tile * 0x10) land 0xFFFF
+      }
+      let ptr = (ptr + (y_offset * 2)) land 0xFFFF
+      let p0 = load(gpu, ptr)
+      let p1 = load(gpu, ptr + 1)
+      let colb = 7 - px mod 8
+      let pix0 = is_bit_set(p0, colb) ? 1 : 0
+      let pix1 = is_bit_set(p1, colb) ? 2 : 0
+      let coln = pix0 lor pix1
+      let color = colors[coln]
+      set_pixel(gpu, ~x=px, ~y=ly, ~color)
+    }
+  }
+}
+
 type sprite = { x:int, y:int, index:int, attrs: int }
 
 let sprite_palette = (palette) => {
@@ -115,14 +159,6 @@ let sprite_palette = (palette) => {
 }
 
 let render_sprites = (gpu, io_regs) => {
-  let palette = io_regs[0x48]
-  let colors = [|
-    0,
-    (palette lsr 2) land 3,
-    (palette lsr 4) land 3,
-    (palette lsr 6) land 3,
-  |]
-
   let sprite_height = gpu.control land 0x4 > 0 ? 16 : 8
   let ly = gpu.ly
 
@@ -187,10 +223,16 @@ let step = (gpu, cycles, lcd_on, io_regs) => {
   | LcdTransfer when cycles >= 172 => {
       let cycles = cycles - 172;
       if (lcd_on) {
-        render_background(gpu, io_regs)
+        if (is_bit_set(gpu.control, 0)) {
+          ()// render_background(gpu, io_regs)
+        } else {
+          Array.fill(gpu.frame, 0, 160 * 144, 0)
+        }
+        // if (is_bit_set(gpu.control, 5)) {
+          render_window(gpu, io_regs)
+        // }
         render_sprites(gpu, io_regs)
-      };
-      // TODO: render window
+      }
       set_mode({...gpu, cycles}, HBlank)
     }
   | HBlank when cycles >= 204 => {
