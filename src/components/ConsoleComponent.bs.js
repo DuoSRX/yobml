@@ -12,7 +12,6 @@ var Console$Yobml = require("../Console.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 var Caml_js_exceptions = require("bs-platform/lib/js/caml_js_exceptions.js");
 var Instructions$Yobml = require("../Instructions.bs.js");
-var RegistersComponent$Yobml = require("./RegistersComponent.bs.js");
 
 var fetch_rom = (
   async function logFetch(url) {
@@ -24,9 +23,12 @@ var fetch_rom = (
 
 var get_display = ( function() { return document.getElementById("display") } );
 
+function get_context(param) {
+  return Curry._1(get_display, /* () */0).getContext("2d");
+}
+
 var display = (
-    function display(canvas, pixels) {
-      var ctx = canvas.getContext("2d");
+    function display(ctx, pixels) {
       var imageData = new ImageData(new Uint8ClampedArray(pixels), 160, 144)
       ctx.putImageData(imageData, 0, 0);
     }
@@ -61,7 +63,7 @@ var color_map = /* array */[
 
 var pixels = Caml_array.caml_make_vect(92160, 0);
 
-function step(canvas) {
+function step(context) {
   while(!$$console[0][/* gpu */1][/* new_frame */13]) {
     var tmp;
     try {
@@ -116,10 +118,10 @@ function step(canvas) {
           Caml_array.caml_array_set(pixels, (i << 2) + 2 | 0, color[/* b */2]);
           return Caml_array.caml_array_set(pixels, (i << 2) + 3 | 0, 255);
         }), $$console[0][/* gpu */1][/* frame */6]);
-  Curry._2(display, canvas, pixels);
+  Curry._2(display, context, pixels);
   $$console[0][/* gpu */1][/* new_frame */13] = false;
   requestAnimationFrame((function (param) {
-          return step(canvas);
+          return step(context);
         }));
   return /* () */0;
 }
@@ -138,6 +140,7 @@ function handle_key_up(dispatch, ev) {
 }
 
 function ConsoleComponent(Props) {
+  var romURL = Props.romURL;
   var match = React.useReducer((function (state, action) {
           if (typeof action === "number") {
             switch (action) {
@@ -166,10 +169,10 @@ function ConsoleComponent(Props) {
         }), initial_state);
   var dispatch = match[1];
   React.useEffect((function () {
-          Curry._1(fetch_rom, "http://localhost:8000/roms/supermarioland.gb").then((function (rom) {
+          Curry._1(fetch_rom, romURL).then((function (rom) {
                   Curry._1(dispatch, /* Loaded */1);
                   $$console[0] = Console$Yobml.make(rom);
-                  step(Curry._1(get_display, /* () */0));
+                  step(Curry._1(get_display, /* () */0).getContext("2d"));
                   return Promise.resolve(/* () */0);
                 }));
           addEventListener("keydown", (function (ev) {
@@ -187,16 +190,9 @@ function ConsoleComponent(Props) {
                           }));
                     return /* () */0;
                   });
-        }), ([]));
+        }), /* array */[romURL]);
   return React.createElement("div", undefined, match[0][/* loading */0] ? React.createElement("div", undefined, "Loading...") : null, React.createElement("canvas", {
                   id: "display"
-                }), React.createElement("button", {
-                  id: "tracing",
-                  onClick: (function (param) {
-                      return Curry._1(dispatch, /* ToggleTracing */2);
-                    })
-                }, "Toggle tracing"), React.createElement(RegistersComponent$Yobml.make, {
-                  console: $$console
                 }));
 }
 
@@ -204,6 +200,7 @@ var make = ConsoleComponent;
 
 exports.fetch_rom = fetch_rom;
 exports.get_display = get_display;
+exports.get_context = get_context;
 exports.display = display;
 exports.ConsoleFailure = ConsoleFailure;
 exports.$$console = $$console;
