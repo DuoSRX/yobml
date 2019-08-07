@@ -3,8 +3,8 @@
 
 var React = require("react");
 var ReactDOMRe = require("reason-react/src/ReactDOMRe.js");
-var ConsoleComponent$Yobml = require("./components/ConsoleComponent.bs.js");
+var MainComponent$Yobml = require("./components/MainComponent.bs.js");
 
-ReactDOMRe.renderToElementWithId(React.createElement(ConsoleComponent$Yobml.make, { }), "console");
+ReactDOMRe.renderToElementWithId(React.createElement(MainComponent$Yobml.make, { }), "console");
 
 /*  Not a pure module */

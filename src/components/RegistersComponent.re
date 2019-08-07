@@ -1,6 +1,3 @@
-[@bs.val] external setTimeout : (unit => unit, int) => unit = "setTimeout";
-[@bs.val] external setInterval : (unit => unit, int) => unit = "setInterval";
-
 type state = {
   af: int,
   bc: int,
@@ -33,7 +30,7 @@ let make = (~console:ref(Console.t)) => {
   let (state, setState) = React.useState(_ => initial_state);
 
   // React.useEffect0(() => {
-  //   setInterval(() => {
+  //   Js.Global.setInterval(() => {
   //     let cpu = console^.cpu
   //     let af = Cpu.get_register16(cpu, AF)
   //     let bc = Cpu.get_register16(cpu, BC)

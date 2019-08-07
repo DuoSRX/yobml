@@ -1,5 +1,3 @@
-[@bs.val] external setTimeout : (unit => unit, int) => unit = "setTimeout";
-[@bs.val] external clearTimeout : float => unit = "clearTimeout";
 [@bs.val] external requestAnimationFrame : (int => unit) => int = "requestAnimationFrame"
 type document;
 [@bs.val] external document : (unit) => document = "document"
@@ -25,15 +23,15 @@ let fetch_rom: (string) => Js.Promise.t(array(int)) = [%bs.raw
 ];
 
 type canvas;
-// type context;
-// [@bs.send] external getContext : (canvas, string) => context = "getContext";
+type context;
+[@bs.send] external getContext : (canvas, string) => context = "getContext";
+[@bs.send] external putImageData : (context, array(int), int, int) => unit = "putImageData";
 let get_display: unit => canvas = [%bs.raw {| function() { return document.getElementById("display") } |}];
-// let ctx = getContext(display, "2d");
+let get_context = () => getContext(get_display(), "2d");
 
-let display: (canvas, array(int)) => unit = [%bs.raw
+let display: (context, array(int)) => unit = [%bs.raw
   {|
-    function display(canvas, pixels) {
-      var ctx = canvas.getContext("2d");
+    function display(ctx, pixels) {
       var imageData = new ImageData(new Uint8ClampedArray(pixels), 160, 144)
       ctx.putImageData(imageData, 0, 0);
     }
@@ -53,7 +51,7 @@ let color_map = [|
 // let color_map = [|0xFF, 0xA0, 0x50, 0x0|]
 let pixels = Array.make(160 * 144 * 4, 0); // 160 lines * 144 columns * 4 bytes
 
-let rec step = (canvas) => {
+let rec step = (context) => {
   while (!console^.gpu.new_frame) {
     console := (try (Console.step(console^)) {
     | Memory.InvalidMemoryAccess(msg)
@@ -73,9 +71,9 @@ let rec step = (canvas) => {
     pixels[i * 4 + 3] = 0xFF    // A
   }, console^.gpu.frame);
 
-  display(canvas, pixels);
+  display(context, pixels);
   console^.gpu.new_frame = false
-  requestAnimationFrame(_ => step(canvas)) |> ignore
+  requestAnimationFrame(_ => step(context)) |> ignore
 };
 
 type state = { loading: bool, running: bool };
@@ -89,7 +87,7 @@ let handle_key_up = (dispatch, ev) =>
   dispatch(KeyUp(ReactEvent.Keyboard.key(ev)));
 
 [@react.component]
-let make = () => {
+let make = (~romURL) => {
   let (state, dispatch) = React.useReducer((state, action) => switch(action) {
   | Loading => {...state, loading: true}
   | Loaded => {...state, loading: false}
@@ -98,27 +96,12 @@ let make = () => {
   | ToggleTracing => console^.tracing = !console^.tracing; state
   }, initial_state)
 
-  React.useEffect0(() => {
-    // fetch_rom("http://localhost:8000/roms/cpu_instrs.gb")
-    // fetch_rom("http://localhost:8000/roms/drmario.gb")
-    // fetch_rom("http://localhost:8000/roms/tetris.gb")
-    fetch_rom("http://localhost:8000/roms/supermarioland.gb")
-    // fetch_rom("http://localhost:8000/roms/01-special.gb")
-    // fetch_rom("http://localhost:8000/roms/02-interrupts.gb")
-    // fetch_rom("http://localhost:8000/roms/03-op_sp_hl.gb")
-    // fetch_rom("http://localhost:8000/roms/04-op_r_imm.gb")
-    // fetch_rom("http://localhost:8000/roms/05-op_rp.gb")
-    // fetch_rom("http://localhost:8000/roms/06-ld_r_r.gb")
-    // fetch_rom("http://localhost:8000/roms/07-jr_jp_call_ret_rst.gb")
-    // fetch_rom("http://localhost:8000/roms/08-misc_instrs.gb")
-    // fetch_rom("http://localhost:8000/roms/09-op_r_r.gb")
-    // fetch_rom("http://localhost:8000/roms/10-bit_ops.gb")
-    // fetch_rom("http://localhost:8000/roms/11-op_a_hl.gb")
+  React.useEffect1(() => {
+    fetch_rom(romURL)
     |> Js.Promise.then_(rom => {
       dispatch(Loaded);
       console := Console.make(rom);
-      // requestAnimationFrame(_ => step(get_display())) |> ignore
-      step(get_display()) |> ignore
+      step(get_context()) |> ignore
       Js.Promise.resolve()})
     |> ignore;
 
@@ -128,7 +111,7 @@ let make = () => {
       remove_keyboard_event_listener("keydown", (ev) => dispatch(KeyDown(ReactEvent.Keyboard.key(ev))));
       remove_keyboard_event_listener("keyup", (ev) => dispatch(KeyUp(ReactEvent.Keyboard.key(ev))));
     })
-  });
+  }, [|romURL|]);
 
   <div>
     {if (state.loading) {
@@ -137,9 +120,9 @@ let make = () => {
       ReasonReact.null
     }}
     <canvas id="display" ></canvas>
-    <button id="tracing" onClick={_ => dispatch(ToggleTracing)}>
-      {ReasonReact.string("Toggle tracing")}
-    </button>
-    <RegistersComponent console/>
+    // <button id="tracing" onClick={_ => dispatch(ToggleTracing)}>
+    //   {ReasonReact.string("Toggle tracing")}
+    // </button>
+    // <RegistersComponent console/>
   </div>
 }
