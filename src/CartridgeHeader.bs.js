@@ -4,6 +4,19 @@
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
 
+function mapper_to_string(c) {
+  var match = c[/* cartridge_type */0];
+  switch (match) {
+    case 0 : 
+        return "ROM Only";
+    case 1 : 
+        return "MBC1";
+    case 2 : 
+        return "MBC2";
+    
+  }
+}
+
 function get_cartridge_type(n) {
   switch (n) {
     case 0 : 
@@ -52,6 +65,7 @@ function make(rom) {
         ];
 }
 
+exports.mapper_to_string = mapper_to_string;
 exports.get_cartridge_type = get_cartridge_type;
 exports.get_rom_size = get_rom_size;
 exports.get_ram_size = get_ram_size;

@@ -1,11 +1,18 @@
 type cartridge_type = RomOnly | MBC1 | MBC2;
 
+
 // http://gbdev.gg8.se/wiki/articles/The_Cartridge_Header
 type t = {
   cartridge_type,
   rom_size: int,
   ram_size: int
 };
+
+let mapper_to_string = (c) => switch(c.cartridge_type) {
+| RomOnly => "ROM Only"
+| MBC1 => "MBC1"
+| MBC2 => "MBC2"
+}
 
 let get_cartridge_type = (n) => switch(n) {
 | 0x00 => RomOnly
