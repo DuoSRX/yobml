@@ -20,6 +20,10 @@ var roms = /* array */[
     "Tetris"
   ],
   /* tuple */[
+    "pokemon_red",
+    "Pokemon Red"
+  ],
+  /* tuple */[
     "cpu_instrs",
     "Blargg CPU Tests"
   ]
@@ -27,7 +31,7 @@ var roms = /* array */[
 
 function MainComponent(Props) {
   var match = React.useState((function () {
-          return undefined;
+          return "http://localhost:8000/roms/pokemon_red.gb";
         }));
   var setRom = match[1];
   var romURL = match[0];

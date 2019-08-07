@@ -12,29 +12,22 @@ function mapper_to_string(c) {
     case 1 : 
         return "MBC1";
     case 2 : 
-        return "MBC2";
+        return "MBC3";
     
   }
 }
 
 function get_cartridge_type(n) {
-  switch (n) {
-    case 0 : 
-        return /* RomOnly */0;
-    case 1 : 
-    case 2 : 
-    case 3 : 
-        return /* MBC1 */1;
-    case 4 : 
-    case 6 : 
-    case 7 : 
-        return Pervasives.failwith("Unknown cartridge type");
-    case 5 : 
-    case 8 : 
-    case 9 : 
-        return /* MBC2 */2;
-    default:
+  if (n > 3 || n < 0) {
+    if (n > 19 || n < 15) {
       return Pervasives.failwith("Unknown cartridge type");
+    } else {
+      return /* MBC3 */2;
+    }
+  } else if (n !== 0) {
+    return /* MBC1 */1;
+  } else {
+    return /* RomOnly */0;
   }
 }
 
