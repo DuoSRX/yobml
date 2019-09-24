@@ -18,9 +18,3 @@ npm run start
 ```
 node src/Main.bs.js
 ```
-
-## TODO
-
-Failing instructions:
-
-* EI
