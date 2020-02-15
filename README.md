@@ -2,6 +2,10 @@
 
 Yes. Yes. Another GameBoy emulator.
 
+Works in the browser, kind of. The game selector is kinda broken.
+
+I might come back to this project eventually.
+
 # Build
 ```
 npm run build
